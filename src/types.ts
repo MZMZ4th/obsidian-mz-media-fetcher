@@ -1,4 +1,6 @@
-export type SourceId = "bangumi" | "mobygames";
+export const SOURCE_IDS = ["bangumi", "mobygames", "bilibili_show"] as const;
+
+export type SourceId = (typeof SOURCE_IDS)[number];
 
 export interface SourceConfig {
   targetFolder: string;

@@ -37,7 +37,12 @@ async function resolveCardPath(
   item: NormalizedMediaItem,
   sourceKey: SourceId
 ): Promise<string> {
-  const idKey = sourceKey === "bangumi" ? "bangumi_id" : "mobygames_id";
+  const idKeyMap: Record<SourceId, string> = {
+    bangumi: "bangumi_id",
+    mobygames: "mobygames_id",
+    bilibili_show: "bilibili_show_id",
+  };
+  const idKey = idKeyMap[sourceKey];
   const primaryName = sanitizeFileName(renderTemplate(config.filename.template, item));
   const collisionName = sanitizeFileName(
     renderTemplate(config.filename.collisionTemplate, item)

@@ -253,7 +253,12 @@ async function buildCard(app, vaultInfo, sourceKey, item, config) {
   };
 }
 async function resolveCardPath(app, config, item, sourceKey) {
-  const idKey = sourceKey === "bangumi" ? "bangumi_id" : "mobygames_id";
+  const idKeyMap = {
+    bangumi: "bangumi_id",
+    mobygames: "mobygames_id",
+    bilibili_show: "bilibili_show_id"
+  };
+  const idKey = idKeyMap[sourceKey];
   const primaryName = sanitizeFileName(renderTemplate(config.filename.template, item));
   const collisionName = sanitizeFileName(
     renderTemplate(config.filename.collisionTemplate, item)
@@ -340,6 +345,30 @@ aliases: {{yaml.aliases}}
 {{platforms_text}}
 
 ## \u7B80\u8BB0
+`,
+  bilibili_show: `---
+categories: \u65B0\u4F5C\u54C1\u5361\u7247
+\u540D\u79F0: {{yaml.title}}
+\u539F\u540D:
+aliases:
+\u5A92\u4F53\u7C7B\u578B:
+\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}
+\u8BC4\u5206:
+\u72B6\u6001:
+\u5B8C\u6210\u65F6\u95F4:
+\u4F53\u9A8C\u6B21\u6570:
+\u6D77\u62A5: {{poster}}
+\u6765\u6E90\u94FE\u63A5: {{bilibili_show_url}}
+\u7F51\u7EDC\u6D77\u62A5: true
+---
+
+![cover|300]({{poster}})
+
+## \u7B80\u4ECB
+
+{{summary}}
+
+## \u7B80\u8BB0
 `
 };
 function getDefaultSourceConfigs(configDir = ".obsidian") {
@@ -362,10 +391,22 @@ function getDefaultSourceConfigs(configDir = ".obsidian") {
         template: "{{title}}",
         collisionTemplate: "{{title}} {{release_year}} {{mobygames_id}}"
       }
+    },
+    bilibili_show: {
+      targetFolder: "00-Inbox",
+      templatePath: `${pluginRoot}/templates/bilibili-show.md`,
+      searchLimit: 8,
+      filename: {
+        template: "{{title}}",
+        collisionTemplate: "{{title}} {{release_year}} {{bilibili_show_id}}"
+      }
     }
   };
 }
 var DEFAULT_SOURCE_CONFIGS = getDefaultSourceConfigs();
+
+// src/types.ts
+var SOURCE_IDS = ["bangumi", "mobygames", "bilibili_show"];
 
 // src/config/storage.ts
 function normalizePlainRelativePath(value) {
@@ -407,16 +448,16 @@ function normalizeSourceConfigs(raw, defaults) {
   if (!raw || typeof raw !== "object") {
     throw new Error("\u4F5C\u54C1\u6293\u53D6\u914D\u7F6E\u683C\u5F0F\u4E0D\u5BF9\u3002");
   }
-  return {
-    bangumi: normalizeSourceConfig(raw.bangumi, "bangumi", defaults),
-    mobygames: normalizeSourceConfig(raw.mobygames, "mobygames", defaults)
-  };
+  return SOURCE_IDS.reduce((result, sourceKey) => {
+    result[sourceKey] = normalizeSourceConfig(raw[sourceKey], sourceKey, defaults);
+    return result;
+  }, {});
 }
 function buildConfigRootFromUnknown(raw, defaults) {
-  return {
-    bangumi: buildTemplateModeSourceConfig(raw?.bangumi, defaults.bangumi),
-    mobygames: buildTemplateModeSourceConfig(raw?.mobygames, defaults.mobygames)
-  };
+  return SOURCE_IDS.reduce((result, sourceKey) => {
+    result[sourceKey] = buildTemplateModeSourceConfig(raw?.[sourceKey], defaults[sourceKey]);
+    return result;
+  }, {});
 }
 function normalizeTemplateEditorValues(sourceKey, state) {
   const defaults = DEFAULT_SOURCE_CONFIGS[sourceKey];
@@ -481,7 +522,7 @@ var ConfigStore = class {
       const initialConfig = await this.buildInitialConfig(vaultBasePath);
       await ensureJsonFile(configPath, initialConfig);
     }
-    for (const sourceKey of Object.keys(defaults)) {
+    for (const sourceKey of SOURCE_IDS) {
       await this.ensureTemplateExists(
         vaultBasePath,
         defaults[sourceKey].templatePath,
@@ -512,7 +553,8 @@ var ConfigStore = class {
     }
     return {
       bangumi,
-      mobygames: defaults.mobygames
+      mobygames: defaults.mobygames,
+      bilibili_show: defaults.bilibili_show
     };
   }
   async loadRawSourceConfigRoot(vaultBasePath) {
@@ -544,7 +586,7 @@ var ConfigStore = class {
     if (JSON.stringify(raw, null, 2) !== JSON.stringify(migrated, null, 2)) {
       await this.writeSourceConfigRoot(migrated);
     }
-    for (const sourceKey of Object.keys(normalized)) {
+    for (const sourceKey of SOURCE_IDS) {
       await this.ensureTemplateExists(
         vaultBasePath,
         normalized[sourceKey].templatePath,
@@ -745,6 +787,105 @@ var bangumiSource = {
   fetchByDirectInput: (directInput) => fetchBangumiSubject(directInput),
   fetchBySearchItem: (item) => fetchBangumiSubject(item.id),
   normalize: normalizeBangumiSubject
+};
+
+// src/sources/bilibili-show.ts
+function ensureHttpsUrl(value) {
+  const normalized = String(value || "").trim();
+  if (!normalized) return "";
+  if (/^https?:\/\//i.test(normalized)) return normalized;
+  if (normalized.startsWith("//")) return `https:${normalized}`;
+  return normalized;
+}
+function formatUnixTimestamp(timestamp) {
+  const seconds = Number(timestamp);
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return "";
+  }
+  const date = new Date(seconds * 1e3);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+function parseBilibiliShowProjectId(input) {
+  const text = String(input || "").trim();
+  if (!text) {
+    throw new Error("\u8BF7\u5148\u8D34\u4E0A bilibili \u4F1A\u5458\u8D2D\u8BE6\u60C5\u9875\u94FE\u63A5\u3002");
+  }
+  let url;
+  try {
+    url = new URL(text);
+  } catch (_error) {
+    throw new Error("bilibili\u4F1A\u5458\u8D2D\u76EE\u524D\u53EA\u652F\u6301\u76F4\u63A5\u8D34\u8BE6\u60C5\u9875\u94FE\u63A5\u3002");
+  }
+  if (!/show\.bilibili\.com$/i.test(url.hostname)) {
+    throw new Error("\u8FD9\u4E0D\u662F bilibili \u4F1A\u5458\u8D2D\u8BE6\u60C5\u9875\u94FE\u63A5\u3002");
+  }
+  if (url.pathname !== "/platform/detail.html") {
+    throw new Error("\u8BF7\u8D34 bilibili \u4F1A\u5458\u8D2D\u5177\u4F53\u8BE6\u60C5\u9875\u94FE\u63A5\uFF0C\u4E0D\u662F\u5217\u8868\u9875\u6216\u5176\u4ED6\u9875\u9762\u3002");
+  }
+  const projectId = Number(url.searchParams.get("id"));
+  if (!Number.isInteger(projectId) || projectId <= 0) {
+    throw new Error("\u8FD9\u4E2A bilibili \u4F1A\u5458\u8D2D\u94FE\u63A5\u91CC\u6CA1\u6709\u6709\u6548\u7684\u9879\u76EE id\u3002");
+  }
+  return projectId;
+}
+function normalizeBilibiliShowProjectUrl(projectId) {
+  return `https://show.bilibili.com/platform/detail.html?id=${projectId}`;
+}
+function unwrapBilibiliShowProjectResponse(payload, projectId) {
+  if (Number(payload?.errno) !== 0 || !payload?.data) {
+    throw new Error(payload?.msg || `bilibili\u4F1A\u5458\u8D2D\u9879\u76EE\u8BFB\u53D6\u5931\u8D25\uFF1A${projectId}`);
+  }
+  if (Number(payload.data.id) !== Number(projectId)) {
+    throw new Error(`bilibili\u4F1A\u5458\u8D2D\u9879\u76EE\u8BFB\u53D6\u5931\u8D25\uFF1A${projectId}`);
+  }
+  return payload.data;
+}
+function normalizeBilibiliShowProject(detail) {
+  const projectId = Number(detail?.id);
+  const releaseDate = formatUnixTimestamp(detail?.start_time);
+  const coverRemote = ensureHttpsUrl(detail?.cover) || ensureHttpsUrl(detail?.banner);
+  return {
+    bilibili_show_id: projectId,
+    bilibili_show_url: normalizeBilibiliShowProjectUrl(projectId),
+    title: String(detail?.name || "").trim() || `bilibili\u4F1A\u5458\u8D2D ${projectId}`,
+    title_original: "",
+    aliases: [],
+    media_type: "",
+    release_date: releaseDate,
+    release_year: extractYear(releaseDate),
+    cover_remote: coverRemote,
+    summary: normalizeSummaryText(detail?.description || ""),
+    platforms: [],
+    platforms_text: ""
+  };
+}
+
+// src/sources/bilibili-show-source.ts
+async function fetchBilibiliShowProject(projectId) {
+  const response = await requestJson(
+    `https://show.bilibili.com/api/ticket/project/get?id=${projectId}`
+  );
+  return unwrapBilibiliShowProjectResponse(response, projectId);
+}
+var bilibiliShowSource = {
+  id: "bilibili_show",
+  label: "bilibili\u4F1A\u5458\u8D2D",
+  commandId: "create-bilibili-show-card",
+  commandName: "\u4ECE bilibili\u4F1A\u5458\u8D2D\u65B0\u5EFA\u4F5C\u54C1\u5361\u7247",
+  inputTitle: "\u4ECE bilibili\u4F1A\u5458\u8D2D\u65B0\u5EFA\u4F5C\u54C1\u5361\u7247",
+  inputHint: "\u8D34 bilibili \u4F1A\u5458\u8D2D\u8BE6\u60C5\u9875\u94FE\u63A5\uFF0C\u63D2\u4EF6\u4F1A\u76F4\u63A5\u8BFB\u53D6\u9879\u76EE\u8BE6\u60C5\u3002",
+  inputPlaceholder: "\u4F8B\u5982\uFF1Ahttps://show.bilibili.com/platform/detail.html?id=107593",
+  parseDirectInput: parseBilibiliShowProjectId,
+  fetchByDirectInput: (projectId) => fetchBilibiliShowProject(projectId),
+  normalize: normalizeBilibiliShowProject
 };
 
 // src/sources/mobygames.ts
@@ -953,10 +1094,11 @@ var mobygamesSource = {
 };
 
 // src/sources/index.ts
-var MEDIA_SOURCES = [bangumiSource, mobygamesSource];
+var MEDIA_SOURCES = [bangumiSource, mobygamesSource, bilibiliShowSource];
 var MEDIA_SOURCE_MAP = {
   bangumi: bangumiSource,
-  mobygames: mobygamesSource
+  mobygames: mobygamesSource,
+  bilibili_show: bilibiliShowSource
 };
 
 // src/ui/modals.ts
@@ -1165,7 +1307,7 @@ var MZMediaFetcherSettingTab = class extends import_obsidian4.PluginSettingTab {
     });
     new import_obsidian4.Setting(sectionEl).setName("\u6A21\u677F\u8DEF\u5F84").setDesc("\u6A21\u677F\u6587\u4EF6\u5728 vault \u5185\u7684\u76F8\u5BF9\u8DEF\u5F84\u3002").addText((text) => {
       new TemplatePathSuggest(this.app, text.inputEl);
-      text.setPlaceholder(".obsidian/plugins/MZ-media-fetcher/templates/bangumi.md");
+      text.setPlaceholder(state.templatePath);
       text.setValue(state.templatePath);
       text.onChange((value) => {
         state.templatePath = value;
@@ -1186,7 +1328,7 @@ var MZMediaFetcherSettingTab = class extends import_obsidian4.PluginSettingTab {
       });
     });
     new import_obsidian4.Setting(sectionEl).setName("\u91CD\u540D\u6587\u4EF6\u540D\u6A21\u677F").setDesc("\u9047\u5230\u540C\u540D\u6587\u4EF6\u65F6\u4F7F\u7528\u7684\u5907\u7528\u6A21\u677F\u3002").addText((text) => {
-      text.setPlaceholder("{{title}} {{release_year}} {{bangumi_id}}");
+      text.setPlaceholder(state.filenameCollisionTemplate);
       text.setValue(state.filenameCollisionTemplate);
       text.onChange((value) => {
         state.filenameCollisionTemplate = value;

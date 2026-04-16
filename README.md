@@ -6,6 +6,7 @@
 
 - Bangumi：支持标题搜索、直接贴条目链接、直接输入条目 ID
 - MobyGames：支持直接贴具体游戏页面链接
+- bilibili会员购：支持直接贴活动详情页链接
 
 ## 功能概览
 
@@ -18,6 +19,7 @@
 
 - `从 Bangumi 新建作品卡片`
 - `从 MobyGames 新建作品卡片`
+- `从 bilibili会员购新建作品卡片`
 
 ## 安装方式
 
@@ -54,6 +56,7 @@ npm test
 
 - `.obsidian/plugins/MZ-media-fetcher/templates/bangumi.md`
 - `.obsidian/plugins/MZ-media-fetcher/templates/mobygames.md`
+- `.obsidian/plugins/MZ-media-fetcher/templates/bilibili-show.md`
 
 默认配置字段只有模板模式所需的最小集合：
 
@@ -83,6 +86,14 @@ npm test
 
 不支持搜索页、列表页或站内标题搜索。
 
+### bilibili会员购
+
+当前只支持直接贴具体活动详情页链接，例如：
+
+- `https://show.bilibili.com/platform/detail.html?id=107593`
+
+插件会直接读取会员购项目详情接口，不解析页面正文。
+
 ## 模板覆盖
 
 默认模板只是起点。你可以在插件设置页里，把 `模板路径` 改到自己喜欢的位置。
@@ -105,6 +116,7 @@ npm test
 - `{{platforms_text}}`
 - `{{bangumi_url}}`
 - `{{mobygames_url}}`
+- `{{bilibili_show_url}}`
 - `{{cover_markdown}}`
 
 ## 扩展新站点

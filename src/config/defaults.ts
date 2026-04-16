@@ -59,6 +59,30 @@ aliases: {{yaml.aliases}}
 
 ## 简记
 `,
+  bilibili_show: `---
+categories: 新作品卡片
+名称: {{yaml.title}}
+原名:
+aliases:
+媒体类型:
+发布日期: {{yaml.release_date}}
+评分:
+状态:
+完成时间:
+体验次数:
+海报: {{poster}}
+来源链接: {{bilibili_show_url}}
+网络海报: true
+---
+
+![cover|300]({{poster}})
+
+## 简介
+
+{{summary}}
+
+## 简记
+`,
 };
 
 export function getDefaultSourceConfigs(configDir = ".obsidian"): SourceConfigRoot {
@@ -80,6 +104,15 @@ export function getDefaultSourceConfigs(configDir = ".obsidian"): SourceConfigRo
       filename: {
         template: "{{title}}",
         collisionTemplate: "{{title}} {{release_year}} {{mobygames_id}}",
+      },
+    },
+    bilibili_show: {
+      targetFolder: "00-Inbox",
+      templatePath: `${pluginRoot}/templates/bilibili-show.md`,
+      searchLimit: 8,
+      filename: {
+        template: "{{title}}",
+        collisionTemplate: "{{title}} {{release_year}} {{bilibili_show_id}}",
       },
     },
   };

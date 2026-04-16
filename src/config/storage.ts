@@ -9,7 +9,7 @@ import {
   getDefaultSourceConfigs,
 } from "./defaults.ts";
 import { ensureJsonFile, ensureTextFile } from "../core/files.ts";
-import type { SourceConfig, SourceConfigRoot, SourceId, VaultInfo } from "../types.ts";
+import { SOURCE_IDS, type SourceConfig, type SourceConfigRoot, type SourceId, type VaultInfo } from "../types.ts";
 
 function normalizePlainRelativePath(value: unknown): string {
   return String(value || "")
@@ -60,17 +60,17 @@ function normalizeSourceConfigs(raw: any, defaults: SourceConfigRoot): SourceCon
     throw new Error("作品抓取配置格式不对。");
   }
 
-  return {
-    bangumi: normalizeSourceConfig(raw.bangumi, "bangumi", defaults),
-    mobygames: normalizeSourceConfig(raw.mobygames, "mobygames", defaults),
-  };
+  return SOURCE_IDS.reduce((result, sourceKey) => {
+    result[sourceKey] = normalizeSourceConfig(raw[sourceKey], sourceKey, defaults);
+    return result;
+  }, {} as SourceConfigRoot);
 }
 
 function buildConfigRootFromUnknown(raw: any, defaults: SourceConfigRoot): SourceConfigRoot {
-  return {
-    bangumi: buildTemplateModeSourceConfig(raw?.bangumi, defaults.bangumi),
-    mobygames: buildTemplateModeSourceConfig(raw?.mobygames, defaults.mobygames),
-  };
+  return SOURCE_IDS.reduce((result, sourceKey) => {
+    result[sourceKey] = buildTemplateModeSourceConfig(raw?.[sourceKey], defaults[sourceKey]);
+    return result;
+  }, {} as SourceConfigRoot);
 }
 
 export function normalizeTemplateEditorValues(
@@ -159,7 +159,7 @@ export class ConfigStore {
       await ensureJsonFile(configPath, initialConfig);
     }
 
-    for (const sourceKey of Object.keys(defaults) as SourceId[]) {
+    for (const sourceKey of SOURCE_IDS) {
       await this.ensureTemplateExists(
         vaultBasePath,
         defaults[sourceKey].templatePath,
@@ -199,6 +199,7 @@ export class ConfigStore {
     return {
       bangumi,
       mobygames: defaults.mobygames,
+      bilibili_show: defaults.bilibili_show,
     };
   }
 
@@ -236,7 +237,7 @@ export class ConfigStore {
       await this.writeSourceConfigRoot(migrated);
     }
 
-    for (const sourceKey of Object.keys(normalized) as SourceId[]) {
+    for (const sourceKey of SOURCE_IDS) {
       await this.ensureTemplateExists(
         vaultBasePath,
         normalized[sourceKey].templatePath,

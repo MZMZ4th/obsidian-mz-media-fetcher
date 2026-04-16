@@ -2,6 +2,7 @@ import { Notice, PluginSettingTab, Setting } from "obsidian";
 import { normalizeTemplateEditorValues } from "../config/storage.ts";
 import { MEDIA_SOURCES } from "../sources/index.ts";
 import type MZMediaFetcherPlugin from "../plugin.ts";
+import type { SourceId } from "../types.ts";
 import { FolderPathSuggest, TemplatePathSuggest } from "./suggest.ts";
 
 export class MZMediaFetcherSettingTab extends PluginSettingTab {
@@ -56,7 +57,7 @@ export class MZMediaFetcherSettingTab extends PluginSettingTab {
 
   async renderSourceSection(
     containerEl: HTMLElement,
-    sourceKey: "bangumi" | "mobygames",
+    sourceKey: SourceId,
     label: string,
     state: {
       targetFolder: string;
@@ -86,7 +87,7 @@ export class MZMediaFetcherSettingTab extends PluginSettingTab {
       .setDesc("模板文件在 vault 内的相对路径。")
       .addText((text) => {
         new TemplatePathSuggest(this.app, text.inputEl);
-        text.setPlaceholder(".obsidian/plugins/MZ-media-fetcher/templates/bangumi.md");
+        text.setPlaceholder(state.templatePath);
         text.setValue(state.templatePath);
         text.onChange((value: string) => {
           state.templatePath = value;
@@ -119,7 +120,7 @@ export class MZMediaFetcherSettingTab extends PluginSettingTab {
       .setName("重名文件名模板")
       .setDesc("遇到同名文件时使用的备用模板。")
       .addText((text) => {
-        text.setPlaceholder("{{title}} {{release_year}} {{bangumi_id}}");
+        text.setPlaceholder(state.filenameCollisionTemplate);
         text.setValue(state.filenameCollisionTemplate);
         text.onChange((value: string) => {
           state.filenameCollisionTemplate = value;
