@@ -20,7 +20,7 @@ aliases: {{yaml.aliases}}
 体验次数: 1
 海报: {{poster}}
 来源链接: {{bangumi_url}}
-网络海报: true
+网络海报: {{yaml.network_poster}}
 ---
 
 {{cover_markdown}}
@@ -44,7 +44,7 @@ aliases: {{yaml.aliases}}
 体验次数: 1
 海报: {{poster}}
 来源链接: {{mobygames_url}}
-网络海报: true
+网络海报: {{yaml.network_poster}}
 ---
 
 {{cover_markdown}}
@@ -72,7 +72,7 @@ aliases:
 体验次数:
 海报: {{poster}}
 来源链接: {{bilibili_show_url}}
-网络海报: true
+网络海报: {{yaml.network_poster}}
 ---
 
 ![cover|300]({{poster}})
@@ -92,6 +92,10 @@ export function getDefaultSourceConfigs(configDir = ".obsidian"): SourceConfigRo
       targetFolder: "00-Inbox",
       templatePath: `${pluginRoot}/templates/bangumi.md`,
       searchLimit: 8,
+      poster: {
+        saveLocal: false,
+        folder: "00-Inbox/附件/作品海报",
+      },
       filename: {
         template: "{{title}}",
         collisionTemplate: "{{title}} {{release_year}} {{bangumi_id}}",
@@ -101,6 +105,10 @@ export function getDefaultSourceConfigs(configDir = ".obsidian"): SourceConfigRo
       targetFolder: "00-Inbox",
       templatePath: `${pluginRoot}/templates/mobygames.md`,
       searchLimit: 8,
+      poster: {
+        saveLocal: false,
+        folder: "00-Inbox/附件/作品海报",
+      },
       filename: {
         template: "{{title}}",
         collisionTemplate: "{{title}} {{release_year}} {{mobygames_id}}",
@@ -110,6 +118,10 @@ export function getDefaultSourceConfigs(configDir = ".obsidian"): SourceConfigRo
       targetFolder: "00-Inbox",
       templatePath: `${pluginRoot}/templates/bilibili-show.md`,
       searchLimit: 8,
+      poster: {
+        saveLocal: false,
+        folder: "00-Inbox/附件/作品海报",
+      },
       filename: {
         template: "{{title}}",
         collisionTemplate: "{{title}} {{release_year}} {{bilibili_show_id}}",

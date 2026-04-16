@@ -37,11 +37,18 @@ function normalizeSearchLimit(value: unknown, fallback: number): number {
 function buildTemplateModeSourceConfig(raw: any, defaults: SourceConfig): SourceConfig {
   const source = raw && typeof raw === "object" ? raw : {};
   const filename = source.filename && typeof source.filename === "object" ? source.filename : {};
+  const poster = source.poster && typeof source.poster === "object" ? source.poster : {};
 
   return {
     targetFolder: normalizePlainRelativePath(source.targetFolder || defaults.targetFolder),
     templatePath: normalizeVaultRelativePath(source.templatePath || defaults.templatePath),
     searchLimit: normalizeSearchLimit(source.searchLimit, defaults.searchLimit),
+    poster: {
+      saveLocal: Boolean(
+        typeof poster.saveLocal === "boolean" ? poster.saveLocal : defaults.poster.saveLocal
+      ),
+      folder: normalizePlainRelativePath(poster.folder || defaults.poster.folder),
+    },
     filename: {
       template: String(filename.template || defaults.filename.template).trim(),
       collisionTemplate: String(
@@ -79,6 +86,8 @@ export function normalizeTemplateEditorValues(
     targetFolder: string;
     templatePath: string;
     searchLimit: string;
+    posterSaveLocal: boolean;
+    posterFolder: string;
     filenameTemplate: string;
     filenameCollisionTemplate: string;
   }
@@ -87,6 +96,8 @@ export function normalizeTemplateEditorValues(
   const targetFolder = normalizePlainRelativePath(state.targetFolder || defaults.targetFolder);
   const templatePath = normalizeVaultRelativePath(state.templatePath || defaults.templatePath);
   const searchLimit = normalizeSearchLimit(state.searchLimit, defaults.searchLimit);
+  const posterSaveLocal = Boolean(state.posterSaveLocal);
+  const posterFolder = normalizePlainRelativePath(state.posterFolder || defaults.poster.folder);
   const filenameTemplate = String(state.filenameTemplate || defaults.filename.template).trim();
   const filenameCollisionTemplate = String(
     state.filenameCollisionTemplate || defaults.filename.collisionTemplate
@@ -104,6 +115,10 @@ export function normalizeTemplateEditorValues(
     targetFolder,
     templatePath,
     searchLimit,
+    poster: {
+      saveLocal: posterSaveLocal,
+      folder: posterFolder,
+    },
     filename: {
       template: filenameTemplate,
       collisionTemplate: filenameCollisionTemplate,

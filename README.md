@@ -14,6 +14,7 @@
 - 使用统一的卡片生成流程：输入、搜索候选、模板渲染、重名处理、写入笔记都走同一条主链路
 - 默认模板随插件一起分发：开箱即用，不再依赖某个私有 vault 里的模板路径
 - 设置页可改：目标目录、模板路径、搜索数量、文件名模板、重名模板
+- 设置页可改：目标目录、模板路径、搜索数量、文件名模板、重名模板，以及海报是否下载到本地
 
 ## 当前命令
 
@@ -63,6 +64,8 @@ npm test
 - `targetFolder`
 - `templatePath`
 - `searchLimit`
+- `poster.saveLocal`
+- `poster.folder`
 - `filename.template`
 - `filename.collisionTemplate`
 
@@ -93,6 +96,7 @@ npm test
 - `https://show.bilibili.com/platform/detail.html?id=107593`
 
 插件会直接读取会员购项目详情接口，不解析页面正文。
+发布日期会统一写成 `YYYY-MM-DD`。
 
 ## 模板覆盖
 
@@ -112,6 +116,7 @@ npm test
 - `{{yaml.media_type}}`
 - `{{yaml.release_date}}`
 - `{{poster}}`
+- `{{yaml.network_poster}}`
 - `{{summary}}`
 - `{{platforms_text}}`
 - `{{bangumi_url}}`

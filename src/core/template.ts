@@ -66,7 +66,9 @@ export function buildTemplateContext(
     ...subject,
     categories: "新作品卡片",
     source: sourceKey,
-    poster: String(subject.cover_remote || "").trim(),
+    poster: String(subject.poster_path || subject.cover_remote || "").trim(),
+    network_poster:
+      typeof subject.network_poster === "boolean" ? subject.network_poster : true,
     rating: "",
     status: "进行中",
     finished_at: "",

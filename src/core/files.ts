@@ -74,3 +74,28 @@ export async function chooseAvailableCardPath(
     index += 1;
   }
 }
+
+export async function chooseAvailableAssetPath(
+  folder: string,
+  baseName: string,
+  extension: string,
+  exists: (candidate: string) => Promise<boolean>
+): Promise<string> {
+  const cleanFolder = String(folder || "").trim().replace(/^\/+|\/+$/g, "");
+  const cleanExt = String(extension || "").trim().replace(/^\./, "") || "jpg";
+  const prefix = cleanFolder ? `${cleanFolder}/` : "";
+
+  let candidate = `${prefix}${baseName}.${cleanExt}`;
+  if (!(await exists(candidate))) {
+    return candidate;
+  }
+
+  let index = 2;
+  while (true) {
+    candidate = `${prefix}${baseName} ${index}.${cleanExt}`;
+    if (!(await exists(candidate))) {
+      return candidate;
+    }
+    index += 1;
+  }
+}

@@ -4,6 +4,9 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -25,6 +28,207 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/config/defaults.ts
+function getDefaultSourceConfigs(configDir = ".obsidian") {
+  const pluginRoot = `${configDir}/plugins/${PLUGIN_ID}`;
+  return {
+    bangumi: {
+      targetFolder: "00-Inbox",
+      templatePath: `${pluginRoot}/templates/bangumi.md`,
+      searchLimit: 8,
+      poster: {
+        saveLocal: false,
+        folder: "00-Inbox/\u9644\u4EF6/\u4F5C\u54C1\u6D77\u62A5"
+      },
+      filename: {
+        template: "{{title}}",
+        collisionTemplate: "{{title}} {{release_year}} {{bangumi_id}}"
+      }
+    },
+    mobygames: {
+      targetFolder: "00-Inbox",
+      templatePath: `${pluginRoot}/templates/mobygames.md`,
+      searchLimit: 8,
+      poster: {
+        saveLocal: false,
+        folder: "00-Inbox/\u9644\u4EF6/\u4F5C\u54C1\u6D77\u62A5"
+      },
+      filename: {
+        template: "{{title}}",
+        collisionTemplate: "{{title}} {{release_year}} {{mobygames_id}}"
+      }
+    },
+    bilibili_show: {
+      targetFolder: "00-Inbox",
+      templatePath: `${pluginRoot}/templates/bilibili-show.md`,
+      searchLimit: 8,
+      poster: {
+        saveLocal: false,
+        folder: "00-Inbox/\u9644\u4EF6/\u4F5C\u54C1\u6D77\u62A5"
+      },
+      filename: {
+        template: "{{title}}",
+        collisionTemplate: "{{title}} {{release_year}} {{bilibili_show_id}}"
+      }
+    }
+  };
+}
+var PLUGIN_ID, PLUGIN_NAME, PLUGIN_VERSION, HTTP_USER_AGENT, BANGUMI_API_BASE, TEMPLATE_CONTENTS, DEFAULT_SOURCE_CONFIGS;
+var init_defaults = __esm({
+  "src/config/defaults.ts"() {
+    PLUGIN_ID = "MZ-media-fetcher";
+    PLUGIN_NAME = "MZ Media Fetcher";
+    PLUGIN_VERSION = "0.2.0";
+    HTTP_USER_AGENT = `${PLUGIN_NAME}/${PLUGIN_VERSION} (Obsidian)`;
+    BANGUMI_API_BASE = "https://api.bgm.tv/v0";
+    TEMPLATE_CONTENTS = {
+      bangumi: `---
+categories: \u65B0\u4F5C\u54C1\u5361\u7247
+\u540D\u79F0: {{yaml.title}}
+\u539F\u540D: {{yaml.title_original}}
+aliases: {{yaml.aliases}}
+\u5A92\u4F53\u7C7B\u578B: {{yaml.media_type}}
+\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}
+\u8BC4\u5206:
+\u72B6\u6001: \u8FDB\u884C\u4E2D
+\u5B8C\u6210\u65F6\u95F4: ""
+\u4F53\u9A8C\u6B21\u6570: 1
+\u6D77\u62A5: {{poster}}
+\u6765\u6E90\u94FE\u63A5: {{bangumi_url}}
+\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}
+---
+
+{{cover_markdown}}
+
+## \u7B80\u4ECB
+
+{{summary}}
+
+## \u7B80\u8BB0
+`,
+      mobygames: `---
+categories: \u65B0\u4F5C\u54C1\u5361\u7247
+\u540D\u79F0: {{yaml.title}}
+\u539F\u540D: {{yaml.title_original}}
+aliases: {{yaml.aliases}}
+\u5A92\u4F53\u7C7B\u578B: {{yaml.media_type}}
+\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}
+\u8BC4\u5206:
+\u72B6\u6001: \u8FDB\u884C\u4E2D
+\u5B8C\u6210\u65F6\u95F4: ""
+\u4F53\u9A8C\u6B21\u6570: 1
+\u6D77\u62A5: {{poster}}
+\u6765\u6E90\u94FE\u63A5: {{mobygames_url}}
+\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}
+---
+
+{{cover_markdown}}
+
+## \u7B80\u4ECB
+
+{{summary}}
+
+## \u5E73\u53F0
+
+{{platforms_text}}
+
+## \u7B80\u8BB0
+`,
+      bilibili_show: `---
+categories: \u65B0\u4F5C\u54C1\u5361\u7247
+\u540D\u79F0: {{yaml.title}}
+\u539F\u540D:
+aliases:
+\u5A92\u4F53\u7C7B\u578B:
+\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}
+\u8BC4\u5206:
+\u72B6\u6001:
+\u5B8C\u6210\u65F6\u95F4:
+\u4F53\u9A8C\u6B21\u6570:
+\u6D77\u62A5: {{poster}}
+\u6765\u6E90\u94FE\u63A5: {{bilibili_show_url}}
+\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}
+---
+
+![cover|300]({{poster}})
+
+## \u7B80\u4ECB
+
+{{summary}}
+
+## \u7B80\u8BB0
+`
+    };
+    DEFAULT_SOURCE_CONFIGS = getDefaultSourceConfigs();
+  }
+});
+
+// src/core/http.ts
+var http_exports = {};
+__export(http_exports, {
+  requestBinary: () => requestBinary,
+  requestJson: () => requestJson,
+  requestText: () => requestText
+});
+async function request(url, accept, options = {}) {
+  const method = String(options.method || "GET").toUpperCase();
+  let response = null;
+  try {
+    response = await (0, import_obsidian.requestUrl)({
+      url,
+      method,
+      headers: {
+        Accept: accept,
+        "User-Agent": HTTP_USER_AGENT,
+        ...options.headers || {}
+      },
+      body: options.body
+    });
+  } catch (error) {
+    const message = error?.response?.text || error?.response?.status || error?.message || String(error);
+    throw new Error(`\u8BF7\u6C42\u5931\u8D25\uFF1A${String(message).trim()}`);
+  }
+  if (!response || response.status >= 400) {
+    throw new Error(`\u8BF7\u6C42\u5931\u8D25\uFF1AHTTP ${response?.status || "unknown"}`);
+  }
+  return response;
+}
+async function requestJson(url, options = {}) {
+  const response = await request(url, "application/json", options);
+  const text = String(response.text || "").trim();
+  if (!text) {
+    throw new Error("\u63A5\u53E3\u6CA1\u6709\u8FD4\u56DE\u5185\u5BB9\u3002");
+  }
+  try {
+    return JSON.parse(text);
+  } catch (_error) {
+    throw new Error("\u63A5\u53E3\u8FD4\u56DE\u4E86\u65E0\u6CD5\u89E3\u6790\u7684\u5185\u5BB9\u3002");
+  }
+}
+async function requestText(url, options = {}) {
+  const response = await request(url, "text/html,application/xhtml+xml", options);
+  const text = String(response.text || "");
+  if (!text.trim()) {
+    throw new Error("\u9875\u9762\u6CA1\u6709\u8FD4\u56DE\u5185\u5BB9\u3002");
+  }
+  return text;
+}
+async function requestBinary(url, options = {}) {
+  const response = await request(url, "*/*", options);
+  const buffer = response?.arrayBuffer;
+  if (!(buffer instanceof ArrayBuffer)) {
+    throw new Error("\u4E8C\u8FDB\u5236\u8D44\u6E90\u8FD4\u56DE\u683C\u5F0F\u4E0D\u5BF9\u3002");
+  }
+  return buffer;
+}
+var import_obsidian;
+var init_http = __esm({
+  "src/core/http.ts"() {
+    import_obsidian = require("obsidian");
+    init_defaults();
+  }
+});
 
 // src/main.ts
 var main_exports = {};
@@ -175,6 +379,23 @@ async function chooseAvailableCardPath(folder, primaryBase, collisionBase, exist
     index += 1;
   }
 }
+async function chooseAvailableAssetPath(folder, baseName, extension, exists) {
+  const cleanFolder = String(folder || "").trim().replace(/^\/+|\/+$/g, "");
+  const cleanExt = String(extension || "").trim().replace(/^\./, "") || "jpg";
+  const prefix = cleanFolder ? `${cleanFolder}/` : "";
+  let candidate = `${prefix}${baseName}.${cleanExt}`;
+  if (!await exists(candidate)) {
+    return candidate;
+  }
+  let index = 2;
+  while (true) {
+    candidate = `${prefix}${baseName} ${index}.${cleanExt}`;
+    if (!await exists(candidate)) {
+      return candidate;
+    }
+    index += 1;
+  }
+}
 
 // src/core/template.ts
 function renderYamlScalar(value, indentLevel) {
@@ -226,7 +447,8 @@ function buildTemplateContext(sourceKey, subject) {
     ...subject,
     categories: "\u65B0\u4F5C\u54C1\u5361\u7247",
     source: sourceKey,
-    poster: String(subject.cover_remote || "").trim(),
+    poster: String(subject.poster_path || subject.cover_remote || "").trim(),
+    network_poster: typeof subject.network_poster === "boolean" ? subject.network_poster : true,
     rating: "",
     status: "\u8FDB\u884C\u4E2D",
     finished_at: "",
@@ -240,12 +462,17 @@ function buildTemplateContext(sourceKey, subject) {
 }
 
 // src/core/cards.ts
-async function buildCard(app, vaultInfo, sourceKey, item, config) {
+async function defaultDownloadBinary(url) {
+  const { requestBinary: requestBinary2 } = await Promise.resolve().then(() => (init_http(), http_exports));
+  return requestBinary2(url);
+}
+async function buildCard(app, vaultInfo, sourceKey, item, config, downloadBinary = defaultDownloadBinary) {
+  const filePath = await resolveCardPath(app, config, item, sourceKey);
+  const resolvedItem = await resolvePosterAsset(app, config, item, filePath, downloadBinary);
   const templatePath = import_path2.default.join(vaultInfo.path, config.templatePath);
   const template = await import_promises2.default.readFile(templatePath, "utf8");
-  const renderContext = buildTemplateContext(sourceKey, item);
+  const renderContext = buildTemplateContext(sourceKey, resolvedItem);
   const content = renderTemplate(template, renderContext).trim();
-  const filePath = await resolveCardPath(app, config, item, sourceKey);
   return {
     folderPath: config.targetFolder,
     filePath,
@@ -273,6 +500,43 @@ async function resolveCardPath(app, config, item, sourceKey) {
     async (candidate) => app.vault.adapter.exists(candidate)
   );
 }
+function inferRemoteFileExtension(urlText) {
+  try {
+    const url = new URL(urlText);
+    const match = url.pathname.match(/\.([a-zA-Z0-9]+)$/);
+    if (match) {
+      return match[1].toLowerCase();
+    }
+  } catch (_error) {
+  }
+  return "jpg";
+}
+async function resolvePosterAsset(app, config, item, cardFilePath, downloadBinary) {
+  const remotePoster = String(item.cover_remote || "").trim();
+  if (!config.poster.saveLocal || !remotePoster) {
+    return {
+      ...item,
+      poster_path: remotePoster,
+      network_poster: true
+    };
+  }
+  const baseName = import_path2.default.parse(cardFilePath).name;
+  const extension = inferRemoteFileExtension(remotePoster);
+  const assetPath = await chooseAvailableAssetPath(
+    config.poster.folder,
+    sanitizeFileName(baseName) || "poster",
+    extension,
+    async (candidate) => app.vault.adapter.exists(candidate)
+  );
+  await ensureFolderExists(app.vault, config.poster.folder);
+  const binary = await downloadBinary(remotePoster);
+  await app.vault.createBinary(assetPath, binary);
+  return {
+    ...item,
+    poster_path: assetPath,
+    network_poster: false
+  };
+}
 
 // src/core/errors.ts
 function normalizeError(error) {
@@ -286,124 +550,7 @@ function normalizeError(error) {
 var import_fs2 = __toESM(require("fs"));
 var import_promises3 = __toESM(require("fs/promises"));
 var import_path3 = __toESM(require("path"));
-
-// src/config/defaults.ts
-var PLUGIN_ID = "MZ-media-fetcher";
-var PLUGIN_NAME = "MZ Media Fetcher";
-var PLUGIN_VERSION = "0.2.0";
-var HTTP_USER_AGENT = `${PLUGIN_NAME}/${PLUGIN_VERSION} (Obsidian)`;
-var BANGUMI_API_BASE = "https://api.bgm.tv/v0";
-var TEMPLATE_CONTENTS = {
-  bangumi: `---
-categories: \u65B0\u4F5C\u54C1\u5361\u7247
-\u540D\u79F0: {{yaml.title}}
-\u539F\u540D: {{yaml.title_original}}
-aliases: {{yaml.aliases}}
-\u5A92\u4F53\u7C7B\u578B: {{yaml.media_type}}
-\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}
-\u8BC4\u5206:
-\u72B6\u6001: \u8FDB\u884C\u4E2D
-\u5B8C\u6210\u65F6\u95F4: ""
-\u4F53\u9A8C\u6B21\u6570: 1
-\u6D77\u62A5: {{poster}}
-\u6765\u6E90\u94FE\u63A5: {{bangumi_url}}
-\u7F51\u7EDC\u6D77\u62A5: true
----
-
-{{cover_markdown}}
-
-## \u7B80\u4ECB
-
-{{summary}}
-
-## \u7B80\u8BB0
-`,
-  mobygames: `---
-categories: \u65B0\u4F5C\u54C1\u5361\u7247
-\u540D\u79F0: {{yaml.title}}
-\u539F\u540D: {{yaml.title_original}}
-aliases: {{yaml.aliases}}
-\u5A92\u4F53\u7C7B\u578B: {{yaml.media_type}}
-\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}
-\u8BC4\u5206:
-\u72B6\u6001: \u8FDB\u884C\u4E2D
-\u5B8C\u6210\u65F6\u95F4: ""
-\u4F53\u9A8C\u6B21\u6570: 1
-\u6D77\u62A5: {{poster}}
-\u6765\u6E90\u94FE\u63A5: {{mobygames_url}}
-\u7F51\u7EDC\u6D77\u62A5: true
----
-
-{{cover_markdown}}
-
-## \u7B80\u4ECB
-
-{{summary}}
-
-## \u5E73\u53F0
-
-{{platforms_text}}
-
-## \u7B80\u8BB0
-`,
-  bilibili_show: `---
-categories: \u65B0\u4F5C\u54C1\u5361\u7247
-\u540D\u79F0: {{yaml.title}}
-\u539F\u540D:
-aliases:
-\u5A92\u4F53\u7C7B\u578B:
-\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}
-\u8BC4\u5206:
-\u72B6\u6001:
-\u5B8C\u6210\u65F6\u95F4:
-\u4F53\u9A8C\u6B21\u6570:
-\u6D77\u62A5: {{poster}}
-\u6765\u6E90\u94FE\u63A5: {{bilibili_show_url}}
-\u7F51\u7EDC\u6D77\u62A5: true
----
-
-![cover|300]({{poster}})
-
-## \u7B80\u4ECB
-
-{{summary}}
-
-## \u7B80\u8BB0
-`
-};
-function getDefaultSourceConfigs(configDir = ".obsidian") {
-  const pluginRoot = `${configDir}/plugins/${PLUGIN_ID}`;
-  return {
-    bangumi: {
-      targetFolder: "00-Inbox",
-      templatePath: `${pluginRoot}/templates/bangumi.md`,
-      searchLimit: 8,
-      filename: {
-        template: "{{title}}",
-        collisionTemplate: "{{title}} {{release_year}} {{bangumi_id}}"
-      }
-    },
-    mobygames: {
-      targetFolder: "00-Inbox",
-      templatePath: `${pluginRoot}/templates/mobygames.md`,
-      searchLimit: 8,
-      filename: {
-        template: "{{title}}",
-        collisionTemplate: "{{title}} {{release_year}} {{mobygames_id}}"
-      }
-    },
-    bilibili_show: {
-      targetFolder: "00-Inbox",
-      templatePath: `${pluginRoot}/templates/bilibili-show.md`,
-      searchLimit: 8,
-      filename: {
-        template: "{{title}}",
-        collisionTemplate: "{{title}} {{release_year}} {{bilibili_show_id}}"
-      }
-    }
-  };
-}
-var DEFAULT_SOURCE_CONFIGS = getDefaultSourceConfigs();
+init_defaults();
 
 // src/types.ts
 var SOURCE_IDS = ["bangumi", "mobygames", "bilibili_show"];
@@ -429,10 +576,17 @@ function normalizeSearchLimit(value, fallback) {
 function buildTemplateModeSourceConfig(raw, defaults) {
   const source = raw && typeof raw === "object" ? raw : {};
   const filename = source.filename && typeof source.filename === "object" ? source.filename : {};
+  const poster = source.poster && typeof source.poster === "object" ? source.poster : {};
   return {
     targetFolder: normalizePlainRelativePath(source.targetFolder || defaults.targetFolder),
     templatePath: normalizeVaultRelativePath(source.templatePath || defaults.templatePath),
     searchLimit: normalizeSearchLimit(source.searchLimit, defaults.searchLimit),
+    poster: {
+      saveLocal: Boolean(
+        typeof poster.saveLocal === "boolean" ? poster.saveLocal : defaults.poster.saveLocal
+      ),
+      folder: normalizePlainRelativePath(poster.folder || defaults.poster.folder)
+    },
     filename: {
       template: String(filename.template || defaults.filename.template).trim(),
       collisionTemplate: String(
@@ -464,6 +618,8 @@ function normalizeTemplateEditorValues(sourceKey, state) {
   const targetFolder = normalizePlainRelativePath(state.targetFolder || defaults.targetFolder);
   const templatePath = normalizeVaultRelativePath(state.templatePath || defaults.templatePath);
   const searchLimit = normalizeSearchLimit(state.searchLimit, defaults.searchLimit);
+  const posterSaveLocal = Boolean(state.posterSaveLocal);
+  const posterFolder = normalizePlainRelativePath(state.posterFolder || defaults.poster.folder);
   const filenameTemplate = String(state.filenameTemplate || defaults.filename.template).trim();
   const filenameCollisionTemplate = String(
     state.filenameCollisionTemplate || defaults.filename.collisionTemplate
@@ -478,6 +634,10 @@ function normalizeTemplateEditorValues(sourceKey, state) {
     targetFolder,
     templatePath,
     searchLimit,
+    poster: {
+      saveLocal: posterSaveLocal,
+      folder: posterFolder
+    },
     filename: {
       template: filenameTemplate,
       collisionTemplate: filenameCollisionTemplate
@@ -607,51 +767,9 @@ var ConfigStore = class {
   }
 };
 
-// src/core/http.ts
-var import_obsidian = require("obsidian");
-async function request(url, accept, options = {}) {
-  const method = String(options.method || "GET").toUpperCase();
-  let response = null;
-  try {
-    response = await (0, import_obsidian.requestUrl)({
-      url,
-      method,
-      headers: {
-        Accept: accept,
-        "User-Agent": HTTP_USER_AGENT,
-        ...options.headers || {}
-      },
-      body: options.body
-    });
-  } catch (error) {
-    const message = error?.response?.text || error?.response?.status || error?.message || String(error);
-    throw new Error(`\u8BF7\u6C42\u5931\u8D25\uFF1A${String(message).trim()}`);
-  }
-  if (!response || response.status >= 400) {
-    throw new Error(`\u8BF7\u6C42\u5931\u8D25\uFF1AHTTP ${response?.status || "unknown"}`);
-  }
-  return response;
-}
-async function requestJson(url, options = {}) {
-  const response = await request(url, "application/json", options);
-  const text = String(response.text || "").trim();
-  if (!text) {
-    throw new Error("\u63A5\u53E3\u6CA1\u6709\u8FD4\u56DE\u5185\u5BB9\u3002");
-  }
-  try {
-    return JSON.parse(text);
-  } catch (_error) {
-    throw new Error("\u63A5\u53E3\u8FD4\u56DE\u4E86\u65E0\u6CD5\u89E3\u6790\u7684\u5185\u5BB9\u3002");
-  }
-}
-async function requestText(url, options = {}) {
-  const response = await request(url, "text/html,application/xhtml+xml", options);
-  const text = String(response.text || "");
-  if (!text.trim()) {
-    throw new Error("\u9875\u9762\u6CA1\u6709\u8FD4\u56DE\u5185\u5BB9\u3002");
-  }
-  return text;
-}
+// src/sources/bangumi-source.ts
+init_defaults();
+init_http();
 
 // src/sources/bangumi.ts
 function mapBangumiSubjectType(type) {
@@ -789,6 +907,9 @@ var bangumiSource = {
   normalize: normalizeBangumiSubject
 };
 
+// src/sources/bilibili-show-source.ts
+init_http();
+
 // src/sources/bilibili-show.ts
 function ensureHttpsUrl(value) {
   const normalized = String(value || "").trim();
@@ -809,9 +930,7 @@ function formatUnixTimestamp(timestamp) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
+  return `${year}-${month}-${day}`;
 }
 function parseBilibiliShowProjectId(input) {
   const text = String(input || "").trim();
@@ -887,6 +1006,9 @@ var bilibiliShowSource = {
   fetchByDirectInput: (projectId) => fetchBilibiliShowProject(projectId),
   normalize: normalizeBilibiliShowProject
 };
+
+// src/sources/mobygames-source.ts
+init_http();
 
 // src/sources/mobygames.ts
 function normalizeMobyGamesGameUrl(input) {
@@ -1288,6 +1410,8 @@ var MZMediaFetcherSettingTab = class extends import_obsidian4.PluginSettingTab {
         targetFolder: normalizedConfig.targetFolder,
         templatePath: normalizedConfig.templatePath,
         searchLimit: String(normalizedConfig.searchLimit),
+        posterSaveLocal: normalizedConfig.poster.saveLocal,
+        posterFolder: normalizedConfig.poster.folder,
         filenameTemplate: normalizedConfig.filename.template,
         filenameCollisionTemplate: normalizedConfig.filename.collisionTemplate
       };
@@ -1318,6 +1442,20 @@ var MZMediaFetcherSettingTab = class extends import_obsidian4.PluginSettingTab {
       text.setValue(state.searchLimit);
       text.onChange((value) => {
         state.searchLimit = value;
+      });
+    });
+    new import_obsidian4.Setting(sectionEl).setName("\u6D77\u62A5\u5B58\u672C\u5730").setDesc("\u5F00\u542F\u540E\u4F1A\u628A\u8FDC\u7A0B\u6D77\u62A5\u4E0B\u8F7D\u5230 vault \u5185\uFF0C\u5E76\u5728\u5361\u7247\u91CC\u6539\u7528\u672C\u5730\u8DEF\u5F84\u3002").addToggle((toggle) => {
+      toggle.setValue(state.posterSaveLocal);
+      toggle.onChange((value) => {
+        state.posterSaveLocal = value;
+      });
+    });
+    new import_obsidian4.Setting(sectionEl).setName("\u672C\u5730\u6D77\u62A5\u76EE\u5F55").setDesc("\u5F00\u542F\u201C\u6D77\u62A5\u5B58\u672C\u5730\u201D\u540E\uFF0C\u6D77\u62A5\u6587\u4EF6\u5199\u5165\u7684 vault \u76F8\u5BF9\u76EE\u5F55\u3002").addText((text) => {
+      new FolderPathSuggest(this.app, text.inputEl);
+      text.setPlaceholder("\u4F8B\u5982\uFF1A00-Inbox/\u9644\u4EF6/\u4F5C\u54C1\u6D77\u62A5");
+      text.setValue(state.posterFolder);
+      text.onChange((value) => {
+        state.posterFolder = value;
       });
     });
     new import_obsidian4.Setting(sectionEl).setName("\u6587\u4EF6\u540D\u6A21\u677F").setDesc("\u7B2C\u4E00\u6B21\u5C1D\u8BD5\u521B\u5EFA\u7B14\u8BB0\u65F6\u4F7F\u7528\u7684\u6587\u4EF6\u540D\u6A21\u677F\u3002").addText((text) => {

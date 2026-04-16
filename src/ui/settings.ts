@@ -47,6 +47,8 @@ export class MZMediaFetcherSettingTab extends PluginSettingTab {
         targetFolder: normalizedConfig.targetFolder,
         templatePath: normalizedConfig.templatePath,
         searchLimit: String(normalizedConfig.searchLimit),
+        posterSaveLocal: normalizedConfig.poster.saveLocal,
+        posterFolder: normalizedConfig.poster.folder,
         filenameTemplate: normalizedConfig.filename.template,
         filenameCollisionTemplate: normalizedConfig.filename.collisionTemplate,
       };
@@ -63,6 +65,8 @@ export class MZMediaFetcherSettingTab extends PluginSettingTab {
       targetFolder: string;
       templatePath: string;
       searchLimit: string;
+      posterSaveLocal: boolean;
+      posterFolder: string;
       filenameTemplate: string;
       filenameCollisionTemplate: string;
     }
@@ -102,6 +106,28 @@ export class MZMediaFetcherSettingTab extends PluginSettingTab {
         text.setValue(state.searchLimit);
         text.onChange((value: string) => {
           state.searchLimit = value;
+        });
+      });
+
+    new Setting(sectionEl)
+      .setName("海报存本地")
+      .setDesc("开启后会把远程海报下载到 vault 内，并在卡片里改用本地路径。")
+      .addToggle((toggle) => {
+        toggle.setValue(state.posterSaveLocal);
+        toggle.onChange((value) => {
+          state.posterSaveLocal = value;
+        });
+      });
+
+    new Setting(sectionEl)
+      .setName("本地海报目录")
+      .setDesc("开启“海报存本地”后，海报文件写入的 vault 相对目录。")
+      .addText((text) => {
+        new FolderPathSuggest(this.app, text.inputEl);
+        text.setPlaceholder("例如：00-Inbox/附件/作品海报");
+        text.setValue(state.posterFolder);
+        text.onChange((value: string) => {
+          state.posterFolder = value;
         });
       });
 

@@ -38,7 +38,7 @@ test("normalizeBilibiliShowProject extracts core project fields", () => {
     normalizeBilibiliShowProjectUrl(107593)
   );
   assert.equal(normalized.title, "杭州· ilem&林震Linz「哎嗒派送」音乐专场");
-  assert.equal(normalized.release_date, "2025-10-02 19:00");
+  assert.equal(normalized.release_date, "2025-10-02");
   assert.equal(normalized.release_year, "2025");
   assert.equal(
     normalized.cover_remote,

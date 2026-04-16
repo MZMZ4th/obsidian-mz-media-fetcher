@@ -2,7 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "fs";
 import path from "path";
+import os from "os";
 import { chooseAvailableCardPath } from "../src/core/files.ts";
+import { buildCard } from "../src/core/cards.ts";
 import { buildTemplateContext, renderTemplate } from "../src/core/template.ts";
 
 test("renderTemplate uses yaml-safe values in context", () => {
@@ -50,7 +52,7 @@ test("bilibili_show default template renders required card fields", () => {
     title_original: "",
     aliases: [],
     media_type: "",
-    release_date: "2025-10-02 19:00",
+    release_date: "2025-10-02",
     release_year: "2025",
     cover_remote: "https://i2.hdslb.com/example.jpeg",
     summary: "",
@@ -62,11 +64,78 @@ test("bilibili_show default template renders required card fields", () => {
 
   const rendered = renderTemplate(template, context);
   assert.match(rendered, /名称: "杭州· ilem&林震Linz「哎嗒派送」音乐专场"/);
-  assert.match(rendered, /发布日期: "2025-10-02 19:00"/);
+  assert.match(rendered, /发布日期: "2025-10-02"/);
   assert.match(rendered, /海报: https:\/\/i2\.hdslb\.com\/example\.jpeg/);
   assert.match(
     rendered,
     /来源链接: https:\/\/show\.bilibili\.com\/platform\/detail\.html\?id=107593/
   );
   assert.match(rendered, /网络海报: true/);
+});
+
+test("buildCard downloads poster locally when poster.saveLocal is enabled", async () => {
+  const vaultPath = fs.mkdtempSync(path.join(os.tmpdir(), "mz-media-fetcher-"));
+  const templatePath = path.join(vaultPath, "templates", "local-poster.md");
+  fs.mkdirSync(path.dirname(templatePath), { recursive: true });
+  fs.writeFileSync(
+    templatePath,
+    "海报: {{poster}}\n网络海报: {{yaml.network_poster}}\n{{cover_markdown}}\n",
+    "utf8"
+  );
+
+  const createdFolders: string[] = [];
+  const createdBinary: Array<{ filePath: string; bytes: ArrayBuffer }> = [];
+  const app = {
+    vault: {
+      adapter: {
+        exists: async () => false,
+      },
+      createFolder: async (folder: string) => {
+        createdFolders.push(folder);
+      },
+      createBinary: async (filePath: string, bytes: ArrayBuffer) => {
+        createdBinary.push({ filePath, bytes });
+      },
+    },
+  };
+
+  const card = await buildCard(
+    app,
+    { name: "test", path: vaultPath },
+    "bilibili_show",
+    {
+      title: "测试活动",
+      title_original: "",
+      aliases: [],
+      media_type: "",
+      release_date: "2025-10-02",
+      release_year: "2025",
+      cover_remote: "https://example.com/poster.jpeg",
+      summary: "",
+      platforms: [],
+      platforms_text: "",
+      bilibili_show_id: 107593,
+      bilibili_show_url: "https://show.bilibili.com/platform/detail.html?id=107593",
+    },
+    {
+      targetFolder: "00-Inbox",
+      templatePath: "templates/local-poster.md",
+      searchLimit: 8,
+      poster: {
+        saveLocal: true,
+        folder: "00-Inbox/附件/作品海报",
+      },
+      filename: {
+        template: "{{title}}",
+        collisionTemplate: "{{title}} {{release_year}} {{bilibili_show_id}}",
+      },
+    },
+    async () => new Uint8Array([1, 2, 3]).buffer
+  );
+
+  assert.deepEqual(createdFolders, ["00-Inbox", "00-Inbox/附件", "00-Inbox/附件/作品海报"]);
+  assert.equal(createdBinary.length, 1);
+  assert.equal(createdBinary[0].filePath, "00-Inbox/附件/作品海报/测试活动.jpeg");
+  assert.match(card.content, /海报: 00-Inbox\/附件\/作品海报\/测试活动\.jpeg/);
+  assert.match(card.content, /网络海报: false/);
 });

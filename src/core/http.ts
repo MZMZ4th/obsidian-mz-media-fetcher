@@ -57,3 +57,12 @@ export async function requestText(url: string, options: RequestOptions = {}): Pr
   }
   return text;
 }
+
+export async function requestBinary(url: string, options: RequestOptions = {}): Promise<ArrayBuffer> {
+  const response = await request(url, "*/*", options);
+  const buffer = response?.arrayBuffer;
+  if (!(buffer instanceof ArrayBuffer)) {
+    throw new Error("二进制资源返回格式不对。");
+  }
+  return buffer;
+}

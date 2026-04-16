@@ -6,6 +6,10 @@ export interface SourceConfig {
   targetFolder: string;
   templatePath: string;
   searchLimit: number;
+  poster: {
+    saveLocal: boolean;
+    folder: string;
+  };
   filename: {
     template: string;
     collisionTemplate: string;
