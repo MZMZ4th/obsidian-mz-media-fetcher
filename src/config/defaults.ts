@@ -5,6 +5,7 @@ export const PLUGIN_NAME = "MZ Media Fetcher";
 export const PLUGIN_VERSION = "0.2.0";
 export const HTTP_USER_AGENT = `${PLUGIN_NAME}/${PLUGIN_VERSION} (Obsidian)`;
 export const BANGUMI_API_BASE = "https://api.bgm.tv/v0";
+export const FALLBACK_POSTER_FOLDER = "00-Inbox/附件/作品海报";
 
 export const TEMPLATE_CONTENTS: Record<SourceId, string> = {
   bangumi: `---
@@ -83,9 +84,36 @@ aliases:
 
 ## 简记
 `,
+  showstart: `---
+categories: 新作品卡片
+名称: {{yaml.title}}
+原名:
+aliases:
+媒体类型:
+发布日期: {{yaml.release_date}}
+评分:
+状态: 已完成
+完成时间: {{yaml.release_date}}
+体验次数: 1
+海报: {{poster}}
+来源链接: {{showstart_url}}
+网络海报: {{yaml.network_poster}}
+---
+
+![cover|300]({{poster}})
+
+## 简介
+
+{{summary}}
+
+## 简记
+`,
 };
 
-export function getDefaultSourceConfigs(configDir = ".obsidian"): SourceConfigRoot {
+export function getDefaultSourceConfigs(
+  configDir = ".obsidian",
+  posterFolder = FALLBACK_POSTER_FOLDER
+): SourceConfigRoot {
   const pluginRoot = `${configDir}/plugins/${PLUGIN_ID}`;
   return {
     bangumi: {
@@ -94,7 +122,7 @@ export function getDefaultSourceConfigs(configDir = ".obsidian"): SourceConfigRo
       searchLimit: 8,
       poster: {
         saveLocal: false,
-        folder: "00-Inbox/附件/作品海报",
+        folder: posterFolder,
       },
       filename: {
         template: "{{title}}",
@@ -107,7 +135,7 @@ export function getDefaultSourceConfigs(configDir = ".obsidian"): SourceConfigRo
       searchLimit: 8,
       poster: {
         saveLocal: false,
-        folder: "00-Inbox/附件/作品海报",
+        folder: posterFolder,
       },
       filename: {
         template: "{{title}}",
@@ -120,11 +148,24 @@ export function getDefaultSourceConfigs(configDir = ".obsidian"): SourceConfigRo
       searchLimit: 8,
       poster: {
         saveLocal: false,
-        folder: "00-Inbox/附件/作品海报",
+        folder: posterFolder,
       },
       filename: {
         template: "{{title}}",
         collisionTemplate: "{{title}} {{release_year}} {{bilibili_show_id}}",
+      },
+    },
+    showstart: {
+      targetFolder: "00-Inbox",
+      templatePath: `${pluginRoot}/templates/showstart.md`,
+      searchLimit: 8,
+      poster: {
+        saveLocal: false,
+        folder: posterFolder,
+      },
+      filename: {
+        template: "{{title}}",
+        collisionTemplate: "{{title}} {{release_year}} {{showstart_activity_id}}",
       },
     },
   };

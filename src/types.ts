@@ -1,4 +1,4 @@
-export const SOURCE_IDS = ["bangumi", "mobygames", "bilibili_show"] as const;
+export const SOURCE_IDS = ["bangumi", "mobygames", "bilibili_show", "showstart"] as const;
 
 export type SourceId = (typeof SOURCE_IDS)[number];
 
@@ -37,6 +37,19 @@ export interface SourceSuggestItem<TItem = unknown> {
   title: string;
   subtitle: string;
   searchText: string;
+}
+
+export interface TemplateVariableDefinition {
+  key: string;
+  description: string;
+  yamlSafe?: boolean;
+}
+
+export interface MediaSourceUiMeta {
+  supportsSearch: boolean;
+  inputFieldLabel: string;
+  featureNotes: string[];
+  templateVariables: TemplateVariableDefinition[];
 }
 
 export interface MediaSource<SearchItem = unknown, DirectInput = unknown, RawDetail = unknown> {

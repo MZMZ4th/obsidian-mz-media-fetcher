@@ -3,6 +3,7 @@ import { buildCard } from "./core/cards.ts";
 import { normalizeError } from "./core/errors.ts";
 import { ensureFolderExists } from "./core/files.ts";
 import { ConfigStore } from "./config/storage.ts";
+import { MEDIA_SOURCE_UI_META_MAP } from "./source-ui-meta.ts";
 import { MEDIA_SOURCE_MAP, MEDIA_SOURCES } from "./sources/index.ts";
 import type { MediaSource, SourceId } from "./types.ts";
 import { QueryInputModal, SourceSuggestModal } from "./ui/modals.ts";
@@ -42,6 +43,7 @@ export default class MZMediaFetcherPlugin extends Plugin {
   }
 
   private async runCreateFlow(source: MediaSource): Promise<void> {
+    const sourceMeta = MEDIA_SOURCE_UI_META_MAP[source.id];
     if (this.isRunning) {
       new Notice(`${source.commandName}已在进行中。`, 5000);
       return;
@@ -59,6 +61,7 @@ export default class MZMediaFetcherPlugin extends Plugin {
         title: source.inputTitle,
         hint: source.inputHint,
         placeholder: source.inputPlaceholder,
+        fieldLabel: sourceMeta?.inputFieldLabel,
       }).openAndWait();
 
       if (!query) {
@@ -73,7 +76,12 @@ export default class MZMediaFetcherPlugin extends Plugin {
       let detail: unknown;
       if (directInput !== null && typeof directInput !== "undefined") {
         detail = await source.fetchByDirectInput(directInput as never, sourceConfig);
-      } else if (source.search && source.fetchBySearchItem && source.toSuggestItem) {
+      } else if (
+        sourceMeta?.supportsSearch &&
+        source.search &&
+        source.fetchBySearchItem &&
+        source.toSuggestItem
+      ) {
         const normalizedQuery = String(query || "").trim();
         if (!normalizedQuery) {
           throw new Error("请输入要搜索的作品名。");
@@ -96,7 +104,7 @@ export default class MZMediaFetcherPlugin extends Plugin {
 
         detail = await source.fetchBySearchItem(chosen as never, sourceConfig);
       } else {
-        throw new Error(`${source.label} 目前只支持直接输入指定链接或 ID。`);
+        throw new Error(`${source.label} 目前只支持直接输入指定详情链接或 ID。`);
       }
 
       const normalizedItem = source.normalize(detail as never);

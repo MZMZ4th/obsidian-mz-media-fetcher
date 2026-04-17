@@ -67,7 +67,7 @@ export async function chooseAvailableCardPath(
 
   let index = 2;
   while (true) {
-    candidate = `${prefix}${collisionBase} ${index}.md`;
+    candidate = `${prefix}${collisionBase}-${index}.md`;
     if (!(await exists(candidate))) {
       return candidate;
     }
@@ -92,7 +92,7 @@ export async function chooseAvailableAssetPath(
 
   let index = 2;
   while (true) {
-    candidate = `${prefix}${baseName} ${index}.${cleanExt}`;
+    candidate = `${prefix}${baseName}-${index}.${cleanExt}`;
     if (!(await exists(candidate))) {
       return candidate;
     }

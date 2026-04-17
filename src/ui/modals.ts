@@ -6,13 +6,17 @@ export class QueryInputModal extends Modal {
     title: string;
     hint: string;
     placeholder: string;
+    fieldLabel?: string;
   };
   value: string;
   result: string | null;
   resolved: boolean;
   resolvePromise?: (value: string | null) => void;
 
-  constructor(app: any, options: { title: string; hint: string; placeholder: string }) {
+  constructor(
+    app: any,
+    options: { title: string; hint: string; placeholder: string; fieldLabel?: string }
+  ) {
     super(app);
     this.options = options;
     this.value = "";
@@ -35,7 +39,9 @@ export class QueryInputModal extends Modal {
     contentEl.empty();
     contentEl.createEl("p", { text: this.options.hint });
 
-    new Setting(contentEl).setName("作品名、链接或 ID").addText((text) => {
+    new Setting(contentEl)
+      .setName(this.options.fieldLabel || "作品名、链接或 ID")
+      .addText((text) => {
       textComponent = text;
       text
         .setPlaceholder(this.options.placeholder)
@@ -50,7 +56,7 @@ export class QueryInputModal extends Modal {
           this.closeWith(this.value.trim());
         }
       });
-    });
+      });
 
     const footer = new Setting(contentEl);
     footer.addButton((button) => {

@@ -4,6 +4,7 @@ import path from "path";
 import type { App } from "obsidian";
 import {
   DEFAULT_SOURCE_CONFIGS,
+  FALLBACK_POSTER_FOLDER,
   PLUGIN_ID,
   TEMPLATE_CONTENTS,
   getDefaultSourceConfigs,
@@ -32,6 +33,14 @@ function normalizeSearchLimit(value: unknown, fallback: number): number {
     return Math.max(1, Number(fallback) || 1);
   }
   return Math.max(1, Math.round(numeric));
+}
+
+export function resolveAttachmentFolderPath(
+  appConfig: unknown,
+  fallback = FALLBACK_POSTER_FOLDER
+): string {
+  const folder = normalizePlainRelativePath((appConfig as any)?.attachmentFolderPath);
+  return folder || normalizePlainRelativePath(fallback);
 }
 
 function buildTemplateModeSourceConfig(raw: any, defaults: SourceConfig): SourceConfig {
@@ -90,9 +99,10 @@ export function normalizeTemplateEditorValues(
     posterFolder: string;
     filenameTemplate: string;
     filenameCollisionTemplate: string;
-  }
+  },
+  defaultSourceConfigs: SourceConfigRoot = DEFAULT_SOURCE_CONFIGS
 ): SourceConfig {
-  const defaults = DEFAULT_SOURCE_CONFIGS[sourceKey];
+  const defaults = defaultSourceConfigs[sourceKey];
   const targetFolder = normalizePlainRelativePath(state.targetFolder || defaults.targetFolder);
   const templatePath = normalizeVaultRelativePath(state.templatePath || defaults.templatePath);
   const searchLimit = normalizeSearchLimit(state.searchLimit, defaults.searchLimit);
@@ -160,8 +170,31 @@ export class ConfigStore {
     return getDefaultSourceConfigs(configDir);
   }
 
+  async readVaultAppConfig(vaultBasePath: string): Promise<any> {
+    const configDir = (this.app.vault as any)?.configDir || ".obsidian";
+    const appConfigPath = path.join(vaultBasePath, configDir, "app.json");
+
+    try {
+      const raw = await fsp.readFile(appConfigPath, "utf8");
+      return JSON.parse(raw);
+    } catch (_error) {
+      return {};
+    }
+  }
+
+  async getDefaultPosterFolder(vaultBasePath: string): Promise<string> {
+    const appConfig = await this.readVaultAppConfig(vaultBasePath);
+    return resolveAttachmentFolderPath(appConfig, FALLBACK_POSTER_FOLDER);
+  }
+
+  async getResolvedDefaultSourceConfigs(vaultBasePath: string): Promise<SourceConfigRoot> {
+    const configDir = (this.app.vault as any)?.configDir || ".obsidian";
+    const posterFolder = await this.getDefaultPosterFolder(vaultBasePath);
+    return getDefaultSourceConfigs(configDir, posterFolder);
+  }
+
   async ensureDefaultFiles(vaultBasePath: string): Promise<void> {
-    const defaults = this.getDefaultSourceConfigs();
+    const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
     const configPath = this.getPluginFilePath("media-fetcher-rules.json");
 
     try {
@@ -193,7 +226,7 @@ export class ConfigStore {
   }
 
   async buildInitialConfig(vaultBasePath: string): Promise<SourceConfigRoot> {
-    const defaults = this.getDefaultSourceConfigs();
+    const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
     const configDir = (this.app.vault as any)?.configDir || ".obsidian";
     const legacyPath = path.join(
       vaultBasePath,
@@ -215,6 +248,7 @@ export class ConfigStore {
       bangumi,
       mobygames: defaults.mobygames,
       bilibili_show: defaults.bilibili_show,
+      showstart: defaults.showstart,
     };
   }
 
@@ -244,7 +278,7 @@ export class ConfigStore {
 
   async loadSourceConfigs(vaultBasePath: string): Promise<SourceConfigRoot> {
     const raw = await this.loadRawSourceConfigRoot(vaultBasePath);
-    const defaults = this.getDefaultSourceConfigs();
+    const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
     const migrated = buildConfigRootFromUnknown(raw, defaults);
     const normalized = normalizeSourceConfigs(migrated, defaults);
 
@@ -270,7 +304,8 @@ export class ConfigStore {
     }
 
     const rawRoot = await this.loadRawSourceConfigRoot(vaultInfo.path);
-    const nextRoot = buildConfigRootFromUnknown(rawRoot, this.getDefaultSourceConfigs());
+    const defaults = await this.getResolvedDefaultSourceConfigs(vaultInfo.path);
+    const nextRoot = buildConfigRootFromUnknown(rawRoot, defaults);
     nextRoot[sourceKey] = values;
     await this.writeSourceConfigRoot(nextRoot);
   }

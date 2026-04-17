@@ -48,6 +48,7 @@ async function resolveCardPath(
     bangumi: "bangumi_id",
     mobygames: "mobygames_id",
     bilibili_show: "bilibili_show_id",
+    showstart: "showstart_activity_id",
   };
   const idKey = idKeyMap[sourceKey];
   const primaryName = sanitizeFileName(renderTemplate(config.filename.template, item));
@@ -55,8 +56,8 @@ async function resolveCardPath(
     renderTemplate(config.filename.collisionTemplate, item)
   );
   const itemId = String(item[idKey] || "").trim();
-  const primaryBase = primaryName || `${sourceKey} ${itemId}`.trim();
-  const collisionBase = collisionName || `${primaryBase} ${itemId}`.trim();
+  const primaryBase = primaryName || [sourceKey, itemId].filter(Boolean).join("-");
+  const collisionBase = collisionName || [primaryBase, itemId].filter(Boolean).join("-");
 
   return chooseAvailableCardPath(
     config.targetFolder,

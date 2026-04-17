@@ -6,6 +6,7 @@ import os from "os";
 import { chooseAvailableCardPath } from "../src/core/files.ts";
 import { buildCard } from "../src/core/cards.ts";
 import { buildTemplateContext, renderTemplate } from "../src/core/template.ts";
+import { sanitizeFileName } from "../src/core/text.ts";
 
 test("renderTemplate uses yaml-safe values in context", () => {
   const context = buildTemplateContext("bangumi", {
@@ -39,7 +40,12 @@ test("chooseAvailableCardPath falls back to collision template and suffix", asyn
     async (candidate) => seen.has(candidate)
   );
 
-  assert.equal(selected, "00-Inbox/Balatro 2024 217980 2.md");
+  assert.equal(selected, "00-Inbox/Balatro 2024 217980-2.md");
+});
+
+test("sanitizeFileName replaces whitespace with hyphens", () => {
+  assert.equal(sanitizeFileName("  Hello   World  "), "Hello-World");
+  assert.equal(sanitizeFileName("A/B:C"), "A-B-C");
 });
 
 test("bilibili_show default template renders required card fields", () => {
@@ -73,6 +79,39 @@ test("bilibili_show default template renders required card fields", () => {
   assert.match(rendered, /网络海报: true/);
 });
 
+test("showstart default template renders required card fields", () => {
+  const template = fs.readFileSync(
+    path.join(process.cwd(), "templates/showstart.md"),
+    "utf8"
+  );
+  const context = buildTemplateContext("showstart", {
+    title: "2024张惠妹 ASMR MAXXX 巡回演唱会-杭州站",
+    title_original: "",
+    aliases: [],
+    media_type: "",
+    release_date: "2024-09-14",
+    release_year: "2024",
+    cover_remote: "https://img.showstart.com/example-showstart-poster.jpg",
+    summary: "",
+    platforms: [],
+    platforms_text: "",
+    showstart_url: "https://wap.showstart.com/pages/activity/detail/detail?activityId=208747",
+    showstart_activity_id: 208747,
+  });
+
+  const rendered = renderTemplate(template, context);
+  assert.match(rendered, /名称: "2024张惠妹 ASMR MAXXX 巡回演唱会-杭州站"/);
+  assert.match(rendered, /发布日期: "2024-09-14"/);
+  assert.match(rendered, /海报: https:\/\/img\.showstart\.com\/example-showstart-poster\.jpg/);
+  assert.match(
+    rendered,
+    /来源链接: https:\/\/wap\.showstart\.com\/pages\/activity\/detail\/detail\?activityId=208747/
+  );
+  assert.match(rendered, /网络海报: true/);
+  assert.match(rendered, /状态: 已完成/);
+  assert.match(rendered, /完成时间: "2024-09-14"/);
+});
+
 test("buildCard downloads poster locally when poster.saveLocal is enabled", async () => {
   const vaultPath = fs.mkdtempSync(path.join(os.tmpdir(), "mz-media-fetcher-"));
   const templatePath = path.join(vaultPath, "templates", "local-poster.md");
@@ -104,7 +143,7 @@ test("buildCard downloads poster locally when poster.saveLocal is enabled", asyn
     { name: "test", path: vaultPath },
     "bilibili_show",
     {
-      title: "测试活动",
+      title: "测试 活动",
       title_original: "",
       aliases: [],
       media_type: "",
@@ -135,7 +174,8 @@ test("buildCard downloads poster locally when poster.saveLocal is enabled", asyn
 
   assert.deepEqual(createdFolders, ["00-Inbox", "00-Inbox/附件", "00-Inbox/附件/作品海报"]);
   assert.equal(createdBinary.length, 1);
-  assert.equal(createdBinary[0].filePath, "00-Inbox/附件/作品海报/测试活动.jpeg");
-  assert.match(card.content, /海报: 00-Inbox\/附件\/作品海报\/测试活动\.jpeg/);
+  assert.equal(card.filePath, "00-Inbox/测试-活动.md");
+  assert.equal(createdBinary[0].filePath, "00-Inbox/附件/作品海报/测试-活动.jpeg");
+  assert.match(card.content, /海报: 00-Inbox\/附件\/作品海报\/测试-活动\.jpeg/);
   assert.match(card.content, /网络海报: false/);
 });

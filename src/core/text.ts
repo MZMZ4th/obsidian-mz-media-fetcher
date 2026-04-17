@@ -66,8 +66,10 @@ export function safeYear(value: unknown): string {
 export function sanitizeFileName(value: unknown): string {
   return String(value || "")
     .replace(/[\\/:*?"<>|]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 export function ensureTrailingNewline(text: string): string {

@@ -7,20 +7,24 @@
 - Bangumi：支持标题搜索、直接贴条目链接、直接输入条目 ID
 - MobyGames：支持直接贴具体游戏页面链接
 - bilibili会员购：支持直接贴活动详情页链接
+- 秀动：支持直接贴活动详情页链接
 
 ## 功能概览
 
 - 保留站点专属 adapter：每个站点的数据获取、解析和归一化都放在自己的模块里
 - 使用统一的卡片生成流程：输入、搜索候选、模板渲染、重名处理、写入笔记都走同一条主链路
 - 默认模板随插件一起分发：开箱即用，不再依赖某个私有 vault 里的模板路径
-- 设置页可改：目标目录、模板路径、搜索数量、文件名模板、重名模板
-- 设置页可改：目标目录、模板路径、搜索数量、文件名模板、重名模板，以及海报是否下载到本地
+- 设置页按来源分成独立 tab：每个 tab 都直接说明这个来源支持哪些输入和能力
+- 只有 Bangumi 会显示搜索条目数；其余来源只支持详情链接，不显示搜索配置
+- 设置页会显示当前来源支持的全部模板参数，并可一键复制插件内置默认模板
+- 本地海报目录默认跟随 Obsidian 的附件目录；文件名和海报名都会自动把空格改成短横线
 
 ## 当前命令
 
 - `从 Bangumi 新建作品卡片`
 - `从 MobyGames 新建作品卡片`
 - `从 bilibili会员购新建作品卡片`
+- `从秀动新建作品卡片`
 
 ## 安装方式
 
@@ -58,6 +62,7 @@ npm test
 - `.obsidian/plugins/MZ-media-fetcher/templates/bangumi.md`
 - `.obsidian/plugins/MZ-media-fetcher/templates/mobygames.md`
 - `.obsidian/plugins/MZ-media-fetcher/templates/bilibili-show.md`
+- `.obsidian/plugins/MZ-media-fetcher/templates/showstart.md`
 
 默认配置字段只有模板模式所需的最小集合：
 
@@ -68,6 +73,12 @@ npm test
 - `poster.folder`
 - `filename.template`
 - `filename.collisionTemplate`
+
+其中：
+
+- `poster.folder` 默认跟随 `.obsidian/app.json` 里的 `attachmentFolderPath`
+- `searchLimit` 只会在支持搜索的来源上显示，当前只有 Bangumi
+- 文件名冲突后的自动后缀统一写成 `-2`、`-3`
 
 如果你之前已经有自定义模板路径，插件会继续沿用，不会强行改掉你的现有设置。
 
@@ -98,6 +109,16 @@ npm test
 插件会直接读取会员购项目详情接口，不解析页面正文。
 发布日期会统一写成 `YYYY-MM-DD`。
 
+### 秀动
+
+当前只支持直接贴具体活动详情页链接，例如：
+
+- `https://wap.showstart.com/pages/activity/detail/detail?activityId=208747`
+- `https://www.showstart.com/event/208747`
+
+插件会优先读取秀动活动详情接口，不解析页面正文。
+发布日期会统一写成 `YYYY-MM-DD`。
+
 ## 模板覆盖
 
 默认模板只是起点。你可以在插件设置页里，把 `模板路径` 改到自己喜欢的位置。
@@ -108,10 +129,15 @@ npm test
 - 再在设置页把 `templatePath` 指过去
 - 后续只维护你自己的模板
 
+设置页会直接列出当前来源支持的全部模板参数，并提供“复制默认模板”按钮。
+
 模板变量沿用统一上下文，常用字段包括：
 
 - `{{title}}`
 - `{{title_original}}`
+- `{{release_year}}`
+- `{{poster_path}}`
+- `{{yaml.title}}`
 - `{{yaml.aliases}}`
 - `{{yaml.media_type}}`
 - `{{yaml.release_date}}`
@@ -122,6 +148,7 @@ npm test
 - `{{bangumi_url}}`
 - `{{mobygames_url}}`
 - `{{bilibili_show_url}}`
+- `{{showstart_url}}`
 - `{{cover_markdown}}`
 
 ## 扩展新站点
@@ -139,7 +166,7 @@ npm test
 
 - `src/core/`：模板渲染、文件写入、通用错误处理
 - `src/config/`：默认配置、配置读写、旧配置迁移
-- `src/sources/`：Bangumi / MobyGames 的解析和 adapter
+- `src/sources/`：Bangumi / MobyGames / bilibili会员购 / 秀动 的解析和 adapter
 - `src/ui/`：输入弹窗、候选弹窗、设置页、路径补全
 - `templates/`：插件自带默认模板
 - `tests/`：解析、模板和配置测试
