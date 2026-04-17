@@ -1,6 +1,7 @@
 import fs from "fs";
 import fsp from "fs/promises";
 import path from "path";
+import { joinVaultPath, normalizeVaultPath } from "./paths.ts";
 import { ensureTrailingNewline } from "./text.ts";
 
 export async function ensureTextFile(filePath: string, content: string): Promise<void> {
@@ -32,7 +33,7 @@ export async function ensureJsonFile(filePath: string, data: unknown): Promise<v
 }
 
 export async function ensureFolderExists(vault: any, targetFolder: string): Promise<void> {
-  const normalized = String(targetFolder || "").trim().replace(/^\/+|\/+$/g, "");
+  const normalized = normalizeVaultPath(targetFolder);
   if (!normalized) return;
 
   const segments = normalized.split("/");
@@ -52,22 +53,20 @@ export async function chooseAvailableCardPath(
   collisionBase: string,
   exists: (candidate: string) => Promise<boolean>
 ): Promise<string> {
-  const cleanFolder = String(folder || "").trim().replace(/^\/+|\/+$/g, "");
-  const prefix = cleanFolder ? `${cleanFolder}/` : "";
-
-  let candidate = `${prefix}${primaryBase}.md`;
+  const cleanFolder = normalizeVaultPath(folder);
+  let candidate = joinVaultPath(cleanFolder, `${primaryBase}.md`);
   if (!(await exists(candidate))) {
     return candidate;
   }
 
-  candidate = `${prefix}${collisionBase}.md`;
+  candidate = joinVaultPath(cleanFolder, `${collisionBase}.md`);
   if (!(await exists(candidate))) {
     return candidate;
   }
 
   let index = 2;
   while (true) {
-    candidate = `${prefix}${collisionBase}-${index}.md`;
+    candidate = joinVaultPath(cleanFolder, `${collisionBase}-${index}.md`);
     if (!(await exists(candidate))) {
       return candidate;
     }
@@ -81,18 +80,16 @@ export async function chooseAvailableAssetPath(
   extension: string,
   exists: (candidate: string) => Promise<boolean>
 ): Promise<string> {
-  const cleanFolder = String(folder || "").trim().replace(/^\/+|\/+$/g, "");
+  const cleanFolder = normalizeVaultPath(folder);
   const cleanExt = String(extension || "").trim().replace(/^\./, "") || "jpg";
-  const prefix = cleanFolder ? `${cleanFolder}/` : "";
-
-  let candidate = `${prefix}${baseName}.${cleanExt}`;
+  let candidate = joinVaultPath(cleanFolder, `${baseName}.${cleanExt}`);
   if (!(await exists(candidate))) {
     return candidate;
   }
 
   let index = 2;
   while (true) {
-    candidate = `${prefix}${baseName}-${index}.${cleanExt}`;
+    candidate = joinVaultPath(cleanFolder, `${baseName}-${index}.${cleanExt}`);
     if (!(await exists(candidate))) {
       return candidate;
     }

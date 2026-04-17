@@ -5,18 +5,18 @@ import type { App } from "obsidian";
 import {
   DEFAULT_SOURCE_CONFIGS,
   FALLBACK_POSTER_FOLDER,
+  LEGACY_PLUGIN_ID,
   PLUGIN_ID,
   TEMPLATE_CONTENTS,
   getDefaultSourceConfigs,
+  getLegacyDefaultSourceConfigs,
 } from "./defaults.ts";
 import { ensureJsonFile, ensureTextFile } from "../core/files.ts";
+import { normalizeVaultPath } from "../core/paths.ts";
 import { SOURCE_IDS, type SourceConfig, type SourceConfigRoot, type SourceId, type VaultInfo } from "../types.ts";
 
 function normalizePlainRelativePath(value: unknown): string {
-  return String(value || "")
-    .replace(/\\/g, "/")
-    .trim()
-    .replace(/^\/+|\/+$/g, "");
+  return normalizeVaultPath(value);
 }
 
 function normalizeVaultRelativePath(value: unknown): string {
@@ -43,14 +43,23 @@ export function resolveAttachmentFolderPath(
   return folder || normalizePlainRelativePath(fallback);
 }
 
-function buildTemplateModeSourceConfig(raw: any, defaults: SourceConfig): SourceConfig {
+function buildTemplateModeSourceConfig(
+  raw: any,
+  defaults: SourceConfig,
+  legacyDefaults?: SourceConfig
+): SourceConfig {
   const source = raw && typeof raw === "object" ? raw : {};
   const filename = source.filename && typeof source.filename === "object" ? source.filename : {};
   const poster = source.poster && typeof source.poster === "object" ? source.poster : {};
+  const templatePath = normalizeVaultRelativePath(source.templatePath || defaults.templatePath);
+  const legacyTemplatePath = legacyDefaults?.templatePath
+    ? normalizeVaultRelativePath(legacyDefaults.templatePath)
+    : "";
 
   return {
     targetFolder: normalizePlainRelativePath(source.targetFolder || defaults.targetFolder),
-    templatePath: normalizeVaultRelativePath(source.templatePath || defaults.templatePath),
+    templatePath:
+      legacyTemplatePath && templatePath === legacyTemplatePath ? defaults.templatePath : templatePath,
     searchLimit: normalizeSearchLimit(source.searchLimit, defaults.searchLimit),
     poster: {
       saveLocal: Boolean(
@@ -67,24 +76,41 @@ function buildTemplateModeSourceConfig(raw: any, defaults: SourceConfig): Source
   };
 }
 
-function normalizeSourceConfig(raw: any, sourceKey: SourceId, defaults: SourceConfigRoot): SourceConfig {
-  return buildTemplateModeSourceConfig(raw, defaults[sourceKey]);
+function normalizeSourceConfig(
+  raw: any,
+  sourceKey: SourceId,
+  defaults: SourceConfigRoot,
+  legacyDefaults: SourceConfigRoot
+): SourceConfig {
+  return buildTemplateModeSourceConfig(raw, defaults[sourceKey], legacyDefaults[sourceKey]);
 }
 
-function normalizeSourceConfigs(raw: any, defaults: SourceConfigRoot): SourceConfigRoot {
+function normalizeSourceConfigs(
+  raw: any,
+  defaults: SourceConfigRoot,
+  legacyDefaults: SourceConfigRoot
+): SourceConfigRoot {
   if (!raw || typeof raw !== "object") {
     throw new Error("作品抓取配置格式不对。");
   }
 
   return SOURCE_IDS.reduce((result, sourceKey) => {
-    result[sourceKey] = normalizeSourceConfig(raw[sourceKey], sourceKey, defaults);
+    result[sourceKey] = normalizeSourceConfig(raw[sourceKey], sourceKey, defaults, legacyDefaults);
     return result;
   }, {} as SourceConfigRoot);
 }
 
-function buildConfigRootFromUnknown(raw: any, defaults: SourceConfigRoot): SourceConfigRoot {
+export function buildConfigRootFromUnknown(
+  raw: any,
+  defaults: SourceConfigRoot,
+  legacyDefaults: SourceConfigRoot
+): SourceConfigRoot {
   return SOURCE_IDS.reduce((result, sourceKey) => {
-    result[sourceKey] = buildTemplateModeSourceConfig(raw?.[sourceKey], defaults[sourceKey]);
+    result[sourceKey] = buildTemplateModeSourceConfig(
+      raw?.[sourceKey],
+      defaults[sourceKey],
+      legacyDefaults[sourceKey]
+    );
     return result;
   }, {} as SourceConfigRoot);
 }
@@ -165,9 +191,24 @@ export class ConfigStore {
     return path.join(vaultInfo.path, configDir, "plugins", PLUGIN_ID, fileName);
   }
 
+  getLegacyPluginFilePath(fileName: string): string {
+    const vaultInfo = this.getVaultInfo();
+    if (!vaultInfo) {
+      throw new Error("当前 vault 不支持插件配置路径。");
+    }
+
+    const configDir = (this.app.vault as any)?.configDir || ".obsidian";
+    return path.join(vaultInfo.path, configDir, "plugins", LEGACY_PLUGIN_ID, fileName);
+  }
+
   getDefaultSourceConfigs(): SourceConfigRoot {
     const configDir = (this.app.vault as any)?.configDir || ".obsidian";
     return getDefaultSourceConfigs(configDir);
+  }
+
+  getLegacyDefaultSourceConfigs(posterFolder = FALLBACK_POSTER_FOLDER): SourceConfigRoot {
+    const configDir = (this.app.vault as any)?.configDir || ".obsidian";
+    return getLegacyDefaultSourceConfigs(configDir, posterFolder);
   }
 
   async readVaultAppConfig(vaultBasePath: string): Promise<any> {
@@ -191,6 +232,11 @@ export class ConfigStore {
     const configDir = (this.app.vault as any)?.configDir || ".obsidian";
     const posterFolder = await this.getDefaultPosterFolder(vaultBasePath);
     return getDefaultSourceConfigs(configDir, posterFolder);
+  }
+
+  async getResolvedLegacyDefaultSourceConfigs(vaultBasePath: string): Promise<SourceConfigRoot> {
+    const posterFolder = await this.getDefaultPosterFolder(vaultBasePath);
+    return this.getLegacyDefaultSourceConfigs(posterFolder);
   }
 
   async ensureDefaultFiles(vaultBasePath: string): Promise<void> {
@@ -221,12 +267,42 @@ export class ConfigStore {
     relativePath: string,
     content: string
   ): Promise<void> {
-    const absolutePath = path.join(vaultBasePath, relativePath);
+    const absolutePath = path.join(vaultBasePath, normalizeVaultPath(relativePath));
     await ensureTextFile(absolutePath, content);
+  }
+
+  async loadLegacyPluginConfigRoot(vaultBasePath: string): Promise<SourceConfigRoot | null> {
+    const filePath = this.getLegacyPluginFilePath("media-fetcher-rules.json");
+    let raw = "";
+
+    try {
+      raw = await fsp.readFile(filePath, "utf8");
+    } catch (error: any) {
+      if (error?.code === "ENOENT") {
+        return null;
+      }
+      throw new Error(`读取旧插件配置失败：${LEGACY_PLUGIN_ID}/media-fetcher-rules.json`);
+    }
+
+    let parsed = null;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (_error) {
+      throw new Error(`旧插件配置不是合法 JSON：${LEGACY_PLUGIN_ID}/media-fetcher-rules.json`);
+    }
+
+    const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
+    const legacyDefaults = await this.getResolvedLegacyDefaultSourceConfigs(vaultBasePath);
+    return buildConfigRootFromUnknown(parsed, defaults, legacyDefaults);
   }
 
   async buildInitialConfig(vaultBasePath: string): Promise<SourceConfigRoot> {
     const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
+    const legacyPluginConfig = await this.loadLegacyPluginConfigRoot(vaultBasePath);
+    if (legacyPluginConfig) {
+      return legacyPluginConfig;
+    }
+
     const configDir = (this.app.vault as any)?.configDir || ".obsidian";
     const legacyPath = path.join(
       vaultBasePath,
@@ -279,8 +355,9 @@ export class ConfigStore {
   async loadSourceConfigs(vaultBasePath: string): Promise<SourceConfigRoot> {
     const raw = await this.loadRawSourceConfigRoot(vaultBasePath);
     const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
-    const migrated = buildConfigRootFromUnknown(raw, defaults);
-    const normalized = normalizeSourceConfigs(migrated, defaults);
+    const legacyDefaults = await this.getResolvedLegacyDefaultSourceConfigs(vaultBasePath);
+    const migrated = buildConfigRootFromUnknown(raw, defaults, legacyDefaults);
+    const normalized = normalizeSourceConfigs(migrated, defaults, legacyDefaults);
 
     if (JSON.stringify(raw, null, 2) !== JSON.stringify(migrated, null, 2)) {
       await this.writeSourceConfigRoot(migrated);
@@ -305,7 +382,8 @@ export class ConfigStore {
 
     const rawRoot = await this.loadRawSourceConfigRoot(vaultInfo.path);
     const defaults = await this.getResolvedDefaultSourceConfigs(vaultInfo.path);
-    const nextRoot = buildConfigRootFromUnknown(rawRoot, defaults);
+    const legacyDefaults = await this.getResolvedLegacyDefaultSourceConfigs(vaultInfo.path);
+    const nextRoot = buildConfigRootFromUnknown(rawRoot, defaults, legacyDefaults);
     nextRoot[sourceKey] = values;
     await this.writeSourceConfigRoot(nextRoot);
   }

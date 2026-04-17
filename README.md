@@ -1,49 +1,51 @@
 # MZ Media Fetcher
 
-`MZ Media Fetcher` 是一个桌面版 Obsidian 插件，用来从外部作品站点抓数据，并按模板新建作品卡片。
+Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showstart.
 
-当前支持：
+`MZ Media Fetcher` is a desktop-only Obsidian plugin that fetches public metadata from supported sources and creates template-driven notes inside your vault.
 
-- Bangumi：支持标题搜索、直接贴条目链接、直接输入条目 ID
-- MobyGames：支持直接贴具体游戏页面链接
-- bilibili会员购：支持直接贴活动详情页链接
-- 秀动：支持直接贴活动详情页链接
+`MZ Media Fetcher` 是一个仅支持桌面版 Obsidian 的插件。它会从支持的站点获取公开信息，并按模板在你的 vault 里新建作品或活动卡片。
 
-## 功能概览
+## Highlights / 功能概览
 
-- 保留站点专属 adapter：每个站点的数据获取、解析和归一化都放在自己的模块里
-- 使用统一的卡片生成流程：输入、搜索候选、模板渲染、重名处理、写入笔记都走同一条主链路
-- 默认模板随插件一起分发：开箱即用，不再依赖某个私有 vault 里的模板路径
-- 设置页按来源分成独立 tab：每个 tab 都直接说明这个来源支持哪些输入和能力
-- 只有 Bangumi 会显示搜索条目数；其余来源只支持详情链接，不显示搜索配置
-- 设置页会显示当前来源支持的全部模板参数，并可一键复制插件内置默认模板
-- 本地海报目录默认跟随 Obsidian 的附件目录；文件名和海报名都会自动把空格改成短横线
+- Bangumi supports title search, subject links, and numeric IDs.
+- MobyGames supports direct game detail links.
+- Bilibili Show supports direct event detail links.
+- Showstart supports direct event detail links.
+- Each source keeps its own parser and adapter, while note creation follows one shared pipeline.
+- The settings tab is split by source, and only Bangumi exposes search-limit controls.
+- Built-in templates ship with the plugin, and you can copy them into your own template files.
+- Poster filenames and note filenames normalize whitespace into hyphenated names.
 
-## 当前命令
+- Bangumi 支持标题搜索、条目链接和数字 ID。
+- MobyGames 支持直接粘贴游戏详情页链接。
+- bilibili 会员购支持直接粘贴活动详情页链接。
+- 秀动支持直接粘贴活动详情页链接。
+- 每个来源保留自己的解析模块，但卡片生成共用一条主链路。
+- 设置页按来源拆分，只有 Bangumi 会显示搜索条目数设置。
+- 插件自带默认模板，也可以一键复制后改成你自己的模板。
+- 笔记文件名和海报文件名都会把空白统一收成短横线。
+
+## Commands / 当前命令
 
 - `从 Bangumi 新建作品卡片`
 - `从 MobyGames 新建作品卡片`
 - `从 bilibili会员购新建作品卡片`
 - `从秀动新建作品卡片`
 
-## 安装方式
+## Install / 安装
 
-### 直接放进现有 vault
+### Community release assets / 使用发布资产安装
 
-1. 把这个仓库放到你的 vault 目录下：
-   `YOUR_VAULT/.obsidian/plugins/MZ-media-fetcher`
-2. 在这个目录执行：
+1. Download `main.js`, `manifest.json`, `styles.css`, and `versions.json` from the latest GitHub release.
+2. Put them in `YOUR_VAULT/.obsidian/plugins/mz-media-fetcher`.
+3. Enable `MZ Media Fetcher` in `Settings -> Community plugins`.
 
-```bash
-npm install
-npm run build
-```
+1. 从最新 GitHub release 下载 `main.js`、`manifest.json`、`styles.css` 和 `versions.json`。
+2. 把它们放进 `YOUR_VAULT/.obsidian/plugins/mz-media-fetcher`。
+3. 在 `设置 -> 第三方插件` 里启用 `MZ Media Fetcher`。
 
-3. 打开 Obsidian 的 `设置 -> 第三方插件`，启用 `MZ Media Fetcher`
-
-### 从当前仓库开发
-
-仓库根目录本身就是插件目录，构建产物会直接输出到根目录的 `main.js`。
+### From source / 从源码运行
 
 ```bash
 npm install
@@ -51,128 +53,132 @@ npm run build
 npm test
 ```
 
-## 默认配置
+The repository root is the plugin root, so the build output lands directly in `main.js`.
 
-插件会在自己的目录下维护配置文件：
+这个仓库根目录本身就是插件目录，所以构建产物会直接输出到 `main.js`。
 
-- `media-fetcher-rules.json`
+## Defaults / 默认行为
 
-默认模板会放在：
+- The plugin stores its runtime config in `media-fetcher-rules.json` under the plugin folder.
+- Built-in templates live under `.obsidian/plugins/mz-media-fetcher/templates/`.
+- The default local poster folder follows `attachmentFolderPath` from `.obsidian/app.json`.
+- Existing custom `templatePath` values are preserved during upgrades.
+- If the vault still has the old plugin id directory `MZ-media-fetcher`, the plugin imports its existing config on first launch and rewrites only the old built-in template paths.
 
-- `.obsidian/plugins/MZ-media-fetcher/templates/bangumi.md`
-- `.obsidian/plugins/MZ-media-fetcher/templates/mobygames.md`
-- `.obsidian/plugins/MZ-media-fetcher/templates/bilibili-show.md`
-- `.obsidian/plugins/MZ-media-fetcher/templates/showstart.md`
+- 插件会把运行配置保存在插件目录下的 `media-fetcher-rules.json`。
+- 插件自带模板默认放在 `.obsidian/plugins/mz-media-fetcher/templates/`。
+- 本地海报目录默认跟随 `.obsidian/app.json` 里的 `attachmentFolderPath`。
+- 升级时，如果你已经有自定义 `templatePath`，插件会继续保留。
+- 如果你的 vault 里还保留旧插件目录 `MZ-media-fetcher`，插件会在首次启动时导入旧配置，并且只改写旧的内置模板路径，不会动你自己的自定义模板路径。
 
-默认配置字段只有模板模式所需的最小集合：
-
-- `targetFolder`
-- `templatePath`
-- `searchLimit`
-- `poster.saveLocal`
-- `poster.folder`
-- `filename.template`
-- `filename.collisionTemplate`
-
-其中：
-
-- `poster.folder` 默认跟随 `.obsidian/app.json` 里的 `attachmentFolderPath`
-- `searchLimit` 只会在支持搜索的来源上显示，当前只有 Bangumi
-- 文件名冲突后的自动后缀统一写成 `-2`、`-3`
-
-如果你之前已经有自定义模板路径，插件会继续沿用，不会强行改掉你的现有设置。
-
-## 使用方式
+## Usage / 使用方式
 
 ### Bangumi
 
-支持三种输入：
+- Search by title.
+- Paste a subject URL such as `https://bgm.tv/subject/328609`.
+- Enter a numeric subject ID such as `328609`.
 
-- 直接输入作品名，插件会先搜索，再让你选条目
-- 直接贴条目链接，例如 `https://bgm.tv/subject/328609`
-- 直接输入数字 ID，例如 `328609`
+- 支持直接搜作品名。
+- 支持粘贴条目链接，例如 `https://bgm.tv/subject/328609`。
+- 支持直接输入数字 ID，例如 `328609`。
 
 ### MobyGames
 
-当前只支持直接贴具体游戏页面链接，例如：
+- Paste a concrete game URL such as `https://www.mobygames.com/game/217980/balatro/`.
+- Search pages and list pages are not supported.
 
-- `https://www.mobygames.com/game/217980/balatro/`
+- 直接粘贴具体游戏详情页链接，例如 `https://www.mobygames.com/game/217980/balatro/`。
+- 不支持搜索页、列表页或站内标题搜索。
 
-不支持搜索页、列表页或站内标题搜索。
+### Bilibili Show
 
-### bilibili会员购
+- Paste a concrete event URL such as `https://show.bilibili.com/platform/detail.html?id=107593`.
+- Release dates are normalized to `YYYY-MM-DD`.
 
-当前只支持直接贴具体活动详情页链接，例如：
+- 直接粘贴活动详情页链接，例如 `https://show.bilibili.com/platform/detail.html?id=107593`。
+- 发布日期会统一写成 `YYYY-MM-DD`。
 
-- `https://show.bilibili.com/platform/detail.html?id=107593`
+### Showstart
 
-插件会直接读取会员购项目详情接口，不解析页面正文。
-发布日期会统一写成 `YYYY-MM-DD`。
+- Paste a concrete event URL such as `https://wap.showstart.com/pages/activity/detail/detail?activityId=208747`.
+- Release dates are normalized to `YYYY-MM-DD`.
 
-### 秀动
+- 直接粘贴活动详情页链接，例如 `https://wap.showstart.com/pages/activity/detail/detail?activityId=208747`。
+- 发布日期会统一写成 `YYYY-MM-DD`。
 
-当前只支持直接贴具体活动详情页链接，例如：
+## Templates / 模板
 
-- `https://wap.showstart.com/pages/activity/detail/detail?activityId=208747`
-- `https://www.showstart.com/event/208747`
-
-插件会优先读取秀动活动详情接口，不解析页面正文。
-发布日期会统一写成 `YYYY-MM-DD`。
-
-## 模板覆盖
-
-默认模板只是起点。你可以在插件设置页里，把 `模板路径` 改到自己喜欢的位置。
-
-推荐做法：
-
-- 先复制插件自带模板到你自己的模板目录
-- 再在设置页把 `templatePath` 指过去
-- 后续只维护你自己的模板
-
-设置页会直接列出当前来源支持的全部模板参数，并提供“复制默认模板”按钮。
-
-模板变量沿用统一上下文，常用字段包括：
+Common variables include:
 
 - `{{title}}`
 - `{{title_original}}`
 - `{{release_year}}`
 - `{{poster_path}}`
+- `{{poster}}`
+- `{{summary}}`
+- `{{platforms_text}}`
+- `{{cover_markdown}}`
 - `{{yaml.title}}`
 - `{{yaml.aliases}}`
 - `{{yaml.media_type}}`
 - `{{yaml.release_date}}`
-- `{{poster}}`
 - `{{yaml.network_poster}}`
-- `{{summary}}`
-- `{{platforms_text}}`
 - `{{bangumi_url}}`
 - `{{mobygames_url}}`
 - `{{bilibili_show_url}}`
 - `{{showstart_url}}`
+
+常用模板变量包括：
+
+- `{{title}}`
+- `{{title_original}}`
+- `{{release_year}}`
+- `{{poster_path}}`
+- `{{poster}}`
+- `{{summary}}`
+- `{{platforms_text}}`
 - `{{cover_markdown}}`
+- `{{yaml.title}}`
+- `{{yaml.aliases}}`
+- `{{yaml.media_type}}`
+- `{{yaml.release_date}}`
+- `{{yaml.network_poster}}`
+- `{{bangumi_url}}`
+- `{{mobygames_url}}`
+- `{{bilibili_show_url}}`
+- `{{showstart_url}}`
 
-## 扩展新站点
+## Network & Privacy / 网络与隐私
 
-当前代码结构已经按“通用流程 + source adapter”拆开。后续新增站点时，优先按下面的方式加：
+- Bangumi requests use the public Bangumi API.
+- MobyGames requests fetch the public game detail page HTML.
+- Bilibili Show requests use the public project detail API behind the event page.
+- Showstart requests first fetch an anonymous guest token, then request the event detail API used by the public page.
+- The plugin does not send telemetry.
+- The plugin only writes files inside the current vault.
+- The plugin does not read files outside the current vault.
 
-1. 在 `src/sources/` 新增一个纯解析模块
-2. 再新增一个 adapter 模块，负责请求和注册命令元信息
-3. 在 `src/sources/index.ts` 注册
-4. 复用现有的配置、设置页和卡片写入逻辑
+- Bangumi 走公开 Bangumi API。
+- MobyGames 读取公开游戏详情页 HTML。
+- bilibili 会员购走活动详情页背后的公开项目详情接口。
+- 秀动会先获取匿名访客 token，再请求公开页面实际使用的活动详情接口。
+- 插件不会发送遥测。
+- 插件只会在当前 vault 内写文件。
+- 插件不会读取当前 vault 之外的文件。
 
-这样新增站点时，不需要再复制整条命令链。
+## Development / 开发结构
 
-## 开发结构
+- `src/core/`: shared note building, file handling, path normalization, and template rendering
+- `src/config/`: defaults, config migration, and config storage
+- `src/sources/`: Bangumi, MobyGames, Bilibili Show, and Showstart adapters
+- `src/ui/`: modals, settings tab, and path suggestions
+- `templates/`: bundled default templates
+- `tests/`: parser, template, config, and migration tests
 
-- `src/core/`：模板渲染、文件写入、通用错误处理
-- `src/config/`：默认配置、配置读写、旧配置迁移
-- `src/sources/`：Bangumi / MobyGames / bilibili会员购 / 秀动 的解析和 adapter
-- `src/ui/`：输入弹窗、候选弹窗、设置页、路径补全
-- `templates/`：插件自带默认模板
-- `tests/`：解析、模板和配置测试
-
-## 兼容说明
-
-- 旧的 `rules` 配置不会再进入主运行链路；插件会在读取时自动收敛成模板模式配置
-- 已有自定义 `templatePath` 会保留
-- 插件继续只支持桌面版 Obsidian
+- `src/core/`：通用卡片生成、文件处理、路径归一化和模板渲染
+- `src/config/`：默认配置、配置迁移和配置读写
+- `src/sources/`：Bangumi、MobyGames、bilibili 会员购、秀动的来源适配器
+- `src/ui/`：弹窗、设置页和路径补全
+- `templates/`：插件内置默认模板
+- `tests/`：解析、模板、配置和迁移测试

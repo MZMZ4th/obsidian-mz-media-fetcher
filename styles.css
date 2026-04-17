@@ -1,0 +1,22 @@
+.mz-media-fetcher-intro {
+  margin-bottom: 1rem;
+}
+
+.mz-media-fetcher-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.mz-media-fetcher-tabs button {
+  margin: 0;
+}
+
+.mz-media-fetcher-section {
+  margin-bottom: 2rem;
+}
+
+.mz-media-fetcher-list {
+  margin: 0.5rem 0 1rem 1.25rem;
+}

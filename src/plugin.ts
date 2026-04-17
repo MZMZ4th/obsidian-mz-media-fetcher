@@ -3,6 +3,7 @@ import { buildCard } from "./core/cards.ts";
 import { normalizeError } from "./core/errors.ts";
 import { ensureFolderExists } from "./core/files.ts";
 import { ConfigStore } from "./config/storage.ts";
+import { PLUGIN_ID } from "./config/defaults.ts";
 import { MEDIA_SOURCE_UI_META_MAP } from "./source-ui-meta.ts";
 import { MEDIA_SOURCE_MAP, MEDIA_SOURCES } from "./sources/index.ts";
 import type { MediaSource, SourceId } from "./types.ts";
@@ -115,7 +116,7 @@ export default class MZMediaFetcherPlugin extends Plugin {
       await this.app.workspace.getLeaf(true).openFile(file);
       new Notice(`作品卡片已创建：${normalizedItem.title}`, 8000);
     } catch (error) {
-      console.error("[MZ-media-fetcher]", error);
+      console.error(`[${PLUGIN_ID}]`, error);
       new Notice(`新建作品卡片失败：${normalizeError(error)}`, 12000);
     } finally {
       this.isRunning = false;

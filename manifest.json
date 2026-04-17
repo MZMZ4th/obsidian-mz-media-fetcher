@@ -1,9 +1,9 @@
 {
-  "id": "MZ-media-fetcher",
+  "id": "mz-media-fetcher",
   "name": "MZ Media Fetcher",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "minAppVersion": "1.8.0",
-  "description": "Create media notes from Bangumi and MobyGames with isolated source adapters and template-driven output.",
+  "description": "Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showstart.",
   "author": "MZMZ4th",
   "authorUrl": "https://github.com/MZMZ4th",
   "isDesktopOnly": true

@@ -2,6 +2,7 @@ import fsp from "fs/promises";
 import path from "path";
 import type { SourceConfig, NormalizedMediaItem, SourceId, VaultInfo } from "../types.ts";
 import { chooseAvailableAssetPath, chooseAvailableCardPath, ensureFolderExists } from "./files.ts";
+import { normalizeVaultPath } from "./paths.ts";
 import { buildTemplateContext, renderTemplate } from "./template.ts";
 import { ensureTrailingNewline, sanitizeFileName } from "./text.ts";
 
@@ -26,13 +27,13 @@ export async function buildCard(
 ): Promise<BuiltCard> {
   const filePath = await resolveCardPath(app, config, item, sourceKey);
   const resolvedItem = await resolvePosterAsset(app, config, item, filePath, downloadBinary);
-  const templatePath = path.join(vaultInfo.path, config.templatePath);
+  const templatePath = path.join(vaultInfo.path, normalizeVaultPath(config.templatePath));
   const template = await fsp.readFile(templatePath, "utf8");
   const renderContext = buildTemplateContext(sourceKey, resolvedItem);
   const content = renderTemplate(template, renderContext).trim();
 
   return {
-    folderPath: config.targetFolder,
+    folderPath: normalizeVaultPath(config.targetFolder),
     filePath,
     content: ensureTrailingNewline(content),
   };

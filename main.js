@@ -29,13 +29,44 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
+// src/core/paths.ts
+function fallbackNormalizePath(value) {
+  return String(value || "").replace(/\\/g, "/").replace(/\/{2,}/g, "/").trim();
+}
+function getRuntimeNormalizePath() {
+  const maybeRequire = globalThis.require;
+  if (typeof maybeRequire === "function") {
+    try {
+      const obsidian = maybeRequire("obsidian");
+      if (typeof obsidian?.normalizePath === "function") {
+        return obsidian.normalizePath;
+      }
+    } catch (_error) {
+    }
+  }
+  return fallbackNormalizePath;
+}
+function normalizeVaultPath(value) {
+  const normalized = getRuntimeNormalizePath()(String(value ?? ""));
+  return normalized.replace(/^\/+|\/+$/g, "");
+}
+function joinVaultPath(...segments) {
+  return normalizeVaultPath(
+    segments.map((segment) => String(segment ?? "").trim()).filter(Boolean).join("/")
+  );
+}
+var init_paths = __esm({
+  "src/core/paths.ts"() {
+  }
+});
+
 // src/config/defaults.ts
-function getDefaultSourceConfigs(configDir = ".obsidian", posterFolder = FALLBACK_POSTER_FOLDER) {
-  const pluginRoot = `${configDir}/plugins/${PLUGIN_ID}`;
+function buildSourceConfigs(pluginId, configDir = ".obsidian", posterFolder = FALLBACK_POSTER_FOLDER) {
+  const pluginRoot = joinVaultPath(configDir, "plugins", pluginId);
   return {
     bangumi: {
       targetFolder: "00-Inbox",
-      templatePath: `${pluginRoot}/templates/bangumi.md`,
+      templatePath: joinVaultPath(pluginRoot, "templates", "bangumi.md"),
       searchLimit: 8,
       poster: {
         saveLocal: false,
@@ -48,7 +79,7 @@ function getDefaultSourceConfigs(configDir = ".obsidian", posterFolder = FALLBAC
     },
     mobygames: {
       targetFolder: "00-Inbox",
-      templatePath: `${pluginRoot}/templates/mobygames.md`,
+      templatePath: joinVaultPath(pluginRoot, "templates", "mobygames.md"),
       searchLimit: 8,
       poster: {
         saveLocal: false,
@@ -61,7 +92,7 @@ function getDefaultSourceConfigs(configDir = ".obsidian", posterFolder = FALLBAC
     },
     bilibili_show: {
       targetFolder: "00-Inbox",
-      templatePath: `${pluginRoot}/templates/bilibili-show.md`,
+      templatePath: joinVaultPath(pluginRoot, "templates", "bilibili-show.md"),
       searchLimit: 8,
       poster: {
         saveLocal: false,
@@ -74,7 +105,7 @@ function getDefaultSourceConfigs(configDir = ".obsidian", posterFolder = FALLBAC
     },
     showstart: {
       targetFolder: "00-Inbox",
-      templatePath: `${pluginRoot}/templates/showstart.md`,
+      templatePath: joinVaultPath(pluginRoot, "templates", "showstart.md"),
       searchLimit: 8,
       poster: {
         saveLocal: false,
@@ -87,12 +118,20 @@ function getDefaultSourceConfigs(configDir = ".obsidian", posterFolder = FALLBAC
     }
   };
 }
-var PLUGIN_ID, PLUGIN_NAME, PLUGIN_VERSION, HTTP_USER_AGENT, BANGUMI_API_BASE, FALLBACK_POSTER_FOLDER, TEMPLATE_CONTENTS, DEFAULT_SOURCE_CONFIGS;
+function getDefaultSourceConfigs(configDir = ".obsidian", posterFolder = FALLBACK_POSTER_FOLDER) {
+  return buildSourceConfigs(PLUGIN_ID, configDir, posterFolder);
+}
+function getLegacyDefaultSourceConfigs(configDir = ".obsidian", posterFolder = FALLBACK_POSTER_FOLDER) {
+  return buildSourceConfigs(LEGACY_PLUGIN_ID, configDir, posterFolder);
+}
+var PLUGIN_ID, LEGACY_PLUGIN_ID, PLUGIN_NAME, PLUGIN_VERSION, HTTP_USER_AGENT, BANGUMI_API_BASE, FALLBACK_POSTER_FOLDER, TEMPLATE_CONTENTS, DEFAULT_SOURCE_CONFIGS;
 var init_defaults = __esm({
   "src/config/defaults.ts"() {
-    PLUGIN_ID = "MZ-media-fetcher";
+    init_paths();
+    PLUGIN_ID = "mz-media-fetcher";
+    LEGACY_PLUGIN_ID = "MZ-media-fetcher";
     PLUGIN_NAME = "MZ Media Fetcher";
-    PLUGIN_VERSION = "0.2.0";
+    PLUGIN_VERSION = "0.3.0";
     HTTP_USER_AGENT = `${PLUGIN_NAME}/${PLUGIN_VERSION} (Obsidian)`;
     BANGUMI_API_BASE = "https://api.bgm.tv/v0";
     FALLBACK_POSTER_FOLDER = "00-Inbox/\u9644\u4EF6/\u4F5C\u54C1\u6D77\u62A5";
@@ -286,6 +325,7 @@ var import_path2 = __toESM(require("path"));
 var import_fs = __toESM(require("fs"));
 var import_promises = __toESM(require("fs/promises"));
 var import_path = __toESM(require("path"));
+init_paths();
 
 // src/core/text.ts
 var MONTH_MAP = {
@@ -386,7 +426,7 @@ async function ensureJsonFile(filePath, data) {
 `, "utf8");
 }
 async function ensureFolderExists(vault, targetFolder) {
-  const normalized = String(targetFolder || "").trim().replace(/^\/+|\/+$/g, "");
+  const normalized = normalizeVaultPath(targetFolder);
   if (!normalized) return;
   const segments = normalized.split("/");
   let current = "";
@@ -398,19 +438,18 @@ async function ensureFolderExists(vault, targetFolder) {
   }
 }
 async function chooseAvailableCardPath(folder, primaryBase, collisionBase, exists) {
-  const cleanFolder = String(folder || "").trim().replace(/^\/+|\/+$/g, "");
-  const prefix = cleanFolder ? `${cleanFolder}/` : "";
-  let candidate = `${prefix}${primaryBase}.md`;
+  const cleanFolder = normalizeVaultPath(folder);
+  let candidate = joinVaultPath(cleanFolder, `${primaryBase}.md`);
   if (!await exists(candidate)) {
     return candidate;
   }
-  candidate = `${prefix}${collisionBase}.md`;
+  candidate = joinVaultPath(cleanFolder, `${collisionBase}.md`);
   if (!await exists(candidate)) {
     return candidate;
   }
   let index = 2;
   while (true) {
-    candidate = `${prefix}${collisionBase}-${index}.md`;
+    candidate = joinVaultPath(cleanFolder, `${collisionBase}-${index}.md`);
     if (!await exists(candidate)) {
       return candidate;
     }
@@ -418,22 +457,24 @@ async function chooseAvailableCardPath(folder, primaryBase, collisionBase, exist
   }
 }
 async function chooseAvailableAssetPath(folder, baseName, extension, exists) {
-  const cleanFolder = String(folder || "").trim().replace(/^\/+|\/+$/g, "");
+  const cleanFolder = normalizeVaultPath(folder);
   const cleanExt = String(extension || "").trim().replace(/^\./, "") || "jpg";
-  const prefix = cleanFolder ? `${cleanFolder}/` : "";
-  let candidate = `${prefix}${baseName}.${cleanExt}`;
+  let candidate = joinVaultPath(cleanFolder, `${baseName}.${cleanExt}`);
   if (!await exists(candidate)) {
     return candidate;
   }
   let index = 2;
   while (true) {
-    candidate = `${prefix}${baseName}-${index}.${cleanExt}`;
+    candidate = joinVaultPath(cleanFolder, `${baseName}-${index}.${cleanExt}`);
     if (!await exists(candidate)) {
       return candidate;
     }
     index += 1;
   }
 }
+
+// src/core/cards.ts
+init_paths();
 
 // src/core/template.ts
 function renderYamlScalar(value, indentLevel) {
@@ -507,12 +548,12 @@ async function defaultDownloadBinary(url) {
 async function buildCard(app, vaultInfo, sourceKey, item, config, downloadBinary = defaultDownloadBinary) {
   const filePath = await resolveCardPath(app, config, item, sourceKey);
   const resolvedItem = await resolvePosterAsset(app, config, item, filePath, downloadBinary);
-  const templatePath = import_path2.default.join(vaultInfo.path, config.templatePath);
+  const templatePath = import_path2.default.join(vaultInfo.path, normalizeVaultPath(config.templatePath));
   const template = await import_promises2.default.readFile(templatePath, "utf8");
   const renderContext = buildTemplateContext(sourceKey, resolvedItem);
   const content = renderTemplate(template, renderContext).trim();
   return {
-    folderPath: config.targetFolder,
+    folderPath: normalizeVaultPath(config.targetFolder),
     filePath,
     content: ensureTrailingNewline(content)
   };
@@ -590,13 +631,14 @@ var import_fs2 = __toESM(require("fs"));
 var import_promises3 = __toESM(require("fs/promises"));
 var import_path3 = __toESM(require("path"));
 init_defaults();
+init_paths();
 
 // src/types.ts
 var SOURCE_IDS = ["bangumi", "mobygames", "bilibili_show", "showstart"];
 
 // src/config/storage.ts
 function normalizePlainRelativePath(value) {
-  return String(value || "").replace(/\\/g, "/").trim().replace(/^\/+|\/+$/g, "");
+  return normalizeVaultPath(value);
 }
 function normalizeVaultRelativePath(value) {
   const normalized = normalizePlainRelativePath(value);
@@ -616,13 +658,15 @@ function resolveAttachmentFolderPath(appConfig, fallback = FALLBACK_POSTER_FOLDE
   const folder = normalizePlainRelativePath(appConfig?.attachmentFolderPath);
   return folder || normalizePlainRelativePath(fallback);
 }
-function buildTemplateModeSourceConfig(raw, defaults) {
+function buildTemplateModeSourceConfig(raw, defaults, legacyDefaults) {
   const source = raw && typeof raw === "object" ? raw : {};
   const filename = source.filename && typeof source.filename === "object" ? source.filename : {};
   const poster = source.poster && typeof source.poster === "object" ? source.poster : {};
+  const templatePath = normalizeVaultRelativePath(source.templatePath || defaults.templatePath);
+  const legacyTemplatePath = legacyDefaults?.templatePath ? normalizeVaultRelativePath(legacyDefaults.templatePath) : "";
   return {
     targetFolder: normalizePlainRelativePath(source.targetFolder || defaults.targetFolder),
-    templatePath: normalizeVaultRelativePath(source.templatePath || defaults.templatePath),
+    templatePath: legacyTemplatePath && templatePath === legacyTemplatePath ? defaults.templatePath : templatePath,
     searchLimit: normalizeSearchLimit(source.searchLimit, defaults.searchLimit),
     poster: {
       saveLocal: Boolean(
@@ -638,21 +682,25 @@ function buildTemplateModeSourceConfig(raw, defaults) {
     }
   };
 }
-function normalizeSourceConfig(raw, sourceKey, defaults) {
-  return buildTemplateModeSourceConfig(raw, defaults[sourceKey]);
+function normalizeSourceConfig(raw, sourceKey, defaults, legacyDefaults) {
+  return buildTemplateModeSourceConfig(raw, defaults[sourceKey], legacyDefaults[sourceKey]);
 }
-function normalizeSourceConfigs(raw, defaults) {
+function normalizeSourceConfigs(raw, defaults, legacyDefaults) {
   if (!raw || typeof raw !== "object") {
     throw new Error("\u4F5C\u54C1\u6293\u53D6\u914D\u7F6E\u683C\u5F0F\u4E0D\u5BF9\u3002");
   }
   return SOURCE_IDS.reduce((result, sourceKey) => {
-    result[sourceKey] = normalizeSourceConfig(raw[sourceKey], sourceKey, defaults);
+    result[sourceKey] = normalizeSourceConfig(raw[sourceKey], sourceKey, defaults, legacyDefaults);
     return result;
   }, {});
 }
-function buildConfigRootFromUnknown(raw, defaults) {
+function buildConfigRootFromUnknown(raw, defaults, legacyDefaults) {
   return SOURCE_IDS.reduce((result, sourceKey) => {
-    result[sourceKey] = buildTemplateModeSourceConfig(raw?.[sourceKey], defaults[sourceKey]);
+    result[sourceKey] = buildTemplateModeSourceConfig(
+      raw?.[sourceKey],
+      defaults[sourceKey],
+      legacyDefaults[sourceKey]
+    );
     return result;
   }, {});
 }
@@ -709,9 +757,21 @@ var ConfigStore = class {
     const configDir = this.app.vault?.configDir || ".obsidian";
     return import_path3.default.join(vaultInfo.path, configDir, "plugins", PLUGIN_ID, fileName);
   }
+  getLegacyPluginFilePath(fileName) {
+    const vaultInfo = this.getVaultInfo();
+    if (!vaultInfo) {
+      throw new Error("\u5F53\u524D vault \u4E0D\u652F\u6301\u63D2\u4EF6\u914D\u7F6E\u8DEF\u5F84\u3002");
+    }
+    const configDir = this.app.vault?.configDir || ".obsidian";
+    return import_path3.default.join(vaultInfo.path, configDir, "plugins", LEGACY_PLUGIN_ID, fileName);
+  }
   getDefaultSourceConfigs() {
     const configDir = this.app.vault?.configDir || ".obsidian";
     return getDefaultSourceConfigs(configDir);
+  }
+  getLegacyDefaultSourceConfigs(posterFolder = FALLBACK_POSTER_FOLDER) {
+    const configDir = this.app.vault?.configDir || ".obsidian";
+    return getLegacyDefaultSourceConfigs(configDir, posterFolder);
   }
   async readVaultAppConfig(vaultBasePath) {
     const configDir = this.app.vault?.configDir || ".obsidian";
@@ -731,6 +791,10 @@ var ConfigStore = class {
     const configDir = this.app.vault?.configDir || ".obsidian";
     const posterFolder = await this.getDefaultPosterFolder(vaultBasePath);
     return getDefaultSourceConfigs(configDir, posterFolder);
+  }
+  async getResolvedLegacyDefaultSourceConfigs(vaultBasePath) {
+    const posterFolder = await this.getDefaultPosterFolder(vaultBasePath);
+    return this.getLegacyDefaultSourceConfigs(posterFolder);
   }
   async ensureDefaultFiles(vaultBasePath) {
     const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
@@ -753,11 +817,36 @@ var ConfigStore = class {
     }
   }
   async ensureTemplateExists(vaultBasePath, relativePath, content) {
-    const absolutePath = import_path3.default.join(vaultBasePath, relativePath);
+    const absolutePath = import_path3.default.join(vaultBasePath, normalizeVaultPath(relativePath));
     await ensureTextFile(absolutePath, content);
+  }
+  async loadLegacyPluginConfigRoot(vaultBasePath) {
+    const filePath = this.getLegacyPluginFilePath("media-fetcher-rules.json");
+    let raw = "";
+    try {
+      raw = await import_promises3.default.readFile(filePath, "utf8");
+    } catch (error) {
+      if (error?.code === "ENOENT") {
+        return null;
+      }
+      throw new Error(`\u8BFB\u53D6\u65E7\u63D2\u4EF6\u914D\u7F6E\u5931\u8D25\uFF1A${LEGACY_PLUGIN_ID}/media-fetcher-rules.json`);
+    }
+    let parsed = null;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (_error) {
+      throw new Error(`\u65E7\u63D2\u4EF6\u914D\u7F6E\u4E0D\u662F\u5408\u6CD5 JSON\uFF1A${LEGACY_PLUGIN_ID}/media-fetcher-rules.json`);
+    }
+    const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
+    const legacyDefaults = await this.getResolvedLegacyDefaultSourceConfigs(vaultBasePath);
+    return buildConfigRootFromUnknown(parsed, defaults, legacyDefaults);
   }
   async buildInitialConfig(vaultBasePath) {
     const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
+    const legacyPluginConfig = await this.loadLegacyPluginConfigRoot(vaultBasePath);
+    if (legacyPluginConfig) {
+      return legacyPluginConfig;
+    }
     const configDir = this.app.vault?.configDir || ".obsidian";
     const legacyPath = import_path3.default.join(
       vaultBasePath,
@@ -804,8 +893,9 @@ var ConfigStore = class {
   async loadSourceConfigs(vaultBasePath) {
     const raw = await this.loadRawSourceConfigRoot(vaultBasePath);
     const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
-    const migrated = buildConfigRootFromUnknown(raw, defaults);
-    const normalized = normalizeSourceConfigs(migrated, defaults);
+    const legacyDefaults = await this.getResolvedLegacyDefaultSourceConfigs(vaultBasePath);
+    const migrated = buildConfigRootFromUnknown(raw, defaults, legacyDefaults);
+    const normalized = normalizeSourceConfigs(migrated, defaults, legacyDefaults);
     if (JSON.stringify(raw, null, 2) !== JSON.stringify(migrated, null, 2)) {
       await this.writeSourceConfigRoot(migrated);
     }
@@ -825,11 +915,15 @@ var ConfigStore = class {
     }
     const rawRoot = await this.loadRawSourceConfigRoot(vaultInfo.path);
     const defaults = await this.getResolvedDefaultSourceConfigs(vaultInfo.path);
-    const nextRoot = buildConfigRootFromUnknown(rawRoot, defaults);
+    const legacyDefaults = await this.getResolvedLegacyDefaultSourceConfigs(vaultInfo.path);
+    const nextRoot = buildConfigRootFromUnknown(rawRoot, defaults, legacyDefaults);
     nextRoot[sourceKey] = values;
     await this.writeSourceConfigRoot(nextRoot);
   }
 };
+
+// src/plugin.ts
+init_defaults();
 
 // src/source-ui-meta.ts
 var COMMON_TEMPLATE_VARIABLES = [
@@ -1905,8 +1999,8 @@ var MZMediaFetcherSettingTab = class extends import_obsidian4.PluginSettingTab {
   async render(refreshFromDisk = false) {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "MZ Media Fetcher" });
-    containerEl.createEl("p", {
+    new import_obsidian4.Setting(containerEl).setName(PLUGIN_NAME).setHeading();
+    containerEl.createDiv({ cls: "mz-media-fetcher-intro" }).createEl("p", {
       text: "\u6309\u6765\u6E90\u7BA1\u7406\u4F5C\u54C1\u6293\u53D6\u914D\u7F6E\u3002\u6A21\u677F\u6B63\u6587\u7EE7\u7EED\u76F4\u63A5\u6539\u6A21\u677F\u6587\u4EF6\uFF1B\u8FD9\u91CC\u8D1F\u8D23\u6765\u6E90\u80FD\u529B\u8BF4\u660E\u3001\u57FA\u7840\u8BBE\u7F6E\u548C\u9ED8\u8BA4\u6A21\u677F\u5DE5\u5177\u3002"
     });
     const vaultInfo = this.plugin.configStore.getVaultInfo();
@@ -1951,11 +2045,7 @@ var MZMediaFetcherSettingTab = class extends import_obsidian4.PluginSettingTab {
     this.defaultPosterFolder = defaultPosterFolder;
   }
   renderTabs(containerEl) {
-    const tabsEl = containerEl.createDiv();
-    tabsEl.style.display = "flex";
-    tabsEl.style.flexWrap = "wrap";
-    tabsEl.style.gap = "8px";
-    tabsEl.style.marginBottom = "16px";
+    const tabsEl = containerEl.createDiv({ cls: "mz-media-fetcher-tabs" });
     for (const source of MEDIA_SOURCES) {
       const buttonEl = tabsEl.createEl("button", { text: source.label });
       const isActive = source.id === this.activeSourceId;
@@ -1971,9 +2061,9 @@ var MZMediaFetcherSettingTab = class extends import_obsidian4.PluginSettingTab {
     }
   }
   async renderSourceSection(containerEl, sourceKey, label, state, defaultConfig) {
-    const sectionEl = containerEl.createDiv();
+    const sectionEl = containerEl.createDiv({ cls: "mz-media-fetcher-section" });
     const sourceMeta = MEDIA_SOURCE_UI_META_MAP[sourceKey];
-    sectionEl.createEl("h3", { text: label });
+    new import_obsidian4.Setting(sectionEl).setName(label).setHeading();
     this.renderFeatureNotes(sectionEl, sourceMeta.featureNotes);
     new import_obsidian4.Setting(sectionEl).setName("\u76EE\u6807\u76EE\u5F55").setDesc("\u65B0\u5EFA\u5361\u7247\u65F6\u5199\u5165\u7684\u7B14\u8BB0\u76EE\u5F55\u3002").addText((text) => {
       new FolderPathSuggest(this.app, text.inputEl);
@@ -2067,18 +2157,18 @@ var MZMediaFetcherSettingTab = class extends import_obsidian4.PluginSettingTab {
     });
   }
   renderFeatureNotes(containerEl, notes) {
-    containerEl.createEl("h4", { text: "\u652F\u6301\u7684\u529F\u80FD" });
-    const listEl = containerEl.createEl("ul");
+    new import_obsidian4.Setting(containerEl).setName("\u652F\u6301\u7684\u529F\u80FD").setHeading();
+    const listEl = containerEl.createEl("ul", { cls: "mz-media-fetcher-list" });
     for (const note of notes) {
       listEl.createEl("li", { text: note });
     }
   }
   renderTemplateVariables(containerEl, variables) {
-    containerEl.createEl("h4", { text: "\u652F\u6301\u7684\u6A21\u677F\u53C2\u6570" });
+    new import_obsidian4.Setting(containerEl).setName("\u652F\u6301\u7684\u6A21\u677F\u53C2\u6570").setHeading();
     containerEl.createEl("p", {
       text: "\u6BCF\u4E2A\u53C2\u6570\u90FD\u53EF\u4EE5\u76F4\u63A5\u5199\u8FDB\u6A21\u677F\uFF1B\u652F\u6301 yaml \u7248\u672C\u7684\uFF0C\u4F1A\u540C\u65F6\u63D0\u4F9B {{yaml.xxx}} \u8FD9\u79CD YAML \u5B89\u5168\u5199\u6CD5\u3002"
     });
-    const listEl = containerEl.createEl("ul");
+    const listEl = containerEl.createEl("ul", { cls: "mz-media-fetcher-list" });
     for (const variable of variables) {
       const itemEl = listEl.createEl("li");
       itemEl.createEl("code", { text: `{{${variable.key}}}` });
@@ -2173,7 +2263,7 @@ var MZMediaFetcherPlugin = class extends import_obsidian5.Plugin {
       await this.app.workspace.getLeaf(true).openFile(file);
       new import_obsidian5.Notice(`\u4F5C\u54C1\u5361\u7247\u5DF2\u521B\u5EFA\uFF1A${normalizedItem.title}`, 8e3);
     } catch (error) {
-      console.error("[MZ-media-fetcher]", error);
+      console.error(`[${PLUGIN_ID}]`, error);
       new import_obsidian5.Notice(`\u65B0\u5EFA\u4F5C\u54C1\u5361\u7247\u5931\u8D25\uFF1A${normalizeError(error)}`, 12e3);
     } finally {
       this.isRunning = false;

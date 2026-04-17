@@ -1,8 +1,12 @@
+import { joinVaultPath } from "../core/paths.ts";
 import type { SourceConfigRoot, SourceId } from "../types.ts";
 
-export const PLUGIN_ID = "MZ-media-fetcher";
+export const PLUGIN_ID = "mz-media-fetcher";
+export const LEGACY_PLUGIN_ID = "MZ-media-fetcher";
 export const PLUGIN_NAME = "MZ Media Fetcher";
-export const PLUGIN_VERSION = "0.2.0";
+export const PLUGIN_VERSION = "0.3.0";
+export const PLUGIN_DESCRIPTION =
+  "Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showstart.";
 export const HTTP_USER_AGENT = `${PLUGIN_NAME}/${PLUGIN_VERSION} (Obsidian)`;
 export const BANGUMI_API_BASE = "https://api.bgm.tv/v0";
 export const FALLBACK_POSTER_FOLDER = "00-Inbox/附件/作品海报";
@@ -110,15 +114,16 @@ aliases:
 `,
 };
 
-export function getDefaultSourceConfigs(
+function buildSourceConfigs(
+  pluginId: string,
   configDir = ".obsidian",
   posterFolder = FALLBACK_POSTER_FOLDER
 ): SourceConfigRoot {
-  const pluginRoot = `${configDir}/plugins/${PLUGIN_ID}`;
+  const pluginRoot = joinVaultPath(configDir, "plugins", pluginId);
   return {
     bangumi: {
       targetFolder: "00-Inbox",
-      templatePath: `${pluginRoot}/templates/bangumi.md`,
+      templatePath: joinVaultPath(pluginRoot, "templates", "bangumi.md"),
       searchLimit: 8,
       poster: {
         saveLocal: false,
@@ -131,7 +136,7 @@ export function getDefaultSourceConfigs(
     },
     mobygames: {
       targetFolder: "00-Inbox",
-      templatePath: `${pluginRoot}/templates/mobygames.md`,
+      templatePath: joinVaultPath(pluginRoot, "templates", "mobygames.md"),
       searchLimit: 8,
       poster: {
         saveLocal: false,
@@ -144,7 +149,7 @@ export function getDefaultSourceConfigs(
     },
     bilibili_show: {
       targetFolder: "00-Inbox",
-      templatePath: `${pluginRoot}/templates/bilibili-show.md`,
+      templatePath: joinVaultPath(pluginRoot, "templates", "bilibili-show.md"),
       searchLimit: 8,
       poster: {
         saveLocal: false,
@@ -157,7 +162,7 @@ export function getDefaultSourceConfigs(
     },
     showstart: {
       targetFolder: "00-Inbox",
-      templatePath: `${pluginRoot}/templates/showstart.md`,
+      templatePath: joinVaultPath(pluginRoot, "templates", "showstart.md"),
       searchLimit: 8,
       poster: {
         saveLocal: false,
@@ -169,6 +174,20 @@ export function getDefaultSourceConfigs(
       },
     },
   };
+}
+
+export function getDefaultSourceConfigs(
+  configDir = ".obsidian",
+  posterFolder = FALLBACK_POSTER_FOLDER
+): SourceConfigRoot {
+  return buildSourceConfigs(PLUGIN_ID, configDir, posterFolder);
+}
+
+export function getLegacyDefaultSourceConfigs(
+  configDir = ".obsidian",
+  posterFolder = FALLBACK_POSTER_FOLDER
+): SourceConfigRoot {
+  return buildSourceConfigs(LEGACY_PLUGIN_ID, configDir, posterFolder);
 }
 
 export const DEFAULT_SOURCE_CONFIGS = getDefaultSourceConfigs();

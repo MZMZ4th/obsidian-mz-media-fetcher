@@ -1,5 +1,5 @@
 import { Notice, PluginSettingTab, Setting } from "obsidian";
-import { TEMPLATE_CONTENTS } from "../config/defaults.ts";
+import { PLUGIN_NAME, TEMPLATE_CONTENTS } from "../config/defaults.ts";
 import { normalizeTemplateEditorValues } from "../config/storage.ts";
 import { MEDIA_SOURCE_UI_META_MAP } from "../source-ui-meta.ts";
 import { MEDIA_SOURCES } from "../sources/index.ts";
@@ -76,8 +76,8 @@ export class MZMediaFetcherSettingTab extends PluginSettingTab {
   async render(refreshFromDisk = false): Promise<void> {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "MZ Media Fetcher" });
-    containerEl.createEl("p", {
+    new Setting(containerEl).setName(PLUGIN_NAME).setHeading();
+    containerEl.createDiv({ cls: "mz-media-fetcher-intro" }).createEl("p", {
       text: "按来源管理作品抓取配置。模板正文继续直接改模板文件；这里负责来源能力说明、基础设置和默认模板工具。",
     });
 
@@ -130,11 +130,7 @@ export class MZMediaFetcherSettingTab extends PluginSettingTab {
   }
 
   renderTabs(containerEl: HTMLElement): void {
-    const tabsEl = containerEl.createDiv();
-    tabsEl.style.display = "flex";
-    tabsEl.style.flexWrap = "wrap";
-    tabsEl.style.gap = "8px";
-    tabsEl.style.marginBottom = "16px";
+    const tabsEl = containerEl.createDiv({ cls: "mz-media-fetcher-tabs" });
 
     for (const source of MEDIA_SOURCES) {
       const buttonEl = tabsEl.createEl("button", { text: source.label });
@@ -158,10 +154,10 @@ export class MZMediaFetcherSettingTab extends PluginSettingTab {
     state: TemplateEditorState,
     defaultConfig: SourceConfig
   ): Promise<void> {
-    const sectionEl = containerEl.createDiv();
+    const sectionEl = containerEl.createDiv({ cls: "mz-media-fetcher-section" });
     const sourceMeta = MEDIA_SOURCE_UI_META_MAP[sourceKey];
 
-    sectionEl.createEl("h3", { text: label });
+    new Setting(sectionEl).setName(label).setHeading();
     this.renderFeatureNotes(sectionEl, sourceMeta.featureNotes);
 
     new Setting(sectionEl)
@@ -290,8 +286,8 @@ export class MZMediaFetcherSettingTab extends PluginSettingTab {
   }
 
   renderFeatureNotes(containerEl: HTMLElement, notes: string[]): void {
-    containerEl.createEl("h4", { text: "支持的功能" });
-    const listEl = containerEl.createEl("ul");
+    new Setting(containerEl).setName("支持的功能").setHeading();
+    const listEl = containerEl.createEl("ul", { cls: "mz-media-fetcher-list" });
     for (const note of notes) {
       listEl.createEl("li", { text: note });
     }
@@ -301,12 +297,12 @@ export class MZMediaFetcherSettingTab extends PluginSettingTab {
     containerEl: HTMLElement,
     variables: TemplateVariableDefinition[]
   ): void {
-    containerEl.createEl("h4", { text: "支持的模板参数" });
+    new Setting(containerEl).setName("支持的模板参数").setHeading();
     containerEl.createEl("p", {
       text: "每个参数都可以直接写进模板；支持 yaml 版本的，会同时提供 {{yaml.xxx}} 这种 YAML 安全写法。",
     });
 
-    const listEl = containerEl.createEl("ul");
+    const listEl = containerEl.createEl("ul", { cls: "mz-media-fetcher-list" });
     for (const variable of variables) {
       const itemEl = listEl.createEl("li");
       itemEl.createEl("code", { text: `{{${variable.key}}}` });
