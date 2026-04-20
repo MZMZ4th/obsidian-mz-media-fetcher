@@ -9,6 +9,10 @@ import {
 import { getSourceTemplateVariables } from "../src/template-fields.ts";
 import { SOURCE_IDS } from "../src/types.ts";
 
+function readNormalizedText(filePath: string): string {
+  return fs.readFileSync(filePath, "utf8").replace(/\r\n/g, "\n");
+}
+
 function includesTemplatePlaceholder(template: string, key: string): boolean {
   return (
     template.includes(`{{${key}}}`) ||
@@ -20,24 +24,24 @@ test("checked-in templates stay in sync with runtime default contents", () => {
   for (const sourceId of SOURCE_IDS) {
     const templatePath =
       sourceId === "bilibili_show" ? "bilibili-show.md" : `${sourceId.replace(/_/g, "-")}.md`;
-    const template = fs.readFileSync(path.join(process.cwd(), "templates", templatePath), "utf8");
+    const template = readNormalizedText(path.join(process.cwd(), "templates", templatePath));
     assert.equal(template, TEMPLATE_CONTENTS[sourceId]);
   }
 
   assert.equal(
-    fs.readFileSync(path.join(process.cwd(), "templates", "bangumi-game.md"), "utf8"),
+    readNormalizedText(path.join(process.cwd(), "templates", "bangumi-game.md")),
     BANGUMI_TYPE_TEMPLATE_CONTENTS.game
   );
   assert.equal(
-    fs.readFileSync(path.join(process.cwd(), "templates", "bangumi-anime.md"), "utf8"),
+    readNormalizedText(path.join(process.cwd(), "templates", "bangumi-anime.md")),
     BANGUMI_TYPE_TEMPLATE_CONTENTS.anime
   );
   assert.equal(
-    fs.readFileSync(path.join(process.cwd(), "templates", "bangumi-book.md"), "utf8"),
+    readNormalizedText(path.join(process.cwd(), "templates", "bangumi-book.md")),
     BANGUMI_TYPE_TEMPLATE_CONTENTS.book
   );
   assert.equal(
-    fs.readFileSync(path.join(process.cwd(), "templates", "bangumi-live-action.md"), "utf8"),
+    readNormalizedText(path.join(process.cwd(), "templates", "bangumi-live-action.md")),
     BANGUMI_TYPE_TEMPLATE_CONTENTS.liveAction
   );
 });
