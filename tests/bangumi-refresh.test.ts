@@ -81,6 +81,51 @@ test("bangumi refresh analysis preserves local posters and detects only real con
   assert.equal(networkPosterCandidate?.fetchedValue, false);
 });
 
+test("bangumi refresh keeps existing values when fetched payload is blank", () => {
+  const bindings = parseTemplateFrontmatterBindings(template);
+  const analysis = analyzeBangumiFrontmatterUpdate({
+    templateBindings: bindings,
+    existingFrontmatter: {
+      名称: "旧标题",
+      原名: "Old Name",
+      作者: ["作者甲"],
+      出版社: ["出版社乙"],
+      连载杂志: ["杂志丙"],
+      来源链接: "https://bgm.tv/subject/328609",
+    },
+    existingKeyOrder: ["名称", "原名", "作者", "出版社", "连载杂志", "来源链接"],
+    fetchedValues: {
+      title: "新标题",
+      title_original: "",
+      authors: [],
+      publishers: [],
+      serial_magazines: [],
+      bangumi_url: "https://bgm.tv/subject/328609",
+    },
+  });
+
+  assert.deepEqual(
+    analysis.conflicts.map((item) => item.propertyKey),
+    ["名称"]
+  );
+  assert.equal(
+    analysis.managedCandidates.find((item) => item.propertyKey === "原名")?.fetchedValue,
+    "Old Name"
+  );
+  assert.deepEqual(
+    analysis.managedCandidates.find((item) => item.propertyKey === "作者")?.fetchedValue,
+    ["作者甲"]
+  );
+  assert.deepEqual(
+    analysis.managedCandidates.find((item) => item.propertyKey === "出版社")?.fetchedValue,
+    ["出版社乙"]
+  );
+  assert.deepEqual(
+    analysis.managedCandidates.find((item) => item.propertyKey === "连载杂志")?.fetchedValue,
+    ["杂志丙"]
+  );
+});
+
 test("bangumi refresh rewrites frontmatter in template order and keeps body unchanged", () => {
   const content = `---
 categories: 新作品卡片

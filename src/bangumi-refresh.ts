@@ -155,6 +155,14 @@ function hasMeaningfulValue(value: unknown): boolean {
   return Boolean(String(value || "").trim());
 }
 
+function preferExistingWhenFetchedIsBlank(currentValue: unknown, fetchedValue: unknown): unknown {
+  if (hasMeaningfulValue(fetchedValue) || !hasMeaningfulValue(currentValue)) {
+    return fetchedValue;
+  }
+
+  return currentValue;
+}
+
 function shouldRefreshPoster(
   frontmatter: Record<string, unknown>,
   posterPropertyKey: string | null,
@@ -229,7 +237,10 @@ export function analyzeBangumiFrontmatterUpdate(args: {
 
     const variableKey = binding.variableKey as BangumiRefreshManagedVariable;
     const currentValue = args.existingFrontmatter[binding.propertyKey];
-    let fetchedValue = args.fetchedValues[variableKey];
+    let fetchedValue = preferExistingWhenFetchedIsBlank(
+      currentValue,
+      args.fetchedValues[variableKey]
+    );
 
     if (variableKey === "poster" && !canRefreshPoster && hasMeaningfulValue(currentValue)) {
       fetchedValue = currentValue;
