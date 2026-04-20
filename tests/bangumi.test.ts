@@ -18,6 +18,18 @@ test("normalizeBangumiSubject maps titles, aliases and release info", () => {
         key: "别名",
         value: ["ぼっち・ざ・ろっく！", { v: "BTR" }],
       },
+      {
+        key: "作者",
+        value: [{ v: "はまじあき" }, "Hamazi Aki"],
+      },
+      {
+        key: "出版社",
+        value: ["芳文社", { v: "Houbunsha" }],
+      },
+      {
+        key: "连载杂志",
+        value: ["Manga Time Kirara MAX"],
+      },
     ],
   });
 
@@ -28,4 +40,7 @@ test("normalizeBangumiSubject maps titles, aliases and release info", () => {
   assert.equal(normalized.media_type, "动画");
   assert.equal(normalized.cover_remote, "https://example.com/cover.jpg");
   assert.deepEqual(normalized.aliases, ["ぼっち・ざ・ろっく！", "BTR"]);
+  assert.deepEqual(normalized.authors, ["はまじあき", "Hamazi Aki"]);
+  assert.deepEqual(normalized.publishers, ["芳文社", "Houbunsha"]);
+  assert.deepEqual(normalized.serial_magazines, ["Manga Time Kirara MAX"]);
 });

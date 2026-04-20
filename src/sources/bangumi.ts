@@ -58,13 +58,25 @@ function collectBangumiAliases(
   preferredTitle: string,
   originalTitle: string
 ): string[] {
+  return collectBangumiInfoboxValues(subject, ["别名"], [preferredTitle, originalTitle]);
+}
+
+function collectBangumiInfoboxValues(
+  subject: BangumiSubject,
+  keys: string[],
+  excludedValues: string[] = []
+): string[] {
   const aliases: string[] = [];
   const seen = new Set<string>();
+  const normalizedExcludedValues = new Set(
+    excludedValues.map((value) => String(value || "").trim()).filter(Boolean)
+  );
+  const keySet = new Set(keys.map((key) => key.trim()));
 
   const pushAlias = (value: unknown) => {
     const normalized = String(value || "").trim();
     if (!normalized) return;
-    if (normalized === preferredTitle || normalized === originalTitle) return;
+    if (normalizedExcludedValues.has(normalized)) return;
     if (seen.has(normalized)) return;
     seen.add(normalized);
     aliases.push(normalized);
@@ -72,7 +84,7 @@ function collectBangumiAliases(
 
   if (Array.isArray(subject.infobox)) {
     for (const item of subject.infobox) {
-      if (String(item?.key || "").trim() !== "别名") continue;
+      if (!keySet.has(String(item?.key || "").trim())) continue;
       extractInfoboxValues(item?.value).forEach(pushAlias);
     }
   }
@@ -135,6 +147,9 @@ export function normalizeBangumiSubject(subject: BangumiSubject): NormalizedMedi
   const releaseDate = normalizeDateValue(subject?.date);
   const releaseYear = extractYear(subject?.date);
   const aliases = collectBangumiAliases(subject, preferredTitle, originalTitle);
+  const authors = collectBangumiInfoboxValues(subject, ["作者"]);
+  const publishers = collectBangumiInfoboxValues(subject, ["出版社"]);
+  const serialMagazines = collectBangumiInfoboxValues(subject, ["连载杂志"]);
 
   return {
     bangumi_id: Number(subject?.id),
@@ -149,5 +164,8 @@ export function normalizeBangumiSubject(subject: BangumiSubject): NormalizedMedi
     summary: normalizeSummaryText(subject?.summary),
     platforms: [],
     platforms_text: "",
+    authors,
+    publishers,
+    serial_magazines: serialMagazines,
   };
 }

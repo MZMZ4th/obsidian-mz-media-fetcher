@@ -66,6 +66,36 @@ test("sanitizeFileName avoids Windows reserved names", () => {
   assert.equal(sanitizeFileName(" \n\t "), "");
 });
 
+test("bangumi default template renders required card fields", () => {
+  const template = fs.readFileSync(path.join(process.cwd(), "templates/bangumi.md"), "utf8");
+  const context = buildTemplateContext("bangumi", {
+    title: "四叠半神话大系",
+    title_original: "四畳半神話大系",
+    aliases: ["The Tatami Galaxy"],
+    media_type: "书籍",
+    release_date: "2010-04-22",
+    release_year: "2010",
+    cover_remote: "https://example.com/bangumi-cover.jpg",
+    summary: "简介",
+    platforms: [],
+    platforms_text: "",
+    bangumi_id: 328609,
+    bangumi_url: "https://bgm.tv/subject/328609",
+    authors: ["森见登美彦"],
+    publishers: ["角川书店"],
+    serial_magazines: ["野性时代"],
+  });
+
+  const rendered = renderTemplate(template, context);
+  assert.match(rendered, /Bangumi ID: 328609/);
+  assert.match(rendered, /作者:\s*\n\s*- "森见登美彦"/);
+  assert.match(rendered, /出版社:\s*\n\s*- "角川书店"/);
+  assert.match(rendered, /连载杂志:\s*\n\s*- "野性时代"/);
+  assert.match(rendered, /网络海报: true/);
+  assert.match(rendered, /- bangumi_id: 328609/);
+  assert.match(rendered, /- authors: 森见登美彦/);
+});
+
 test("bilibili_show default template renders required card fields", () => {
   const template = fs.readFileSync(
     path.join(process.cwd(), "templates/bilibili-show.md"),
@@ -99,6 +129,8 @@ test("bilibili_show default template renders required card fields", () => {
     /来源链接: https:\/\/show\.bilibili\.com\/platform\/detail\.html\?id=107593/
   );
   assert.match(rendered, /网络海报: true/);
+  assert.match(rendered, /- bilibili_show_id: 107593/);
+  assert.match(rendered, /- venue_name: 杭州奥体中心体育馆/);
 });
 
 test("showstart default template renders required card fields", () => {
@@ -136,6 +168,7 @@ test("showstart default template renders required card fields", () => {
   assert.match(rendered, /网络海报: true/);
   assert.match(rendered, /状态: 已完成/);
   assert.match(rendered, /完成时间: "2024-09-14"/);
+  assert.match(rendered, /- showstart_activity_id: 208747/);
 });
 
 test("event source metadata exposes venue template variables", () => {

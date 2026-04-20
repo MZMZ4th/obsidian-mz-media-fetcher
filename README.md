@@ -29,6 +29,7 @@ Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showsta
 ## Commands / 当前命令
 
 - `从 Bangumi 新建作品卡片`
+- `重新补全当前笔记的 Bangumi 信息`
 - `从 MobyGames 新建作品卡片`
 - `从 bilibili会员购新建作品卡片`
 - `从秀动新建作品卡片`
@@ -85,11 +86,13 @@ The repository root is the plugin root, so the build output lands directly in `m
 - Paste a subject URL such as `https://bgm.tv/subject/328609`.
 - Enter a numeric subject ID such as `328609`.
 - Game / anime / book / live action subjects can point to separate template paths; blank overrides fall back to the general Bangumi template.
+- Bangumi cards can refresh the current note's frontmatter from the latest subject metadata without rewriting the body.
 
 - 支持直接搜作品名。
 - 支持粘贴条目链接，例如 `https://bgm.tv/subject/328609`。
 - 支持直接输入数字 ID，例如 `328609`。
 - 游戏 / 动画 / 书籍 / 三次元条目可以分别配置模板路径；留空时会回退到通用 Bangumi 模板。
+- 已有 Bangumi 卡片支持直接重补当前笔记 frontmatter，不会重写正文。
 
 ### MobyGames
 
@@ -121,13 +124,25 @@ The repository root is the plugin root, so the build output lands directly in `m
 
 ## Templates / 模板
 
-Common variables include:
+Built-in templates now include a preview section that renders every currently supported variable. Common variables include:
 
 - `{{title}}`
 - `{{title_original}}`
+- `{{aliases}}`
+- `{{media_type}}`
+- `{{release_date}}`
 - `{{release_year}}`
+- `{{cover_remote}}`
+- `{{platforms}}`
 - `{{poster_path}}`
 - `{{poster}}`
+- `{{network_poster}}`
+- `{{categories}}`
+- `{{source}}`
+- `{{rating}}`
+- `{{status}}`
+- `{{finished_at}}`
+- `{{rewatch_count}}`
 - `{{summary}}`
 - `{{platforms_text}}`
 - `{{cover_markdown}}`
@@ -136,21 +151,40 @@ Common variables include:
 - `{{yaml.media_type}}`
 - `{{yaml.release_date}}`
 - `{{yaml.network_poster}}`
+- `{{bangumi_id}}`
 - `{{bangumi_url}}`
+- `{{authors}}`
+- `{{publishers}}`
+- `{{serial_magazines}}`
+- `{{mobygames_id}}`
 - `{{venue_name}}`
 - `{{venue_address}}`
 - `{{venue_text}}`
 - `{{mobygames_url}}`
+- `{{bilibili_show_id}}`
 - `{{bilibili_show_url}}`
+- `{{showstart_activity_id}}`
 - `{{showstart_url}}`
 
-常用模板变量包括：
+插件内置模板现在会额外带一个“字段预览”区域，直接把当前支持的变量效果渲染出来。常用模板变量包括：
 
 - `{{title}}`
 - `{{title_original}}`
+- `{{aliases}}`
+- `{{media_type}}`
+- `{{release_date}}`
 - `{{release_year}}`
+- `{{cover_remote}}`
+- `{{platforms}}`
 - `{{poster_path}}`
 - `{{poster}}`
+- `{{network_poster}}`
+- `{{categories}}`
+- `{{source}}`
+- `{{rating}}`
+- `{{status}}`
+- `{{finished_at}}`
+- `{{rewatch_count}}`
 - `{{summary}}`
 - `{{platforms_text}}`
 - `{{cover_markdown}}`
@@ -159,12 +193,19 @@ Common variables include:
 - `{{yaml.media_type}}`
 - `{{yaml.release_date}}`
 - `{{yaml.network_poster}}`
+- `{{bangumi_id}}`
 - `{{bangumi_url}}`
+- `{{authors}}`
+- `{{publishers}}`
+- `{{serial_magazines}}`
+- `{{mobygames_id}}`
 - `{{venue_name}}`
 - `{{venue_address}}`
 - `{{venue_text}}`
 - `{{mobygames_url}}`
+- `{{bilibili_show_id}}`
 - `{{bilibili_show_url}}`
+- `{{showstart_activity_id}}`
 - `{{showstart_url}}`
 
 ## Network & Privacy / 网络与隐私

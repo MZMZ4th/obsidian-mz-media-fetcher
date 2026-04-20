@@ -29,6 +29,144 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
+// src/template-fields.ts
+function getSourceTemplateVariables(sourceId) {
+  return [...COMMON_TEMPLATE_VARIABLES, ...SOURCE_SPECIFIC_TEMPLATE_VARIABLES[sourceId]];
+}
+function buildTemplatePreviewSection(sourceId) {
+  const variables = getSourceTemplateVariables(sourceId);
+  const lines = ["## \u6293\u53D6\u5B57\u6BB5\u9884\u89C8", ""];
+  for (const variable of variables) {
+    if (!PREVIEW_INLINE_VARIABLES.has(variable.key)) {
+      continue;
+    }
+    lines.push(`- ${variable.key}: {{${variable.key}}}`);
+  }
+  for (const variableKey of PREVIEW_BLOCK_VARIABLES) {
+    const variable = variables.find((item) => item.key === variableKey);
+    if (!variable) {
+      continue;
+    }
+    lines.push("");
+    lines.push(`### ${variable.key}`);
+    lines.push("");
+    lines.push(`{{${variable.key}}}`);
+  }
+  return `${lines.join("\n")}
+`;
+}
+var COMMON_TEMPLATE_VARIABLES, SOURCE_SPECIFIC_TEMPLATE_VARIABLES, PREVIEW_INLINE_VARIABLES, PREVIEW_BLOCK_VARIABLES, BANGUMI_REFRESH_MANAGED_VARIABLES, BANGUMI_REFRESH_MANAGED_VARIABLE_SET, SOURCE_TEMPLATE_VARIABLES_MAP;
+var init_template_fields = __esm({
+  "src/template-fields.ts"() {
+    COMMON_TEMPLATE_VARIABLES = [
+      { key: "title", description: "\u5F53\u524D\u5361\u7247\u6807\u9898\u3002" },
+      { key: "title_original", description: "\u539F\u540D\u3002" },
+      { key: "aliases", description: "\u522B\u540D\u5217\u8868\uFF1B\u76F4\u63A5\u4F7F\u7528\u65F6\u4F1A\u62FC\u6210\u9017\u53F7\u5206\u9694\u6587\u672C\u3002" },
+      { key: "media_type", description: "\u5A92\u4F53\u7C7B\u578B\u3002" },
+      { key: "release_date", description: "\u53D1\u5E03\u65E5\u671F\uFF0C\u683C\u5F0F\u4E3A YYYY-MM-DD\u3002" },
+      { key: "release_year", description: "\u53D1\u884C\u5E74\u4EFD\u3002" },
+      { key: "cover_remote", description: "\u6765\u6E90\u7AD9\u70B9\u8FD4\u56DE\u7684\u8FDC\u7A0B\u6D77\u62A5\u94FE\u63A5\u3002" },
+      { key: "summary", description: "\u7B80\u4ECB\u6B63\u6587\u3002" },
+      { key: "platforms", description: "\u5E73\u53F0\u5217\u8868\uFF1B\u76F4\u63A5\u4F7F\u7528\u65F6\u4F1A\u62FC\u6210\u9017\u53F7\u5206\u9694\u6587\u672C\u3002" },
+      { key: "platforms_text", description: "\u5E73\u53F0\u5217\u8868\u7684\u6362\u884C\u6587\u672C\u3002" },
+      { key: "poster_path", description: "\u6700\u7EC8\u6D77\u62A5\u8DEF\u5F84\uFF1B\u4E0B\u8F7D\u672C\u5730\u540E\u4F1A\u53D8\u6210\u672C\u5730\u8DEF\u5F84\u3002" },
+      { key: "poster", description: "\u6A21\u677F\u91CC\u63A8\u8350\u76F4\u63A5\u4F7F\u7528\u7684\u6D77\u62A5\u5B57\u6BB5\u3002" },
+      { key: "network_poster", description: "\u5F53\u524D\u6D77\u62A5\u662F\u5426\u4ECD\u662F\u7F51\u7EDC\u94FE\u63A5\u3002" },
+      { key: "categories", description: "\u9ED8\u8BA4\u5206\u7C7B\u3002" },
+      { key: "source", description: "\u6765\u6E90 id\u3002" },
+      { key: "rating", description: "\u9884\u7559\u8BC4\u5206\u9ED8\u8BA4\u503C\u3002" },
+      { key: "status", description: "\u9884\u7559\u72B6\u6001\u9ED8\u8BA4\u503C\u3002" },
+      { key: "finished_at", description: "\u9884\u7559\u5B8C\u6210\u65F6\u95F4\u9ED8\u8BA4\u503C\u3002" },
+      { key: "rewatch_count", description: "\u9884\u7559\u4F53\u9A8C\u6B21\u6570\u9ED8\u8BA4\u503C\u3002" },
+      { key: "cover_markdown", description: "\u73B0\u6210\u5C01\u9762 Markdown\u3002", yamlSafe: false }
+    ];
+    SOURCE_SPECIFIC_TEMPLATE_VARIABLES = {
+      bangumi: [
+        { key: "bangumi_id", description: "Bangumi \u6761\u76EE ID\u3002" },
+        { key: "bangumi_url", description: "Bangumi \u6761\u76EE\u94FE\u63A5\u3002" },
+        { key: "authors", description: "\u4F5C\u8005\u5217\u8868\uFF1B\u76F4\u63A5\u4F7F\u7528\u65F6\u4F1A\u62FC\u6210\u9017\u53F7\u5206\u9694\u6587\u672C\u3002" },
+        { key: "publishers", description: "\u51FA\u7248\u793E\u5217\u8868\uFF1B\u76F4\u63A5\u4F7F\u7528\u65F6\u4F1A\u62FC\u6210\u9017\u53F7\u5206\u9694\u6587\u672C\u3002" },
+        { key: "serial_magazines", description: "\u8FDE\u8F7D\u6742\u5FD7\u5217\u8868\uFF1B\u76F4\u63A5\u4F7F\u7528\u65F6\u4F1A\u62FC\u6210\u9017\u53F7\u5206\u9694\u6587\u672C\u3002" }
+      ],
+      mobygames: [
+        { key: "mobygames_id", description: "MobyGames \u6E38\u620F ID\u3002" },
+        { key: "mobygames_url", description: "MobyGames \u6E38\u620F\u94FE\u63A5\u3002" }
+      ],
+      bilibili_show: [
+        { key: "bilibili_show_id", description: "\u4F1A\u5458\u8D2D\u9879\u76EE ID\u3002" },
+        { key: "bilibili_show_url", description: "\u4F1A\u5458\u8D2D\u8BE6\u60C5\u9875\u94FE\u63A5\u3002" },
+        { key: "venue_name", description: "\u6F14\u51FA\u573A\u6240\u540D\u79F0\u3002" },
+        { key: "venue_address", description: "\u6F14\u51FA\u573A\u6240\u5730\u5740\u3002" },
+        { key: "venue_text", description: "\u6F14\u51FA\u573A\u6240\u7684\u4E00\u884C\u6587\u672C\uFF0C\u4F18\u5148\u62FC\u63A5\u540D\u79F0\u548C\u5730\u5740\u3002" }
+      ],
+      showstart: [
+        { key: "showstart_activity_id", description: "\u79C0\u52A8\u6D3B\u52A8 ID\u3002" },
+        { key: "showstart_url", description: "\u79C0\u52A8\u6D3B\u52A8\u8BE6\u60C5\u9875\u94FE\u63A5\u3002" },
+        { key: "venue_name", description: "\u6F14\u51FA\u573A\u6240\u540D\u79F0\u3002" },
+        { key: "venue_address", description: "\u6F14\u51FA\u573A\u6240\u5730\u5740\u3002" },
+        { key: "venue_text", description: "\u6F14\u51FA\u573A\u6240\u7684\u4E00\u884C\u6587\u672C\uFF0C\u4F18\u5148\u62FC\u63A5\u540D\u79F0\u548C\u5730\u5740\u3002" }
+      ]
+    };
+    PREVIEW_INLINE_VARIABLES = /* @__PURE__ */ new Set([
+      "title",
+      "title_original",
+      "aliases",
+      "media_type",
+      "release_date",
+      "release_year",
+      "cover_remote",
+      "platforms",
+      "poster_path",
+      "poster",
+      "network_poster",
+      "categories",
+      "source",
+      "rating",
+      "status",
+      "finished_at",
+      "rewatch_count",
+      "bangumi_id",
+      "bangumi_url",
+      "authors",
+      "publishers",
+      "serial_magazines",
+      "mobygames_id",
+      "mobygames_url",
+      "bilibili_show_id",
+      "bilibili_show_url",
+      "showstart_activity_id",
+      "showstart_url",
+      "venue_name",
+      "venue_address",
+      "venue_text"
+    ]);
+    PREVIEW_BLOCK_VARIABLES = ["summary", "platforms_text", "cover_markdown"];
+    BANGUMI_REFRESH_MANAGED_VARIABLES = [
+      "title",
+      "title_original",
+      "aliases",
+      "media_type",
+      "release_date",
+      "bangumi_id",
+      "bangumi_url",
+      "authors",
+      "publishers",
+      "serial_magazines",
+      "poster",
+      "network_poster"
+    ];
+    BANGUMI_REFRESH_MANAGED_VARIABLE_SET = new Set(
+      BANGUMI_REFRESH_MANAGED_VARIABLES
+    );
+    SOURCE_TEMPLATE_VARIABLES_MAP = {
+      bangumi: getSourceTemplateVariables("bangumi"),
+      mobygames: getSourceTemplateVariables("mobygames"),
+      bilibili_show: getSourceTemplateVariables("bilibili_show"),
+      showstart: getSourceTemplateVariables("showstart")
+    };
+  }
+});
+
 // src/core/paths.ts
 function fallbackNormalizePath(value) {
   return String(value || "").replace(/\\/g, "/").replace(/\/{2,}/g, "/").trim();
@@ -61,6 +199,21 @@ var init_paths = __esm({
 });
 
 // src/config/defaults.ts
+function buildTemplateContent(sourceId, frontmatter, options) {
+  const sections = [
+    `---
+${frontmatter.join("\n")}
+---`,
+    options.cover,
+    buildTemplatePreviewSection(sourceId).trimEnd(),
+    "## \u7B80\u4ECB",
+    "{{summary}}",
+    ...options.details || [],
+    "## \u7B80\u8BB0"
+  ];
+  return `${sections.join("\n\n")}
+`;
+}
 function buildDefaultBangumiTypeTemplatePaths(pluginRoot) {
   return {
     game: joinVaultPath(pluginRoot, "templates", BANGUMI_TYPE_TEMPLATE_FILENAMES.game),
@@ -133,10 +286,11 @@ function getDefaultSourceConfigs(configDir = ".obsidian", posterFolder = FALLBAC
 function getLegacyDefaultSourceConfigs(configDir = ".obsidian", posterFolder = FALLBACK_POSTER_FOLDER) {
   return buildSourceConfigs(LEGACY_PLUGIN_ID, configDir, posterFolder);
 }
-var PLUGIN_ID, LEGACY_PLUGIN_ID, PLUGIN_NAME, PLUGIN_VERSION, HTTP_USER_AGENT, BANGUMI_API_BASE, FALLBACK_POSTER_FOLDER, BANGUMI_TEMPLATE_CONTENT, BILIBILI_SHOW_TEMPLATE_CONTENT, SHOWSTART_TEMPLATE_CONTENT, TEMPLATE_CONTENTS, BANGUMI_TYPE_TEMPLATE_FILENAMES, BANGUMI_TYPE_TEMPLATE_CONTENTS, DEFAULT_SOURCE_CONFIGS;
+var PLUGIN_ID, LEGACY_PLUGIN_ID, PLUGIN_NAME, PLUGIN_VERSION, HTTP_USER_AGENT, BANGUMI_API_BASE, FALLBACK_POSTER_FOLDER, BANGUMI_TEMPLATE_FRONTMATTER, BANGUMI_TEMPLATE_CONTENT, BILIBILI_SHOW_TEMPLATE_CONTENT, SHOWSTART_TEMPLATE_CONTENT, TEMPLATE_CONTENTS, BANGUMI_TYPE_TEMPLATE_FILENAMES, BANGUMI_TYPE_TEMPLATE_CONTENTS, DEFAULT_SOURCE_CONFIGS;
 var init_defaults = __esm({
   "src/config/defaults.ts"() {
     init_paths();
+    init_template_fields();
     PLUGIN_ID = "mz-media-fetcher";
     LEGACY_PLUGIN_ID = "MZ-media-fetcher";
     PLUGIN_NAME = "MZ Media Fetcher";
@@ -144,110 +298,96 @@ var init_defaults = __esm({
     HTTP_USER_AGENT = `${PLUGIN_NAME}/${PLUGIN_VERSION} (Obsidian)`;
     BANGUMI_API_BASE = "https://api.bgm.tv/v0";
     FALLBACK_POSTER_FOLDER = "00-Inbox/\u9644\u4EF6/\u4F5C\u54C1\u6D77\u62A5";
-    BANGUMI_TEMPLATE_CONTENT = `---
-categories: \u65B0\u4F5C\u54C1\u5361\u7247
-\u540D\u79F0: {{yaml.title}}
-\u539F\u540D: {{yaml.title_original}}
-aliases: {{yaml.aliases}}
-\u5A92\u4F53\u7C7B\u578B: {{yaml.media_type}}
-\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}
-\u8BC4\u5206:
-\u72B6\u6001: \u8FDB\u884C\u4E2D
-\u5B8C\u6210\u65F6\u95F4: ""
-\u4F53\u9A8C\u6B21\u6570: 1
-\u6D77\u62A5: {{poster}}
-\u6765\u6E90\u94FE\u63A5: {{bangumi_url}}
-\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}
----
-
-{{cover_markdown}}
-
-## \u7B80\u4ECB
-
-{{summary}}
-
-## \u7B80\u8BB0
-`;
-    BILIBILI_SHOW_TEMPLATE_CONTENT = `---
-categories: \u65B0\u4F5C\u54C1\u5361\u7247
-\u540D\u79F0: {{yaml.title}}
-\u539F\u540D:
-aliases:
-\u5A92\u4F53\u7C7B\u578B:
-\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}
-\u6F14\u51FA\u573A\u6240: {{yaml.venue_text}}
-\u8BC4\u5206:
-\u72B6\u6001:
-\u5B8C\u6210\u65F6\u95F4:
-\u4F53\u9A8C\u6B21\u6570:
-\u6D77\u62A5: {{poster}}
-\u6765\u6E90\u94FE\u63A5: {{bilibili_show_url}}
-\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}
----
-
-![cover|300]({{poster}})
-
-## \u7B80\u4ECB
-
-{{summary}}
-
-## \u7B80\u8BB0
-`;
-    SHOWSTART_TEMPLATE_CONTENT = `---
-categories: \u65B0\u4F5C\u54C1\u5361\u7247
-\u540D\u79F0: {{yaml.title}}
-\u539F\u540D:
-aliases:
-\u5A92\u4F53\u7C7B\u578B:
-\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}
-\u6F14\u51FA\u573A\u6240: {{yaml.venue_text}}
-\u8BC4\u5206:
-\u72B6\u6001: \u5DF2\u5B8C\u6210
-\u5B8C\u6210\u65F6\u95F4: {{yaml.release_date}}
-\u4F53\u9A8C\u6B21\u6570: 1
-\u6D77\u62A5: {{poster}}
-\u6765\u6E90\u94FE\u63A5: {{showstart_url}}
-\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}
----
-
-![cover|300]({{poster}})
-
-## \u7B80\u4ECB
-
-{{summary}}
-
-## \u7B80\u8BB0
-`;
+    BANGUMI_TEMPLATE_FRONTMATTER = [
+      "categories: \u65B0\u4F5C\u54C1\u5361\u7247",
+      "\u540D\u79F0: {{yaml.title}}",
+      "\u539F\u540D: {{yaml.title_original}}",
+      "aliases: {{yaml.aliases}}",
+      "\u5A92\u4F53\u7C7B\u578B: {{yaml.media_type}}",
+      "\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}",
+      "Bangumi ID: {{yaml.bangumi_id}}",
+      "\u4F5C\u8005: {{yaml.authors}}",
+      "\u51FA\u7248\u793E: {{yaml.publishers}}",
+      "\u8FDE\u8F7D\u6742\u5FD7: {{yaml.serial_magazines}}",
+      "\u8BC4\u5206:",
+      "\u72B6\u6001: \u8FDB\u884C\u4E2D",
+      '\u5B8C\u6210\u65F6\u95F4: ""',
+      "\u4F53\u9A8C\u6B21\u6570: 1",
+      "\u6D77\u62A5: {{poster}}",
+      "\u6765\u6E90\u94FE\u63A5: {{bangumi_url}}",
+      "\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}"
+    ];
+    BANGUMI_TEMPLATE_CONTENT = buildTemplateContent("bangumi", BANGUMI_TEMPLATE_FRONTMATTER, {
+      cover: "{{cover_markdown}}"
+    });
+    BILIBILI_SHOW_TEMPLATE_CONTENT = buildTemplateContent(
+      "bilibili_show",
+      [
+        "categories: \u65B0\u4F5C\u54C1\u5361\u7247",
+        "\u540D\u79F0: {{yaml.title}}",
+        "\u539F\u540D:",
+        "aliases:",
+        "\u5A92\u4F53\u7C7B\u578B:",
+        "\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}",
+        "\u6F14\u51FA\u573A\u6240: {{yaml.venue_text}}",
+        "\u8BC4\u5206:",
+        "\u72B6\u6001:",
+        "\u5B8C\u6210\u65F6\u95F4:",
+        "\u4F53\u9A8C\u6B21\u6570:",
+        "\u6D77\u62A5: {{poster}}",
+        "\u6765\u6E90\u94FE\u63A5: {{bilibili_show_url}}",
+        "\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}"
+      ],
+      {
+        cover: "![cover|300]({{poster}})"
+      }
+    );
+    SHOWSTART_TEMPLATE_CONTENT = buildTemplateContent(
+      "showstart",
+      [
+        "categories: \u65B0\u4F5C\u54C1\u5361\u7247",
+        "\u540D\u79F0: {{yaml.title}}",
+        "\u539F\u540D:",
+        "aliases:",
+        "\u5A92\u4F53\u7C7B\u578B:",
+        "\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}",
+        "\u6F14\u51FA\u573A\u6240: {{yaml.venue_text}}",
+        "\u8BC4\u5206:",
+        "\u72B6\u6001: \u5DF2\u5B8C\u6210",
+        "\u5B8C\u6210\u65F6\u95F4: {{yaml.release_date}}",
+        "\u4F53\u9A8C\u6B21\u6570: 1",
+        "\u6D77\u62A5: {{poster}}",
+        "\u6765\u6E90\u94FE\u63A5: {{showstart_url}}",
+        "\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}"
+      ],
+      {
+        cover: "![cover|300]({{poster}})"
+      }
+    );
     TEMPLATE_CONTENTS = {
       bangumi: BANGUMI_TEMPLATE_CONTENT,
-      mobygames: `---
-categories: \u65B0\u4F5C\u54C1\u5361\u7247
-\u540D\u79F0: {{yaml.title}}
-\u539F\u540D: {{yaml.title_original}}
-aliases: {{yaml.aliases}}
-\u5A92\u4F53\u7C7B\u578B: {{yaml.media_type}}
-\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}
-\u8BC4\u5206:
-\u72B6\u6001: \u8FDB\u884C\u4E2D
-\u5B8C\u6210\u65F6\u95F4: ""
-\u4F53\u9A8C\u6B21\u6570: 1
-\u6D77\u62A5: {{poster}}
-\u6765\u6E90\u94FE\u63A5: {{mobygames_url}}
-\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}
----
-
-{{cover_markdown}}
-
-## \u7B80\u4ECB
-
-{{summary}}
-
-## \u5E73\u53F0
-
-{{platforms_text}}
-
-## \u7B80\u8BB0
-`,
+      mobygames: buildTemplateContent(
+        "mobygames",
+        [
+          "categories: \u65B0\u4F5C\u54C1\u5361\u7247",
+          "\u540D\u79F0: {{yaml.title}}",
+          "\u539F\u540D: {{yaml.title_original}}",
+          "aliases: {{yaml.aliases}}",
+          "\u5A92\u4F53\u7C7B\u578B: {{yaml.media_type}}",
+          "\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}",
+          "\u8BC4\u5206:",
+          "\u72B6\u6001: \u8FDB\u884C\u4E2D",
+          '\u5B8C\u6210\u65F6\u95F4: ""',
+          "\u4F53\u9A8C\u6B21\u6570: 1",
+          "\u6D77\u62A5: {{poster}}",
+          "\u6765\u6E90\u94FE\u63A5: {{mobygames_url}}",
+          "\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}"
+        ],
+        {
+          cover: "{{cover_markdown}}",
+          details: ["## \u5E73\u53F0", "{{platforms_text}}"]
+        }
+      ),
       bilibili_show: BILIBILI_SHOW_TEMPLATE_CONTENT,
       showstart: SHOWSTART_TEMPLATE_CONTENT
     };
@@ -341,17 +481,9 @@ __export(main_exports, {
 module.exports = __toCommonJS(main_exports);
 
 // src/plugin.ts
+var import_promises4 = __toESM(require("fs/promises"));
+var import_path4 = __toESM(require("path"));
 var import_obsidian5 = require("obsidian");
-
-// src/core/cards.ts
-var import_promises2 = __toESM(require("fs/promises"));
-var import_path2 = __toESM(require("path"));
-
-// src/core/files.ts
-var import_fs = __toESM(require("fs"));
-var import_promises = __toESM(require("fs/promises"));
-var import_path = __toESM(require("path"));
-init_paths();
 
 // src/core/text.ts
 var MONTH_MAP = {
@@ -437,7 +569,271 @@ function normalizeDateText(value) {
   return `${match[3]}-${month}-${day}`;
 }
 
+// src/core/template.ts
+function renderYamlScalar(value, indentLevel) {
+  if (value === null || typeof value === "undefined") return '""';
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  const text = String(value);
+  if (text.includes("\n")) {
+    const indent = "  ".repeat(indentLevel + 1);
+    return `|-
+${text.split("\n").map((line) => `${indent}${line}`).join("\n")}`;
+  }
+  return JSON.stringify(text);
+}
+function renderYamlValue(value, indentLevel) {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "[]";
+    const indent = "  ".repeat(indentLevel + 1);
+    return `
+${value.map((item) => `${indent}- ${renderYamlScalar(item, indentLevel + 1)}`).join("\n")}`;
+  }
+  return renderYamlScalar(value, indentLevel);
+}
+function getValueByPath(target, sourcePath) {
+  return String(sourcePath || "").split(".").filter(Boolean).reduce((current, key) => {
+    if (current === null || typeof current === "undefined") return void 0;
+    return current[key];
+  }, target);
+}
+function renderTemplate(template, context) {
+  return String(template || "").replace(/\{\{\s*([a-zA-Z0-9_\.]+)\s*\}\}/g, (_, key) => {
+    const value = getValueByPath(context, key);
+    if (Array.isArray(value)) {
+      return value.join(", ");
+    }
+    if (value === null || typeof value === "undefined") {
+      return "";
+    }
+    return String(value);
+  });
+}
+function buildYamlTemplateContext(values) {
+  return Object.entries(values).reduce((result, [key, value]) => {
+    result[key] = renderYamlValue(value, 0);
+    return result;
+  }, {});
+}
+function buildTemplateContext(sourceKey, subject) {
+  const context = {
+    ...subject,
+    categories: "\u65B0\u4F5C\u54C1\u5361\u7247",
+    source: sourceKey,
+    poster: String(subject.poster_path || subject.cover_remote || "").trim(),
+    network_poster: typeof subject.network_poster === "boolean" ? subject.network_poster : true,
+    rating: "",
+    status: "\u8FDB\u884C\u4E2D",
+    finished_at: "",
+    rewatch_count: 1
+  };
+  return {
+    ...context,
+    yaml: buildYamlTemplateContext(context),
+    cover_markdown: context.poster ? `![cover|300](${context.poster})` : ""
+  };
+}
+
+// src/bangumi-refresh.ts
+init_template_fields();
+var TEMPLATE_PLACEHOLDER_PATTERN = /\{\{\s*(?:yaml\.)?([a-zA-Z0-9_]+)\s*\}\}/g;
+function extractFrontmatterBlock(content) {
+  const normalized = String(content || "").replace(/\r\n/g, "\n");
+  const lines = normalized.split("\n");
+  if (lines[0] !== "---") {
+    return null;
+  }
+  for (let index = 1; index < lines.length; index += 1) {
+    if (lines[index] !== "---") {
+      continue;
+    }
+    return {
+      frontmatter: lines.slice(1, index).join("\n"),
+      body: lines.slice(index + 1).join("\n")
+    };
+  }
+  return null;
+}
+function listFrontmatterKeys(frontmatter) {
+  const keys = [];
+  for (const line of String(frontmatter || "").split("\n")) {
+    const match = line.match(/^([^-\s#][^:]*):(?:\s|$)/);
+    if (match) {
+      keys.push(match[1].trim());
+    }
+  }
+  return keys;
+}
+function parseTemplateFrontmatterBindings(template) {
+  const block = extractFrontmatterBlock(template);
+  if (!block) {
+    return [];
+  }
+  const bindings = [];
+  for (const line of block.frontmatter.split("\n")) {
+    const match = line.match(/^([^-\s#][^:]*):\s*(.*)$/);
+    if (!match) {
+      continue;
+    }
+    const propertyKey = match[1].trim();
+    const valueText = match[2] || "";
+    const placeholderMatch = [...valueText.matchAll(TEMPLATE_PLACEHOLDER_PATTERN)][0];
+    if (!placeholderMatch?.[1]) {
+      continue;
+    }
+    bindings.push({
+      propertyKey,
+      variableKey: placeholderMatch[1]
+    });
+  }
+  return bindings;
+}
+function sanitizeFrontmatterObject(frontmatter) {
+  return Object.entries(frontmatter || {}).reduce((result, [key, value]) => {
+    if (key === "position") {
+      return result;
+    }
+    result[key] = value;
+    return result;
+  }, {});
+}
+function stringifyFrontmatterEntries(entries) {
+  const lines = ["---"];
+  for (const entry of entries) {
+    const renderedValue = renderYamlValue(entry.value, 0);
+    if (renderedValue.startsWith("\n")) {
+      lines.push(`${entry.key}:${renderedValue}`);
+    } else {
+      lines.push(`${entry.key}: ${renderedValue}`);
+    }
+  }
+  lines.push("---", "");
+  return `${lines.join("\n")}`;
+}
+function replaceFrontmatter(content, entries) {
+  const normalized = String(content || "").replace(/\r\n/g, "\n");
+  const block = extractFrontmatterBlock(normalized);
+  const body = block ? block.body : normalized;
+  const prefix = stringifyFrontmatterEntries(entries);
+  const normalizedBody = body.replace(/^\n*/, "");
+  if (!normalizedBody) {
+    return ensureTrailingNewline(prefix);
+  }
+  return ensureTrailingNewline(`${prefix}${normalizedBody}`);
+}
+function normalizeComparableValue(value) {
+  if (Array.isArray(value)) {
+    return JSON.stringify(value.map((item) => String(item || "").trim()).filter(Boolean));
+  }
+  if (typeof value === "boolean" || typeof value === "number") {
+    return String(value);
+  }
+  return String(value || "").trim();
+}
+function hasMeaningfulValue(value) {
+  if (Array.isArray(value)) {
+    return value.some((item) => String(item || "").trim());
+  }
+  if (typeof value === "boolean" || typeof value === "number") {
+    return true;
+  }
+  return Boolean(String(value || "").trim());
+}
+function shouldRefreshPoster(frontmatter, posterPropertyKey, networkPosterPropertyKey) {
+  const networkPosterValue = networkPosterPropertyKey ? frontmatter[networkPosterPropertyKey] : void 0;
+  if (networkPosterValue === false || String(networkPosterValue || "").trim().toLowerCase() === "false") {
+    return false;
+  }
+  const currentPosterValue = posterPropertyKey ? frontmatter[posterPropertyKey] : void 0;
+  if (!hasMeaningfulValue(currentPosterValue)) {
+    return true;
+  }
+  return /^https?:\/\//i.test(String(currentPosterValue || "").trim());
+}
+function collectBangumiTemplateValueCandidates(frontmatter, bindingGroups) {
+  const result = {};
+  for (const literalKey of ["bangumi_id", "bangumi_url"]) {
+    if (hasMeaningfulValue(frontmatter[literalKey])) {
+      result[literalKey] = frontmatter[literalKey];
+    }
+  }
+  for (const bindings of bindingGroups) {
+    for (const binding of bindings) {
+      if (typeof result[binding.variableKey] !== "undefined") {
+        continue;
+      }
+      if (!hasMeaningfulValue(frontmatter[binding.propertyKey])) {
+        continue;
+      }
+      result[binding.variableKey] = frontmatter[binding.propertyKey];
+    }
+  }
+  return result;
+}
+function analyzeBangumiFrontmatterUpdate(args) {
+  const managedCandidates = [];
+  const conflicts = [];
+  const managedPropertyKeys = /* @__PURE__ */ new Set();
+  const posterBinding = args.templateBindings.find((binding) => binding.variableKey === "poster");
+  const networkPosterBinding = args.templateBindings.find(
+    (binding) => binding.variableKey === "network_poster"
+  );
+  const canRefreshPoster = shouldRefreshPoster(
+    args.existingFrontmatter,
+    posterBinding?.propertyKey || null,
+    networkPosterBinding?.propertyKey || null
+  );
+  for (const binding of args.templateBindings) {
+    if (!BANGUMI_REFRESH_MANAGED_VARIABLE_SET.has(binding.variableKey)) {
+      continue;
+    }
+    const variableKey = binding.variableKey;
+    const currentValue = args.existingFrontmatter[binding.propertyKey];
+    let fetchedValue = args.fetchedValues[variableKey];
+    if (variableKey === "poster" && !canRefreshPoster && hasMeaningfulValue(currentValue)) {
+      fetchedValue = currentValue;
+    }
+    if (variableKey === "network_poster" && !canRefreshPoster && typeof currentValue !== "undefined") {
+      fetchedValue = currentValue;
+    }
+    const candidate = {
+      propertyKey: binding.propertyKey,
+      variableKey,
+      currentValue,
+      fetchedValue
+    };
+    managedCandidates.push(candidate);
+    managedPropertyKeys.add(binding.propertyKey);
+    if (hasMeaningfulValue(currentValue) && hasMeaningfulValue(fetchedValue) && normalizeComparableValue(currentValue) !== normalizeComparableValue(fetchedValue)) {
+      conflicts.push(candidate);
+    }
+  }
+  const otherEntries = args.existingKeyOrder.filter((key) => !managedPropertyKeys.has(key)).map((key) => ({
+    key,
+    value: args.existingFrontmatter[key]
+  }));
+  return {
+    managedCandidates,
+    conflicts,
+    otherEntries
+  };
+}
+function buildBangumiFrontmatterEntries(analysis, decisions = {}) {
+  const managedEntries = analysis.managedCandidates.map((candidate) => ({
+    key: candidate.propertyKey,
+    value: decisions[candidate.propertyKey] === "keep" ? candidate.currentValue : candidate.fetchedValue
+  }));
+  return [...managedEntries, ...analysis.otherEntries];
+}
+
+// src/core/cards.ts
+var import_promises2 = __toESM(require("fs/promises"));
+var import_path2 = __toESM(require("path"));
+
 // src/core/files.ts
+var import_fs = __toESM(require("fs"));
+var import_promises = __toESM(require("fs/promises"));
+var import_path = __toESM(require("path"));
+init_paths();
 async function ensureTextFile(filePath, content) {
   try {
     await import_promises.default.access(filePath, import_fs.default.constants.F_OK);
@@ -513,72 +909,6 @@ async function chooseAvailableAssetPath(folder, baseName, extension, exists) {
 
 // src/core/cards.ts
 init_paths();
-
-// src/core/template.ts
-function renderYamlScalar(value, indentLevel) {
-  if (value === null || typeof value === "undefined") return '""';
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  const text = String(value);
-  if (text.includes("\n")) {
-    const indent = "  ".repeat(indentLevel + 1);
-    return `|-
-${text.split("\n").map((line) => `${indent}${line}`).join("\n")}`;
-  }
-  return JSON.stringify(text);
-}
-function renderYamlValue(value, indentLevel) {
-  if (Array.isArray(value)) {
-    if (value.length === 0) return "[]";
-    const indent = "  ".repeat(indentLevel + 1);
-    return `
-${value.map((item) => `${indent}- ${renderYamlScalar(item, indentLevel + 1)}`).join("\n")}`;
-  }
-  return renderYamlScalar(value, indentLevel);
-}
-function getValueByPath(target, sourcePath) {
-  return String(sourcePath || "").split(".").filter(Boolean).reduce((current, key) => {
-    if (current === null || typeof current === "undefined") return void 0;
-    return current[key];
-  }, target);
-}
-function renderTemplate(template, context) {
-  return String(template || "").replace(/\{\{\s*([a-zA-Z0-9_\.]+)\s*\}\}/g, (_, key) => {
-    const value = getValueByPath(context, key);
-    if (Array.isArray(value)) {
-      return value.join(", ");
-    }
-    if (value === null || typeof value === "undefined") {
-      return "";
-    }
-    return String(value);
-  });
-}
-function buildYamlTemplateContext(values) {
-  return Object.entries(values).reduce((result, [key, value]) => {
-    result[key] = renderYamlValue(value, 0);
-    return result;
-  }, {});
-}
-function buildTemplateContext(sourceKey, subject) {
-  const context = {
-    ...subject,
-    categories: "\u65B0\u4F5C\u54C1\u5361\u7247",
-    source: sourceKey,
-    poster: String(subject.poster_path || subject.cover_remote || "").trim(),
-    network_poster: typeof subject.network_poster === "boolean" ? subject.network_poster : true,
-    rating: "",
-    status: "\u8FDB\u884C\u4E2D",
-    finished_at: "",
-    rewatch_count: 1
-  };
-  return {
-    ...context,
-    yaml: buildYamlTemplateContext(context),
-    cover_markdown: context.poster ? `![cover|300](${context.poster})` : ""
-  };
-}
-
-// src/core/cards.ts
 var BANGUMI_MEDIA_TYPE_TEMPLATE_MAP = {
   \u6E38\u620F: "game",
   \u52A8\u753B: "anime",
@@ -681,6 +1011,9 @@ function normalizeError(error) {
   }
   return String(error || "\u672A\u77E5\u9519\u8BEF");
 }
+
+// src/plugin.ts
+init_paths();
 
 // src/config/storage.ts
 var import_fs2 = __toESM(require("fs"));
@@ -1042,31 +1375,7 @@ var ConfigStore = class {
 init_defaults();
 
 // src/source-ui-meta.ts
-var COMMON_TEMPLATE_VARIABLES = [
-  { key: "title", description: "\u5F53\u524D\u5361\u7247\u6807\u9898\u3002" },
-  { key: "title_original", description: "\u539F\u540D\u3002" },
-  { key: "aliases", description: "\u522B\u540D\u5217\u8868\uFF1B\u76F4\u63A5\u4F7F\u7528\u65F6\u4F1A\u62FC\u6210\u9017\u53F7\u5206\u9694\u6587\u672C\u3002" },
-  { key: "media_type", description: "\u5A92\u4F53\u7C7B\u578B\u3002" },
-  { key: "release_date", description: "\u53D1\u5E03\u65E5\u671F\uFF0C\u683C\u5F0F\u4E3A YYYY-MM-DD\u3002" },
-  { key: "release_year", description: "\u53D1\u884C\u5E74\u4EFD\u3002" },
-  { key: "cover_remote", description: "\u6765\u6E90\u7AD9\u70B9\u8FD4\u56DE\u7684\u8FDC\u7A0B\u6D77\u62A5\u94FE\u63A5\u3002" },
-  { key: "summary", description: "\u7B80\u4ECB\u6B63\u6587\u3002" },
-  { key: "platforms", description: "\u5E73\u53F0\u5217\u8868\uFF1B\u76F4\u63A5\u4F7F\u7528\u65F6\u4F1A\u62FC\u6210\u9017\u53F7\u5206\u9694\u6587\u672C\u3002" },
-  { key: "platforms_text", description: "\u5E73\u53F0\u5217\u8868\u7684\u6362\u884C\u6587\u672C\u3002" },
-  { key: "poster_path", description: "\u6700\u7EC8\u6D77\u62A5\u8DEF\u5F84\uFF1B\u4E0B\u8F7D\u672C\u5730\u540E\u4F1A\u53D8\u6210\u672C\u5730\u8DEF\u5F84\u3002" },
-  { key: "poster", description: "\u6A21\u677F\u91CC\u63A8\u8350\u76F4\u63A5\u4F7F\u7528\u7684\u6D77\u62A5\u5B57\u6BB5\u3002" },
-  { key: "network_poster", description: "\u5F53\u524D\u6D77\u62A5\u662F\u5426\u4ECD\u662F\u7F51\u7EDC\u94FE\u63A5\u3002" },
-  { key: "categories", description: "\u9ED8\u8BA4\u5206\u7C7B\u3002" },
-  { key: "source", description: "\u6765\u6E90 id\u3002" },
-  { key: "rating", description: "\u9884\u7559\u8BC4\u5206\u9ED8\u8BA4\u503C\u3002" },
-  { key: "status", description: "\u9884\u7559\u72B6\u6001\u9ED8\u8BA4\u503C\u3002" },
-  { key: "finished_at", description: "\u9884\u7559\u5B8C\u6210\u65F6\u95F4\u9ED8\u8BA4\u503C\u3002" },
-  { key: "rewatch_count", description: "\u9884\u7559\u4F53\u9A8C\u6B21\u6570\u9ED8\u8BA4\u503C\u3002" },
-  { key: "cover_markdown", description: "\u73B0\u6210\u5C01\u9762 Markdown\u3002", yamlSafe: false }
-];
-function buildTemplateVariables(sourceSpecific) {
-  return [...COMMON_TEMPLATE_VARIABLES, ...sourceSpecific];
-}
+init_template_fields();
 var MEDIA_SOURCE_UI_META_MAP = {
   bangumi: {
     supportsSearch: true,
@@ -1076,12 +1385,10 @@ var MEDIA_SOURCE_UI_META_MAP = {
       "\u652F\u6301\u76F4\u63A5\u7C98\u8D34 Bangumi \u6761\u76EE\u94FE\u63A5\u3002",
       "\u652F\u6301\u76F4\u63A5\u8F93\u5165\u6570\u5B57\u6761\u76EE ID\u3002",
       "\u652F\u6301\u6309\u6E38\u620F\u3001\u52A8\u753B\u3001\u4E66\u7C4D\u3001\u4E09\u6B21\u5143\u81EA\u52A8\u5207\u6362\u5230\u4E0D\u540C\u6A21\u677F\uFF1B\u7559\u7A7A\u65F6\u4F1A\u56DE\u9000\u901A\u7528\u6A21\u677F\u3002",
-      "\u4F1A\u6309\u6A21\u677F\u65B0\u5EFA\u4F5C\u54C1\u5361\u7247\uFF0C\u5E76\u53EF\u6309\u914D\u7F6E\u51B3\u5B9A\u662F\u5426\u4E0B\u8F7D\u672C\u5730\u6D77\u62A5\u3002"
+      "\u4F1A\u6309\u6A21\u677F\u65B0\u5EFA\u4F5C\u54C1\u5361\u7247\uFF0C\u5E76\u53EF\u6309\u914D\u7F6E\u51B3\u5B9A\u662F\u5426\u4E0B\u8F7D\u672C\u5730\u6D77\u62A5\u3002",
+      "\u652F\u6301\u5BF9\u5F53\u524D\u6253\u5F00\u7684 Bangumi \u5361\u7247\u91CD\u65B0\u8865\u5168 frontmatter\uFF0C\u4E0D\u4F1A\u91CD\u5199\u6B63\u6587\u3002"
     ],
-    templateVariables: buildTemplateVariables([
-      { key: "bangumi_id", description: "Bangumi \u6761\u76EE ID\u3002" },
-      { key: "bangumi_url", description: "Bangumi \u6761\u76EE\u94FE\u63A5\u3002" }
-    ])
+    templateVariables: SOURCE_TEMPLATE_VARIABLES_MAP.bangumi
   },
   mobygames: {
     supportsSearch: false,
@@ -1091,10 +1398,7 @@ var MEDIA_SOURCE_UI_META_MAP = {
       "\u4E0D\u652F\u6301\u641C\u7D22\u9875\u3001\u5217\u8868\u9875\u6216\u7AD9\u5185\u6807\u9898\u641C\u7D22\u3002",
       "\u4F1A\u6293\u53D6\u516C\u5F00\u9875\u9762\u5185\u5BB9\u5E76\u6309\u6A21\u677F\u65B0\u5EFA\u4F5C\u54C1\u5361\u7247\u3002"
     ],
-    templateVariables: buildTemplateVariables([
-      { key: "mobygames_id", description: "MobyGames \u6E38\u620F ID\u3002" },
-      { key: "mobygames_url", description: "MobyGames \u6E38\u620F\u94FE\u63A5\u3002" }
-    ])
+    templateVariables: SOURCE_TEMPLATE_VARIABLES_MAP.mobygames
   },
   bilibili_show: {
     supportsSearch: false,
@@ -1104,13 +1408,7 @@ var MEDIA_SOURCE_UI_META_MAP = {
       "\u4E0D\u652F\u6301\u7AD9\u5185\u641C\u7D22\u3002",
       "\u4F1A\u76F4\u63A5\u8BFB\u53D6\u9879\u76EE\u8BE6\u60C5\u63A5\u53E3\uFF0C\u4E0D\u89E3\u6790\u9875\u9762\u6B63\u6587\u3002"
     ],
-    templateVariables: buildTemplateVariables([
-      { key: "bilibili_show_id", description: "\u4F1A\u5458\u8D2D\u9879\u76EE ID\u3002" },
-      { key: "bilibili_show_url", description: "\u4F1A\u5458\u8D2D\u8BE6\u60C5\u9875\u94FE\u63A5\u3002" },
-      { key: "venue_name", description: "\u6F14\u51FA\u573A\u6240\u540D\u79F0\u3002" },
-      { key: "venue_address", description: "\u6F14\u51FA\u573A\u6240\u5730\u5740\u3002" },
-      { key: "venue_text", description: "\u6F14\u51FA\u573A\u6240\u7684\u4E00\u884C\u6587\u672C\uFF0C\u4F18\u5148\u62FC\u63A5\u540D\u79F0\u548C\u5730\u5740\u3002" }
-    ])
+    templateVariables: SOURCE_TEMPLATE_VARIABLES_MAP.bilibili_show
   },
   showstart: {
     supportsSearch: false,
@@ -1120,13 +1418,7 @@ var MEDIA_SOURCE_UI_META_MAP = {
       "\u4E0D\u652F\u6301\u7AD9\u5185\u641C\u7D22\u3002",
       "\u4F1A\u8BFB\u53D6\u79C0\u52A8\u6D3B\u52A8\u8BE6\u60C5\u63A5\u53E3\uFF0C\u4E0D\u89E3\u6790\u9875\u9762\u6B63\u6587\u3002"
     ],
-    templateVariables: buildTemplateVariables([
-      { key: "showstart_activity_id", description: "\u79C0\u52A8\u6D3B\u52A8 ID\u3002" },
-      { key: "showstart_url", description: "\u79C0\u52A8\u6D3B\u52A8\u8BE6\u60C5\u9875\u94FE\u63A5\u3002" },
-      { key: "venue_name", description: "\u6F14\u51FA\u573A\u6240\u540D\u79F0\u3002" },
-      { key: "venue_address", description: "\u6F14\u51FA\u573A\u6240\u5730\u5740\u3002" },
-      { key: "venue_text", description: "\u6F14\u51FA\u573A\u6240\u7684\u4E00\u884C\u6587\u672C\uFF0C\u4F18\u5148\u62FC\u63A5\u540D\u79F0\u548C\u5730\u5740\u3002" }
-    ])
+    templateVariables: SOURCE_TEMPLATE_VARIABLES_MAP.showstart
   }
 };
 
@@ -1159,19 +1451,26 @@ function extractInfoboxValues(value) {
   return normalized ? [normalized] : [];
 }
 function collectBangumiAliases(subject, preferredTitle, originalTitle) {
+  return collectBangumiInfoboxValues(subject, ["\u522B\u540D"], [preferredTitle, originalTitle]);
+}
+function collectBangumiInfoboxValues(subject, keys, excludedValues = []) {
   const aliases = [];
   const seen = /* @__PURE__ */ new Set();
+  const normalizedExcludedValues = new Set(
+    excludedValues.map((value) => String(value || "").trim()).filter(Boolean)
+  );
+  const keySet = new Set(keys.map((key) => key.trim()));
   const pushAlias = (value) => {
     const normalized = String(value || "").trim();
     if (!normalized) return;
-    if (normalized === preferredTitle || normalized === originalTitle) return;
+    if (normalizedExcludedValues.has(normalized)) return;
     if (seen.has(normalized)) return;
     seen.add(normalized);
     aliases.push(normalized);
   };
   if (Array.isArray(subject.infobox)) {
     for (const item of subject.infobox) {
-      if (String(item?.key || "").trim() !== "\u522B\u540D") continue;
+      if (!keySet.has(String(item?.key || "").trim())) continue;
       extractInfoboxValues(item?.value).forEach(pushAlias);
     }
   }
@@ -1214,6 +1513,9 @@ function normalizeBangumiSubject(subject) {
   const releaseDate = normalizeDateValue(subject?.date);
   const releaseYear = extractYear(subject?.date);
   const aliases = collectBangumiAliases(subject, preferredTitle, originalTitle);
+  const authors = collectBangumiInfoboxValues(subject, ["\u4F5C\u8005"]);
+  const publishers = collectBangumiInfoboxValues(subject, ["\u51FA\u7248\u793E"]);
+  const serialMagazines = collectBangumiInfoboxValues(subject, ["\u8FDE\u8F7D\u6742\u5FD7"]);
   return {
     bangumi_id: Number(subject?.id),
     bangumi_url: `https://bgm.tv/subject/${subject?.id}`,
@@ -1226,7 +1528,10 @@ function normalizeBangumiSubject(subject) {
     cover_remote: pickBangumiCover(subject?.images),
     summary: normalizeSummaryText(subject?.summary),
     platforms: [],
-    platforms_text: ""
+    platforms_text: "",
+    authors,
+    publishers,
+    serial_magazines: serialMagazines
   };
 }
 
@@ -1746,19 +2051,6 @@ function pickShowstartCover(detail) {
     ])
   );
 }
-function pickNestedString2(detail, containerKeys, valueKeys) {
-  for (const containerKey of containerKeys) {
-    const container = detail[containerKey];
-    if (!container || typeof container !== "object" || Array.isArray(container)) {
-      continue;
-    }
-    const picked = pickString2(container, valueKeys);
-    if (picked) {
-      return picked;
-    }
-  }
-  return "";
-}
 function buildVenueText2(name, address) {
   if (!name) return address;
   if (!address) return name;
@@ -1766,54 +2058,104 @@ function buildVenueText2(name, address) {
   if (name.includes(address)) return name;
   return `${name} \xB7 ${address}`;
 }
+function pickShowstartVenueContainers(detail) {
+  const containers = [{ record: detail, allowGenericName: false }];
+  const seen = /* @__PURE__ */ new Set([detail]);
+  for (const key of ["venueInfo", "venue_info", "siteInfo", "site_info", "venue", "place"]) {
+    const value = detail[key];
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      continue;
+    }
+    const record = value;
+    if (seen.has(record)) {
+      continue;
+    }
+    seen.add(record);
+    containers.push({ record, allowGenericName: true });
+  }
+  return containers;
+}
+function pickStringFromVenueContainers(containers, keys, options = {}) {
+  for (const container of containers) {
+    if (options.genericNameOnly && !container.allowGenericName) {
+      continue;
+    }
+    const picked = pickString2(container.record, keys);
+    if (picked) {
+      return picked;
+    }
+  }
+  return "";
+}
+function appendVenuePart(parts, value) {
+  const normalized = String(value || "").trim();
+  if (!normalized) {
+    return;
+  }
+  const duplicateIndex = parts.findIndex(
+    (part) => part === normalized || part.includes(normalized) || normalized.includes(part)
+  );
+  if (duplicateIndex === -1) {
+    parts.push(normalized);
+    return;
+  }
+  if (normalized.length > parts[duplicateIndex].length) {
+    parts.splice(duplicateIndex, 1, normalized);
+  }
+}
+function buildVenueAddressFromParts(containers) {
+  const parts = [];
+  appendVenuePart(
+    parts,
+    pickStringFromVenueContainers(containers, ["provinceName", "province_name", "province"])
+  );
+  appendVenuePart(
+    parts,
+    pickStringFromVenueContainers(containers, ["cityName", "city_name", "city"])
+  );
+  appendVenuePart(
+    parts,
+    pickStringFromVenueContainers(containers, ["districtName", "district_name", "district"])
+  );
+  appendVenuePart(
+    parts,
+    pickStringFromVenueContainers(containers, [
+      "detailAddress",
+      "detail_address",
+      "venueAddress",
+      "venue_address",
+      "placeAddress",
+      "place_address",
+      "address",
+      "addr"
+    ])
+  );
+  return parts.join("");
+}
 function pickShowstartVenue(detail) {
-  const venueName = pickString2(detail, [
+  const containers = pickShowstartVenueContainers(detail);
+  const venueName = pickStringFromVenueContainers(containers, [
     "venueName",
     "venue_name",
     "siteName",
     "site_name",
     "placeName",
     "place_name",
-    "venue",
-    "place",
     "shopName",
     "stadiumName"
-  ]) || pickNestedString2(detail, ["venueInfo", "venue_info", "siteInfo", "site_info"], [
-    "venueName",
-    "venue_name",
-    "name",
-    "siteName",
-    "site_name",
-    "placeName",
-    "place_name",
-    "shopName",
-    "stadiumName"
-  ]);
-  const venueAddress = pickString2(detail, [
+  ]) || pickStringFromVenueContainers(
+    containers,
+    ["name", "venue", "place"],
+    { genericNameOnly: true }
+  );
+  const venueAddress = pickStringFromVenueContainers(containers, [
     "venueAddress",
     "venue_address",
-    "address",
-    "addr",
-    "detailAddress",
-    "detail_address",
     "placeAddress",
     "place_address",
-    "cityName",
-    "city_name",
-    "city"
-  ]) || pickNestedString2(detail, ["venueInfo", "venue_info", "siteInfo", "site_info"], [
-    "venueAddress",
-    "venue_address",
     "address",
-    "addr",
-    "detailAddress",
-    "detail_address",
-    "placeAddress",
-    "place_address",
-    "cityName",
-    "city_name",
-    "city"
-  ]);
+    "addr"
+  ]) || buildVenueAddressFromParts(containers);
   return {
     venueName,
     venueAddress,
@@ -1936,7 +2278,7 @@ function createShowstartTraceId() {
 function normalizeHeaderValue(value) {
   return value || "nil";
 }
-function buildShowstartV3Request(path4, body, auth = {}) {
+function buildShowstartV3Request(path5, body, auth = {}) {
   const bodyString = JSON.stringify(body);
   const deviceToken = auth.deviceToken || createShowstartDeviceToken();
   const traceId = auth.traceId || createShowstartTraceId();
@@ -1959,11 +2301,11 @@ function buildShowstartV3Request(path4, body, auth = {}) {
     CTRACKPATH: "",
     CSOURCEPATH: "",
     CRPSIGN: md5Hex(
-      `${accessToken}${""}${idToken}${userId}${SHOWSTART_APP_ID}${deviceToken}${bodyString}${path4}${SHOWSTART_VERSION}${SHOWSTART_APP_ID}${traceId}`
+      `${accessToken}${""}${idToken}${userId}${SHOWSTART_APP_ID}${deviceToken}${bodyString}${path5}${SHOWSTART_VERSION}${SHOWSTART_APP_ID}${traceId}`
     )
   };
   return {
-    url: `${SHOWSTART_V3_BASE}${path4}`,
+    url: `${SHOWSTART_V3_BASE}${path5}`,
     body: bodyString,
     headers,
     traceId
@@ -1993,8 +2335,8 @@ var SHOWSTART_GETTOKEN_PATH = "/waf/gettoken";
 var SHOWSTART_ACTIVITY_DETAILS_PATH = "/wap/activity/details";
 var SHOWSTART_TOKEN_REFRESH_MARGIN_MS = 60 * 1e3;
 var cachedShowstartAuth = null;
-async function requestShowstartV3(path4, body, auth) {
-  const request2 = buildShowstartV3Request(path4, body, auth || void 0);
+async function requestShowstartV3(path5, body, auth) {
+  const request2 = buildShowstartV3Request(path5, body, auth || void 0);
   return requestJson(request2.url, {
     method: "POST",
     body: request2.body,
@@ -2087,6 +2429,9 @@ var MEDIA_SOURCE_MAP = {
   bilibili_show: bilibiliShowSource,
   showstart: showstartSource
 };
+
+// src/plugin.ts
+init_template_fields();
 
 // src/ui/modals.ts
 var import_obsidian2 = require("obsidian");
@@ -2202,6 +2547,73 @@ var SourceSuggestModal = class extends import_obsidian2.FuzzySuggestModal {
         this.resolved = true;
       }
     }, 0);
+  }
+};
+function formatConflictValue(value) {
+  if (Array.isArray(value)) {
+    return value.length ? value.map((item) => `- ${String(item || "")}`).join("\n") : "(\u7A7A)";
+  }
+  if (value === null || typeof value === "undefined") {
+    return "(\u7A7A)";
+  }
+  const normalized = String(value).trim();
+  return normalized || "(\u7A7A)";
+}
+var BangumiRefreshConflictModal = class extends import_obsidian2.Modal {
+  constructor(app, conflict) {
+    super(app);
+    this.conflict = conflict;
+    this.result = null;
+    this.resolved = false;
+    this.setTitle(`\u5B57\u6BB5\u51B2\u7A81\uFF1A${conflict.propertyKey}`);
+  }
+  openAndWait() {
+    return new Promise((resolve) => {
+      this.resolvePromise = resolve;
+      this.open();
+    });
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("p", {
+      text: `\u5F53\u524D\u7B14\u8BB0\u548C\u6700\u65B0 Bangumi \u6570\u636E\u5728\u201C${this.conflict.propertyKey}\u201D\u4E0A\u4E0D\u4E00\u81F4\uFF0C\u8BF7\u9009\u62E9\u4FDD\u7559\u54EA\u4E00\u8FB9\u3002`
+    });
+    new import_obsidian2.Setting(contentEl).setName("\u5F53\u524D\u503C");
+    contentEl.createEl("pre", {
+      text: formatConflictValue(this.conflict.currentValue),
+      cls: "mz-media-fetcher-conflict-value"
+    });
+    new import_obsidian2.Setting(contentEl).setName("\u6293\u53D6\u503C");
+    contentEl.createEl("pre", {
+      text: formatConflictValue(this.conflict.fetchedValue),
+      cls: "mz-media-fetcher-conflict-value"
+    });
+    const actions = new import_obsidian2.Setting(contentEl);
+    actions.addButton((button) => {
+      button.setButtonText("\u4FDD\u7559\u5F53\u524D\u503C");
+      button.onClick(() => this.closeWith("keep"));
+    });
+    actions.addButton((button) => {
+      button.setButtonText("\u4F7F\u7528\u6293\u53D6\u503C");
+      button.setCta();
+      button.onClick(() => this.closeWith("replace"));
+    });
+  }
+  onClose() {
+    this.contentEl.empty();
+    if (!this.resolved && this.resolvePromise) {
+      this.resolvePromise(this.result);
+      this.resolved = true;
+    }
+  }
+  closeWith(result) {
+    this.result = result;
+    if (!this.resolved && this.resolvePromise) {
+      this.resolvePromise(this.result);
+      this.resolved = true;
+    }
+    this.close();
   }
 };
 
@@ -2517,6 +2929,11 @@ var MZMediaFetcherPlugin = class extends import_obsidian5.Plugin {
         callback: () => this.createCardForSource(source.id)
       });
     }
+    this.addCommand({
+      id: "refresh-current-bangumi-note",
+      name: "\u91CD\u65B0\u8865\u5168\u5F53\u524D\u7B14\u8BB0\u7684 Bangumi \u4FE1\u606F",
+      callback: () => this.refreshCurrentBangumiNote()
+    });
     this.addSettingTab(new MZMediaFetcherSettingTab(this.app, this));
   }
   normalizeError(error) {
@@ -2529,6 +2946,81 @@ var MZMediaFetcherPlugin = class extends import_obsidian5.Plugin {
       return;
     }
     await this.runCreateFlow(source);
+  }
+  async refreshCurrentBangumiNote() {
+    if (this.isRunning) {
+      new import_obsidian5.Notice("\u5F53\u524D\u5DF2\u6709\u6293\u53D6\u4EFB\u52A1\u5728\u8FDB\u884C\u4E2D\u3002", 5e3);
+      return;
+    }
+    const vaultInfo = this.configStore.getVaultInfo();
+    if (!vaultInfo) {
+      new import_obsidian5.Notice("\u5F53\u524D vault \u4E0D\u652F\u6301\u672C\u5730\u63D2\u4EF6\u914D\u7F6E\u8DEF\u5F84\u3002", 8e3);
+      return;
+    }
+    const activeFile = this.app.workspace.getActiveFile();
+    if (!activeFile || activeFile.extension !== "md") {
+      new import_obsidian5.Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u7BC7\u8981\u8865\u5168\u7684 Markdown \u7B14\u8BB0\u3002", 8e3);
+      return;
+    }
+    this.isRunning = true;
+    try {
+      const sourceConfigs = await this.configStore.loadSourceConfigs(vaultInfo.path);
+      const bangumiConfig = sourceConfigs.bangumi;
+      const rawContent = await this.app.vault.cachedRead(activeFile);
+      const frontmatterBlock = extractFrontmatterBlock(rawContent);
+      if (!frontmatterBlock) {
+        throw new Error("\u5F53\u524D\u7B14\u8BB0\u6CA1\u6709 frontmatter\uFF0C\u65E0\u6CD5\u91CD\u65B0\u8865\u5168 Bangumi \u4FE1\u606F\u3002");
+      }
+      const existingFrontmatter = sanitizeFrontmatterObject(
+        this.app.metadataCache.getFileCache(activeFile)?.frontmatter || {}
+      );
+      const templateBindingGroups = await this.loadBangumiTemplateBindingGroups(
+        vaultInfo.path,
+        bangumiConfig
+      );
+      const candidateValues = collectBangumiTemplateValueCandidates(
+        existingFrontmatter,
+        templateBindingGroups
+      );
+      const subjectId = this.resolveCurrentBangumiSubjectId(candidateValues);
+      if (!subjectId) {
+        throw new Error("\u5F53\u524D\u7B14\u8BB0\u6CA1\u6709\u53EF\u8BC6\u522B\u7684 bangumi_id \u6216 bangumi_url\u3002");
+      }
+      const bangumiSource2 = MEDIA_SOURCE_MAP.bangumi;
+      const detail = await bangumiSource2.fetchByDirectInput(subjectId, bangumiConfig);
+      const normalizedItem = bangumiSource2.normalize(detail);
+      const templateBindings = await this.readTemplateBindings(
+        vaultInfo.path,
+        bangumiConfig,
+        normalizedItem
+      );
+      const fetchedValues = this.buildBangumiFetchedValues(normalizedItem);
+      const analysis = analyzeBangumiFrontmatterUpdate({
+        templateBindings,
+        existingFrontmatter,
+        existingKeyOrder: listFrontmatterKeys(frontmatterBlock.frontmatter),
+        fetchedValues
+      });
+      const decisions = await this.collectBangumiConflictDecisions(analysis.conflicts);
+      if (decisions === null) {
+        new import_obsidian5.Notice("\u5DF2\u53D6\u6D88\uFF0C\u672A\u4FEE\u6539\u5F53\u524D\u7B14\u8BB0\u3002", 4e3);
+        return;
+      }
+      const nextEntries = buildBangumiFrontmatterEntries(analysis, decisions);
+      const nextContent = replaceFrontmatter(rawContent, nextEntries);
+      const normalizedCurrentContent = rawContent.replace(/\r\n/g, "\n");
+      if (nextContent === normalizedCurrentContent) {
+        new import_obsidian5.Notice("\u5F53\u524D Bangumi \u4FE1\u606F\u5DF2\u7ECF\u662F\u6700\u65B0\u7684\u3002", 5e3);
+        return;
+      }
+      await this.app.vault.modify(activeFile, nextContent);
+      new import_obsidian5.Notice(`Bangumi \u4FE1\u606F\u5DF2\u8865\u5168\uFF1A${normalizedItem.title}`, 8e3);
+    } catch (error) {
+      console.error(`[${PLUGIN_ID}]`, error);
+      new import_obsidian5.Notice(`\u8865\u5168 Bangumi \u4FE1\u606F\u5931\u8D25\uFF1A${normalizeError(error)}`, 12e3);
+    } finally {
+      this.isRunning = false;
+    }
   }
   async runCreateFlow(source) {
     const sourceMeta = MEDIA_SOURCE_UI_META_MAP[source.id];
@@ -2592,6 +3084,71 @@ var MZMediaFetcherPlugin = class extends import_obsidian5.Plugin {
     } finally {
       this.isRunning = false;
     }
+  }
+  buildBangumiFetchedValues(item) {
+    const context = buildTemplateContext("bangumi", item);
+    return BANGUMI_REFRESH_MANAGED_VARIABLES.reduce((result, key) => {
+      result[key] = context[key];
+      return result;
+    }, {});
+  }
+  resolveCurrentBangumiSubjectId(candidateValues) {
+    const literalId = Number(candidateValues.bangumi_id);
+    if (Number.isInteger(literalId) && literalId > 0) {
+      return literalId;
+    }
+    return parseBangumiSubjectId(String(candidateValues.bangumi_url || ""));
+  }
+  async loadBangumiTemplateBindingGroups(vaultBasePath, config) {
+    const templatePaths = [config.templatePath];
+    for (const templatePath of Object.values(config.typeTemplatePaths || {})) {
+      if (templatePath && !templatePaths.includes(templatePath)) {
+        templatePaths.push(templatePath);
+      }
+    }
+    return Promise.all(
+      templatePaths.map(async (templatePath) => {
+        const absolutePath = import_path4.default.join(vaultBasePath, normalizeVaultPath(templatePath));
+        const template = await import_promises4.default.readFile(absolutePath, "utf8");
+        return parseTemplateFrontmatterBindings(template);
+      })
+    );
+  }
+  async readTemplateBindings(vaultBasePath, config, item) {
+    const relativePath = this.resolveBangumiTemplatePath(config, item);
+    const absolutePath = import_path4.default.join(vaultBasePath, normalizeVaultPath(relativePath));
+    const template = await import_promises4.default.readFile(absolutePath, "utf8");
+    return parseTemplateFrontmatterBindings(template);
+  }
+  resolveBangumiTemplatePath(config, item) {
+    const mediaType = String(item.media_type || "").trim();
+    if (!config.typeTemplatePaths) {
+      return config.templatePath;
+    }
+    if (mediaType === "\u6E38\u620F") {
+      return config.typeTemplatePaths.game || config.templatePath;
+    }
+    if (mediaType === "\u52A8\u753B") {
+      return config.typeTemplatePaths.anime || config.templatePath;
+    }
+    if (mediaType === "\u4E66\u7C4D") {
+      return config.typeTemplatePaths.book || config.templatePath;
+    }
+    if (mediaType === "\u4E09\u6B21\u5143") {
+      return config.typeTemplatePaths.liveAction || config.templatePath;
+    }
+    return config.templatePath;
+  }
+  async collectBangumiConflictDecisions(conflicts) {
+    const decisions = {};
+    for (const conflict of conflicts) {
+      const decision = await new BangumiRefreshConflictModal(this.app, conflict).openAndWait();
+      if (!decision) {
+        return null;
+      }
+      decisions[conflict.propertyKey] = decision;
+    }
+    return decisions;
   }
 };
 

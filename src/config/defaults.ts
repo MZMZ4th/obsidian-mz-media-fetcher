@@ -1,4 +1,5 @@
 import { joinVaultPath } from "../core/paths.ts";
+import { buildTemplatePreviewSection } from "../template-fields.ts";
 import type {
   BangumiTemplateType,
   BangumiTypeTemplatePaths,
@@ -16,113 +17,118 @@ export const HTTP_USER_AGENT = `${PLUGIN_NAME}/${PLUGIN_VERSION} (Obsidian)`;
 export const BANGUMI_API_BASE = "https://api.bgm.tv/v0";
 export const FALLBACK_POSTER_FOLDER = "00-Inbox/附件/作品海报";
 
-const BANGUMI_TEMPLATE_CONTENT = `---
-categories: 新作品卡片
-名称: {{yaml.title}}
-原名: {{yaml.title_original}}
-aliases: {{yaml.aliases}}
-媒体类型: {{yaml.media_type}}
-发布日期: {{yaml.release_date}}
-评分:
-状态: 进行中
-完成时间: ""
-体验次数: 1
-海报: {{poster}}
-来源链接: {{bangumi_url}}
-网络海报: {{yaml.network_poster}}
----
+function buildTemplateContent(
+  sourceId: SourceId,
+  frontmatter: string[],
+  options: { cover: string; details?: string[] }
+): string {
+  const sections = [
+    `---\n${frontmatter.join("\n")}\n---`,
+    options.cover,
+    buildTemplatePreviewSection(sourceId).trimEnd(),
+    "## 简介",
+    "{{summary}}",
+    ...(options.details || []),
+    "## 简记",
+  ];
 
-{{cover_markdown}}
+  return `${sections.join("\n\n")}\n`;
+}
 
-## 简介
+const BANGUMI_TEMPLATE_FRONTMATTER = [
+  "categories: 新作品卡片",
+  "名称: {{yaml.title}}",
+  "原名: {{yaml.title_original}}",
+  "aliases: {{yaml.aliases}}",
+  "媒体类型: {{yaml.media_type}}",
+  "发布日期: {{yaml.release_date}}",
+  "Bangumi ID: {{yaml.bangumi_id}}",
+  "作者: {{yaml.authors}}",
+  "出版社: {{yaml.publishers}}",
+  "连载杂志: {{yaml.serial_magazines}}",
+  "评分:",
+  "状态: 进行中",
+  '完成时间: ""',
+  "体验次数: 1",
+  "海报: {{poster}}",
+  "来源链接: {{bangumi_url}}",
+  "网络海报: {{yaml.network_poster}}",
+];
 
-{{summary}}
+const BANGUMI_TEMPLATE_CONTENT = buildTemplateContent("bangumi", BANGUMI_TEMPLATE_FRONTMATTER, {
+  cover: "{{cover_markdown}}",
+});
 
-## 简记
-`;
+const BILIBILI_SHOW_TEMPLATE_CONTENT = buildTemplateContent(
+  "bilibili_show",
+  [
+    "categories: 新作品卡片",
+    "名称: {{yaml.title}}",
+    "原名:",
+    "aliases:",
+    "媒体类型:",
+    "发布日期: {{yaml.release_date}}",
+    "演出场所: {{yaml.venue_text}}",
+    "评分:",
+    "状态:",
+    "完成时间:",
+    "体验次数:",
+    "海报: {{poster}}",
+    "来源链接: {{bilibili_show_url}}",
+    "网络海报: {{yaml.network_poster}}",
+  ],
+  {
+    cover: "![cover|300]({{poster}})",
+  }
+);
 
-const BILIBILI_SHOW_TEMPLATE_CONTENT = `---
-categories: 新作品卡片
-名称: {{yaml.title}}
-原名:
-aliases:
-媒体类型:
-发布日期: {{yaml.release_date}}
-演出场所: {{yaml.venue_text}}
-评分:
-状态:
-完成时间:
-体验次数:
-海报: {{poster}}
-来源链接: {{bilibili_show_url}}
-网络海报: {{yaml.network_poster}}
----
-
-![cover|300]({{poster}})
-
-## 简介
-
-{{summary}}
-
-## 简记
-`;
-
-const SHOWSTART_TEMPLATE_CONTENT = `---
-categories: 新作品卡片
-名称: {{yaml.title}}
-原名:
-aliases:
-媒体类型:
-发布日期: {{yaml.release_date}}
-演出场所: {{yaml.venue_text}}
-评分:
-状态: 已完成
-完成时间: {{yaml.release_date}}
-体验次数: 1
-海报: {{poster}}
-来源链接: {{showstart_url}}
-网络海报: {{yaml.network_poster}}
----
-
-![cover|300]({{poster}})
-
-## 简介
-
-{{summary}}
-
-## 简记
-`;
+const SHOWSTART_TEMPLATE_CONTENT = buildTemplateContent(
+  "showstart",
+  [
+    "categories: 新作品卡片",
+    "名称: {{yaml.title}}",
+    "原名:",
+    "aliases:",
+    "媒体类型:",
+    "发布日期: {{yaml.release_date}}",
+    "演出场所: {{yaml.venue_text}}",
+    "评分:",
+    "状态: 已完成",
+    "完成时间: {{yaml.release_date}}",
+    "体验次数: 1",
+    "海报: {{poster}}",
+    "来源链接: {{showstart_url}}",
+    "网络海报: {{yaml.network_poster}}",
+  ],
+  {
+    cover: "![cover|300]({{poster}})",
+  }
+);
 
 export const TEMPLATE_CONTENTS: Record<SourceId, string> = {
   bangumi: BANGUMI_TEMPLATE_CONTENT,
-  mobygames: `---
-categories: 新作品卡片
-名称: {{yaml.title}}
-原名: {{yaml.title_original}}
-aliases: {{yaml.aliases}}
-媒体类型: {{yaml.media_type}}
-发布日期: {{yaml.release_date}}
-评分:
-状态: 进行中
-完成时间: ""
-体验次数: 1
-海报: {{poster}}
-来源链接: {{mobygames_url}}
-网络海报: {{yaml.network_poster}}
----
-
-{{cover_markdown}}
-
-## 简介
-
-{{summary}}
-
-## 平台
-
-{{platforms_text}}
-
-## 简记
-`,
+  mobygames: buildTemplateContent(
+    "mobygames",
+    [
+      "categories: 新作品卡片",
+      "名称: {{yaml.title}}",
+      "原名: {{yaml.title_original}}",
+      "aliases: {{yaml.aliases}}",
+      "媒体类型: {{yaml.media_type}}",
+      "发布日期: {{yaml.release_date}}",
+      "评分:",
+      "状态: 进行中",
+      '完成时间: ""',
+      "体验次数: 1",
+      "海报: {{poster}}",
+      "来源链接: {{mobygames_url}}",
+      "网络海报: {{yaml.network_poster}}",
+    ],
+    {
+      cover: "{{cover_markdown}}",
+      details: ["## 平台", "{{platforms_text}}"],
+    }
+  ),
   bilibili_show: BILIBILI_SHOW_TEMPLATE_CONTENT,
   showstart: SHOWSTART_TEMPLATE_CONTENT,
 };

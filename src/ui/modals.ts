@@ -1,4 +1,5 @@
 import { FuzzySuggestModal, Modal, Setting } from "obsidian";
+import type { BangumiRefreshConflict } from "../bangumi-refresh.ts";
 import type { SourceSuggestItem } from "../types.ts";
 
 export class QueryInputModal extends Modal {
@@ -155,5 +156,89 @@ export class SourceSuggestModal<TItem> extends FuzzySuggestModal<SourceSuggestIt
         this.resolved = true;
       }
     }, 0);
+  }
+}
+
+function formatConflictValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value.length ? value.map((item) => `- ${String(item || "")}`).join("\n") : "(空)";
+  }
+
+  if (value === null || typeof value === "undefined") {
+    return "(空)";
+  }
+
+  const normalized = String(value).trim();
+  return normalized || "(空)";
+}
+
+export class BangumiRefreshConflictModal extends Modal {
+  conflict: BangumiRefreshConflict;
+  result: "keep" | "replace" | null;
+  resolved: boolean;
+  resolvePromise?: (value: "keep" | "replace" | null) => void;
+
+  constructor(app: any, conflict: BangumiRefreshConflict) {
+    super(app);
+    this.conflict = conflict;
+    this.result = null;
+    this.resolved = false;
+    this.setTitle(`字段冲突：${conflict.propertyKey}`);
+  }
+
+  openAndWait(): Promise<"keep" | "replace" | null> {
+    return new Promise((resolve) => {
+      this.resolvePromise = resolve;
+      this.open();
+    });
+  }
+
+  onOpen(): void {
+    const { contentEl } = this;
+    contentEl.empty();
+
+    contentEl.createEl("p", {
+      text: `当前笔记和最新 Bangumi 数据在“${this.conflict.propertyKey}”上不一致，请选择保留哪一边。`,
+    });
+
+    new Setting(contentEl).setName("当前值");
+    contentEl.createEl("pre", {
+      text: formatConflictValue(this.conflict.currentValue),
+      cls: "mz-media-fetcher-conflict-value",
+    });
+
+    new Setting(contentEl).setName("抓取值");
+    contentEl.createEl("pre", {
+      text: formatConflictValue(this.conflict.fetchedValue),
+      cls: "mz-media-fetcher-conflict-value",
+    });
+
+    const actions = new Setting(contentEl);
+    actions.addButton((button) => {
+      button.setButtonText("保留当前值");
+      button.onClick(() => this.closeWith("keep"));
+    });
+    actions.addButton((button) => {
+      button.setButtonText("使用抓取值");
+      button.setCta();
+      button.onClick(() => this.closeWith("replace"));
+    });
+  }
+
+  onClose(): void {
+    this.contentEl.empty();
+    if (!this.resolved && this.resolvePromise) {
+      this.resolvePromise(this.result);
+      this.resolved = true;
+    }
+  }
+
+  closeWith(result: "keep" | "replace" | null): void {
+    this.result = result;
+    if (!this.resolved && this.resolvePromise) {
+      this.resolvePromise(this.result);
+      this.resolved = true;
+    }
+    this.close();
   }
 }

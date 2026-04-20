@@ -5,8 +5,16 @@
     "activityId": 208747,
     "activityName": "2024张惠妹 ASMR MAXXX 巡回演唱会-杭州站",
     "activityTime": "2024-09-14 19:00",
+    "cityName": "杭州市",
     "poster": "https://img.showstart.com/example-showstart-poster.jpg",
     "shareImage": "https://img.showstart.com/example-showstart-share.jpg",
-    "description": "<p>这是秀动活动简介。</p><p>第二段。</p>"
+    "description": "<p>这是秀动活动简介。</p><p>第二段。</p>",
+    "venueInfo": {
+      "name": "杭州奥体中心体育馆",
+      "provinceName": "浙江省",
+      "cityName": "杭州市",
+      "districtName": "滨江区",
+      "detailAddress": "飞虹路3号"
+    }
   }
 }

@@ -61,9 +61,12 @@ test("normalizeShowstartActivity extracts core activity fields", () => {
     "https://img.showstart.com/example-showstart-poster.jpg"
   );
   assert.equal(normalized.summary, "这是秀动活动简介。\n\n第二段。");
-  assert.equal(normalized.venue_name, "");
-  assert.equal(normalized.venue_address, "");
-  assert.equal(normalized.venue_text, "");
+  assert.equal(normalized.venue_name, "杭州奥体中心体育馆");
+  assert.equal(normalized.venue_address, "浙江省杭州市滨江区飞虹路3号");
+  assert.equal(
+    normalized.venue_text,
+    "杭州奥体中心体育馆 · 浙江省杭州市滨江区飞虹路3号"
+  );
 });
 
 test("normalizeShowstartActivity falls back to secondary poster fields", () => {
@@ -115,6 +118,63 @@ test("normalizeShowstartActivity extracts venue fields from nested venue info", 
     venueInfo: {
       name: "杭州奥体中心体育馆",
       detailAddress: "浙江省杭州市滨江区飞虹路3号",
+    },
+  });
+
+  assert.equal(normalized.venue_name, "杭州奥体中心体育馆");
+  assert.equal(normalized.venue_address, "浙江省杭州市滨江区飞虹路3号");
+  assert.equal(
+    normalized.venue_text,
+    "杭州奥体中心体育馆 · 浙江省杭州市滨江区飞虹路3号"
+  );
+});
+
+test("normalizeShowstartActivity prefers a composed full address over top-level city only", () => {
+  const normalized = normalizeShowstartActivity({
+    activityId: 208747,
+    activityName: "测试活动",
+    cityName: "杭州市",
+    venueInfo: {
+      name: "杭州奥体中心体育馆",
+      provinceName: "浙江省",
+      cityName: "杭州市",
+      districtName: "滨江区",
+      detailAddress: "飞虹路3号",
+    },
+  });
+
+  assert.equal(normalized.venue_name, "杭州奥体中心体育馆");
+  assert.equal(normalized.venue_address, "浙江省杭州市滨江区飞虹路3号");
+  assert.equal(
+    normalized.venue_text,
+    "杭州奥体中心体育馆 · 浙江省杭州市滨江区飞虹路3号"
+  );
+});
+
+test("normalizeShowstartActivity assembles split venue address parts", () => {
+  const normalized = normalizeShowstartActivity({
+    activityId: 208747,
+    activityName: "测试活动",
+    venueInfo: {
+      siteName: "杭州奥体中心体育馆",
+      provinceName: "浙江省",
+      cityName: "杭州市",
+      districtName: "滨江区",
+      detailAddress: "飞虹路3号",
+    },
+  });
+
+  assert.equal(normalized.venue_name, "杭州奥体中心体育馆");
+  assert.equal(normalized.venue_address, "浙江省杭州市滨江区飞虹路3号");
+});
+
+test("normalizeShowstartActivity extracts venue fields from object-style venue containers", () => {
+  const normalized = normalizeShowstartActivity({
+    activityId: 208747,
+    activityName: "测试活动",
+    venue: {
+      name: "杭州奥体中心体育馆",
+      address: "浙江省杭州市滨江区飞虹路3号",
     },
   });
 

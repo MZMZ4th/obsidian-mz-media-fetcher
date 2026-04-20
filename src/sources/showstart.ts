@@ -155,6 +155,11 @@ function pickNestedString(
   return "";
 }
 
+interface ShowstartVenueContainer {
+  record: Record<string, unknown>;
+  allowGenericName: boolean;
+}
+
 function buildVenueText(name: string, address: string): string {
   if (!name) return address;
   if (!address) return name;
@@ -163,63 +168,131 @@ function buildVenueText(name: string, address: string): string {
   return `${name} · ${address}`;
 }
 
+function pickShowstartVenueContainers(detail: Record<string, unknown>): ShowstartVenueContainer[] {
+  const containers: ShowstartVenueContainer[] = [{ record: detail, allowGenericName: false }];
+  const seen = new Set<Record<string, unknown>>([detail]);
+
+  for (const key of ["venueInfo", "venue_info", "siteInfo", "site_info", "venue", "place"]) {
+    const value = detail[key];
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      continue;
+    }
+
+    const record = value as Record<string, unknown>;
+    if (seen.has(record)) {
+      continue;
+    }
+    seen.add(record);
+    containers.push({ record, allowGenericName: true });
+  }
+
+  return containers;
+}
+
+function pickStringFromVenueContainers(
+  containers: ShowstartVenueContainer[],
+  keys: string[],
+  options: { genericNameOnly?: boolean } = {}
+): string {
+  for (const container of containers) {
+    if (options.genericNameOnly && !container.allowGenericName) {
+      continue;
+    }
+
+    const picked = pickString(container.record, keys);
+    if (picked) {
+      return picked;
+    }
+  }
+
+  return "";
+}
+
+function appendVenuePart(parts: string[], value: unknown): void {
+  const normalized = String(value || "").trim();
+  if (!normalized) {
+    return;
+  }
+
+  const duplicateIndex = parts.findIndex(
+    (part) =>
+      part === normalized || part.includes(normalized) || normalized.includes(part)
+  );
+
+  if (duplicateIndex === -1) {
+    parts.push(normalized);
+    return;
+  }
+
+  if (normalized.length > parts[duplicateIndex].length) {
+    parts.splice(duplicateIndex, 1, normalized);
+  }
+}
+
+function buildVenueAddressFromParts(containers: ShowstartVenueContainer[]): string {
+  const parts: string[] = [];
+
+  appendVenuePart(
+    parts,
+    pickStringFromVenueContainers(containers, ["provinceName", "province_name", "province"])
+  );
+  appendVenuePart(
+    parts,
+    pickStringFromVenueContainers(containers, ["cityName", "city_name", "city"])
+  );
+  appendVenuePart(
+    parts,
+    pickStringFromVenueContainers(containers, ["districtName", "district_name", "district"])
+  );
+  appendVenuePart(
+    parts,
+    pickStringFromVenueContainers(containers, [
+      "detailAddress",
+      "detail_address",
+      "venueAddress",
+      "venue_address",
+      "placeAddress",
+      "place_address",
+      "address",
+      "addr",
+    ])
+  );
+
+  return parts.join("");
+}
+
 function pickShowstartVenue(detail: Record<string, unknown>): {
   venueName: string;
   venueAddress: string;
   venueText: string;
 } {
+  const containers = pickShowstartVenueContainers(detail);
   const venueName =
-    pickString(detail, [
+    pickStringFromVenueContainers(containers, [
       "venueName",
       "venue_name",
       "siteName",
       "site_name",
       "placeName",
       "place_name",
-      "venue",
-      "place",
       "shopName",
       "stadiumName",
     ]) ||
-    pickNestedString(detail, ["venueInfo", "venue_info", "siteInfo", "site_info"], [
-      "venueName",
-      "venue_name",
-      "name",
-      "siteName",
-      "site_name",
-      "placeName",
-      "place_name",
-      "shopName",
-      "stadiumName",
-    ]);
+    pickStringFromVenueContainers(
+      containers,
+      ["name", "venue", "place"],
+      { genericNameOnly: true }
+    );
 
   const venueAddress =
-    pickString(detail, [
+    pickStringFromVenueContainers(containers, [
       "venueAddress",
       "venue_address",
-      "address",
-      "addr",
-      "detailAddress",
-      "detail_address",
       "placeAddress",
       "place_address",
-      "cityName",
-      "city_name",
-      "city",
-    ]) ||
-    pickNestedString(detail, ["venueInfo", "venue_info", "siteInfo", "site_info"], [
-      "venueAddress",
-      "venue_address",
       "address",
       "addr",
-      "detailAddress",
-      "detail_address",
-      "placeAddress",
-      "place_address",
-      "cityName",
-      "city_name",
-      "city",
-    ]);
+    ]) || buildVenueAddressFromParts(containers);
 
   return {
     venueName,

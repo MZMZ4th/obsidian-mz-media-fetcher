@@ -19,6 +19,9 @@ test("source metadata includes common and source-specific template variables", (
   assert.ok(bangumiKeys.includes("title"));
   assert.ok(bangumiKeys.includes("poster"));
   assert.ok(bangumiKeys.includes("bangumi_id"));
+  assert.ok(bangumiKeys.includes("authors"));
+  assert.ok(bangumiKeys.includes("publishers"));
+  assert.ok(bangumiKeys.includes("serial_magazines"));
   assert.ok(showstartKeys.includes("showstart_activity_id"));
   assert.equal(coverMarkdown?.yamlSafe, false);
 });

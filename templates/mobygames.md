@@ -11,8 +11,42 @@ aliases: {{yaml.aliases}}
 体验次数: 1
 海报: {{poster}}
 来源链接: {{mobygames_url}}
-网络海报: true
+网络海报: {{yaml.network_poster}}
 ---
+
+{{cover_markdown}}
+
+## 抓取字段预览
+
+- title: {{title}}
+- title_original: {{title_original}}
+- aliases: {{aliases}}
+- media_type: {{media_type}}
+- release_date: {{release_date}}
+- release_year: {{release_year}}
+- cover_remote: {{cover_remote}}
+- platforms: {{platforms}}
+- poster_path: {{poster_path}}
+- poster: {{poster}}
+- network_poster: {{network_poster}}
+- categories: {{categories}}
+- source: {{source}}
+- rating: {{rating}}
+- status: {{status}}
+- finished_at: {{finished_at}}
+- rewatch_count: {{rewatch_count}}
+- mobygames_id: {{mobygames_id}}
+- mobygames_url: {{mobygames_url}}
+
+### summary
+
+{{summary}}
+
+### platforms_text
+
+{{platforms_text}}
+
+### cover_markdown
 
 {{cover_markdown}}
 

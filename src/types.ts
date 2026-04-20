@@ -39,6 +39,9 @@ export interface NormalizedMediaItem {
   summary: string;
   platforms: string[];
   platforms_text: string;
+  authors?: string[];
+  publishers?: string[];
+  serial_magazines?: string[];
   venue_name?: string;
   venue_address?: string;
   venue_text?: string;
