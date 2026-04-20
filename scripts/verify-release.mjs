@@ -19,6 +19,12 @@ if (versions[manifest.version] !== manifest.minAppVersion) {
   );
 }
 
+for (const asset of ["manifest.json", "styles.css", "versions.json"]) {
+  if (!fs.existsSync(asset)) {
+    throw new Error(`缺少 release 资产：${asset}`);
+  }
+}
+
 if (expectedTag && expectedTag !== manifest.version) {
   throw new Error(`发布 tag 必须和版本号一致：${expectedTag} !== ${manifest.version}`);
 }

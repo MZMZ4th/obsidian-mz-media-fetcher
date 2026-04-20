@@ -16,20 +16,33 @@ import {
 } from "../src/config/storage.ts";
 
 test("normalizeTemplateEditorValues keeps template mode essentials only", () => {
+  const defaultConfigs = getDefaultSourceConfigs(".obsidian", "00-Inbox/附件/作品海报");
   const config = normalizeTemplateEditorValues("bangumi", {
     targetFolder: "00-Inbox",
     templatePath: ".obsidian/plugins/mz-media-fetcher/templates/bangumi.md",
     searchLimit: "12",
+    typeTemplatePaths: {
+      game: ".obsidian/plugins/mz-media-fetcher/templates/bangumi-game.md",
+      anime: ".obsidian/plugins/mz-media-fetcher/templates/bangumi-anime.md",
+      book: "",
+      liveAction: ".obsidian/plugins/mz-media-fetcher/templates/bangumi-live-action.md",
+    },
     posterSaveLocal: false,
     posterFolder: "00-Inbox/附件/作品海报",
     filenameTemplate: "{{title}}",
     filenameCollisionTemplate: "{{title}} {{release_year}} {{bangumi_id}}",
-  });
+  }, defaultConfigs);
 
   assert.deepEqual(config, {
     targetFolder: "00-Inbox",
     templatePath: ".obsidian/plugins/mz-media-fetcher/templates/bangumi.md",
     searchLimit: 12,
+    typeTemplatePaths: {
+      game: ".obsidian/plugins/mz-media-fetcher/templates/bangumi-game.md",
+      anime: ".obsidian/plugins/mz-media-fetcher/templates/bangumi-anime.md",
+      book: "",
+      liveAction: ".obsidian/plugins/mz-media-fetcher/templates/bangumi-live-action.md",
+    },
     poster: {
       saveLocal: false,
       folder: "00-Inbox/附件/作品海报",
@@ -110,6 +123,7 @@ test("normalizeTemplateEditorValues falls back to runtime default poster folder"
   );
 
   assert.equal(config.poster.folder, "50-Others/附件");
+  assert.deepEqual(config.typeTemplatePaths, defaultConfigs.bangumi.typeTemplatePaths);
 });
 
 test("resolveAttachmentFolderPath reads attachmentFolderPath from app config", () => {
@@ -166,10 +180,64 @@ test("ConfigStore imports legacy plugin config and only rewrites old built-in te
   const configs = await store.loadSourceConfigs(vaultPath);
 
   assert.equal(configs.bangumi.templatePath, currentDefaults.bangumi.templatePath);
+  assert.deepEqual(configs.bangumi.typeTemplatePaths, currentDefaults.bangumi.typeTemplatePaths);
   assert.equal(configs.mobygames.templatePath, "50-Others/模板 fetcher/作品卡片MobyGames.md");
 
   const newConfigPath = path.join(vaultPath, configDir, "plugins", PLUGIN_ID, "media-fetcher-rules.json");
   const saved = JSON.parse(fs.readFileSync(newConfigPath, "utf8"));
   assert.equal(saved.bangumi.templatePath, currentDefaults.bangumi.templatePath);
+  assert.deepEqual(saved.bangumi.typeTemplatePaths, currentDefaults.bangumi.typeTemplatePaths);
   assert.equal(saved.mobygames.templatePath, "50-Others/模板 fetcher/作品卡片MobyGames.md");
+});
+
+test("ConfigStore preserves blank bangumi type template overrides and keeps general fallback", async () => {
+  const vaultPath = fs.mkdtempSync(path.join(os.tmpdir(), "mz-media-fetcher-config-blank-"));
+  const configDir = ".obsidian";
+  const currentDefaults = getDefaultSourceConfigs(configDir, "50-Others/附件");
+
+  fs.mkdirSync(path.join(vaultPath, configDir, "plugins", PLUGIN_ID), { recursive: true });
+  fs.writeFileSync(
+    path.join(vaultPath, configDir, "plugins", PLUGIN_ID, "media-fetcher-rules.json"),
+    `${JSON.stringify(
+      {
+        bangumi: {
+          ...currentDefaults.bangumi,
+          typeTemplatePaths: {
+            ...currentDefaults.bangumi.typeTemplatePaths,
+            game: "",
+          },
+        },
+        mobygames: currentDefaults.mobygames,
+        bilibili_show: currentDefaults.bilibili_show,
+        showstart: currentDefaults.showstart,
+      },
+      null,
+      2
+    )}\n`,
+    "utf8"
+  );
+  fs.writeFileSync(
+    path.join(vaultPath, configDir, "app.json"),
+    `${JSON.stringify({ attachmentFolderPath: "50-Others/附件" }, null, 2)}\n`,
+    "utf8"
+  );
+
+  const store = new ConfigStore({
+    vault: {
+      adapter: {
+        getBasePath: () => vaultPath,
+      },
+      getName: () => "test",
+      configDir,
+    },
+  } as any);
+
+  const configs = await store.loadSourceConfigs(vaultPath);
+
+  assert.equal(configs.bangumi.typeTemplatePaths?.game, "");
+
+  const saved = JSON.parse(
+    fs.readFileSync(path.join(vaultPath, configDir, "plugins", PLUGIN_ID, "media-fetcher-rules.json"), "utf8")
+  );
+  assert.equal(saved.bangumi.typeTemplatePaths.game, "");
 });

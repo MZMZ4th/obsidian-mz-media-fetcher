@@ -61,6 +61,9 @@ test("normalizeShowstartActivity extracts core activity fields", () => {
     "https://img.showstart.com/example-showstart-poster.jpg"
   );
   assert.equal(normalized.summary, "这是秀动活动简介。\n\n第二段。");
+  assert.equal(normalized.venue_name, "");
+  assert.equal(normalized.venue_address, "");
+  assert.equal(normalized.venue_text, "");
 });
 
 test("normalizeShowstartActivity falls back to secondary poster fields", () => {
@@ -89,6 +92,38 @@ test("normalizeShowstartActivity supports v3 response fields", () => {
   assert.equal(normalized.release_date, "2023-10-21");
   assert.equal(normalized.cover_remote, "https://img.showstart.com/example-showstart-avatar.jpg");
   assert.equal(normalized.summary, "第一段。\n\n第二段。");
+});
+
+test("normalizeShowstartActivity extracts venue fields from fallback candidates", () => {
+  const normalized = normalizeShowstartActivity({
+    ...fixture.data!,
+    siteName: "杭州奥体中心体育馆",
+    address: "浙江省杭州市滨江区飞虹路3号",
+  });
+
+  assert.equal(normalized.venue_name, "杭州奥体中心体育馆");
+  assert.equal(normalized.venue_address, "浙江省杭州市滨江区飞虹路3号");
+  assert.equal(
+    normalized.venue_text,
+    "杭州奥体中心体育馆 · 浙江省杭州市滨江区飞虹路3号"
+  );
+});
+
+test("normalizeShowstartActivity extracts venue fields from nested venue info", () => {
+  const normalized = normalizeShowstartActivity({
+    ...fixture.data!,
+    venueInfo: {
+      name: "杭州奥体中心体育馆",
+      detailAddress: "浙江省杭州市滨江区飞虹路3号",
+    },
+  });
+
+  assert.equal(normalized.venue_name, "杭州奥体中心体育馆");
+  assert.equal(normalized.venue_address, "浙江省杭州市滨江区飞虹路3号");
+  assert.equal(
+    normalized.venue_text,
+    "杭州奥体中心体育馆 · 浙江省杭州市滨江区飞虹路3号"
+  );
 });
 
 test("buildShowstartV3Request matches the verified v3 route format", () => {

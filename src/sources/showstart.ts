@@ -135,6 +135,99 @@ function pickShowstartCover(detail: Record<string, unknown>): string {
   );
 }
 
+function pickNestedString(
+  detail: Record<string, unknown>,
+  containerKeys: string[],
+  valueKeys: string[]
+): string {
+  for (const containerKey of containerKeys) {
+    const container = detail[containerKey];
+    if (!container || typeof container !== "object" || Array.isArray(container)) {
+      continue;
+    }
+
+    const picked = pickString(container as Record<string, unknown>, valueKeys);
+    if (picked) {
+      return picked;
+    }
+  }
+
+  return "";
+}
+
+function buildVenueText(name: string, address: string): string {
+  if (!name) return address;
+  if (!address) return name;
+  if (address.includes(name)) return address;
+  if (name.includes(address)) return name;
+  return `${name} · ${address}`;
+}
+
+function pickShowstartVenue(detail: Record<string, unknown>): {
+  venueName: string;
+  venueAddress: string;
+  venueText: string;
+} {
+  const venueName =
+    pickString(detail, [
+      "venueName",
+      "venue_name",
+      "siteName",
+      "site_name",
+      "placeName",
+      "place_name",
+      "venue",
+      "place",
+      "shopName",
+      "stadiumName",
+    ]) ||
+    pickNestedString(detail, ["venueInfo", "venue_info", "siteInfo", "site_info"], [
+      "venueName",
+      "venue_name",
+      "name",
+      "siteName",
+      "site_name",
+      "placeName",
+      "place_name",
+      "shopName",
+      "stadiumName",
+    ]);
+
+  const venueAddress =
+    pickString(detail, [
+      "venueAddress",
+      "venue_address",
+      "address",
+      "addr",
+      "detailAddress",
+      "detail_address",
+      "placeAddress",
+      "place_address",
+      "cityName",
+      "city_name",
+      "city",
+    ]) ||
+    pickNestedString(detail, ["venueInfo", "venue_info", "siteInfo", "site_info"], [
+      "venueAddress",
+      "venue_address",
+      "address",
+      "addr",
+      "detailAddress",
+      "detail_address",
+      "placeAddress",
+      "place_address",
+      "cityName",
+      "city_name",
+      "city",
+    ]);
+
+  return {
+    venueName,
+    venueAddress,
+    venueText: buildVenueText(venueName, venueAddress),
+  };
+}
+
 export function parseShowstartActivityId(input: string): number | null {
   const text = String(input || "").trim();
   if (!text) {
@@ -216,6 +309,7 @@ export function normalizeShowstartActivity(detail: ShowstartActivity): Normalize
   const summary = normalizeSummaryText(
     pickString(record, ["document", "description", "content", "remark", "summary"])
   );
+  const { venueName, venueAddress, venueText } = pickShowstartVenue(record);
 
   return {
     showstart_activity_id: activityId,
@@ -230,5 +324,8 @@ export function normalizeShowstartActivity(detail: ShowstartActivity): Normalize
     summary,
     platforms: [],
     platforms_text: "",
+    venue_name: venueName,
+    venue_address: venueAddress,
+    venue_text: venueText,
   };
 }

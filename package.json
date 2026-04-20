@@ -5,6 +5,8 @@
   "description": "Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showstart.",
   "scripts": {
     "build": "node esbuild.config.mjs",
+    "install:dev": "node scripts/install-dev.mjs",
+    "package": "node scripts/package-release.mjs",
     "test": "node --no-warnings --experimental-strip-types --experimental-specifier-resolution=node --test tests/**/*.test.ts",
     "release:check": "node scripts/verify-release.mjs"
   },

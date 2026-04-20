@@ -4,13 +4,28 @@ import { normalizeTemplateEditorValues } from "../config/storage.ts";
 import { MEDIA_SOURCE_UI_META_MAP } from "../source-ui-meta.ts";
 import { MEDIA_SOURCES } from "../sources/index.ts";
 import type MZMediaFetcherPlugin from "../plugin.ts";
-import type { SourceConfig, SourceConfigRoot, SourceId, TemplateVariableDefinition } from "../types.ts";
+import type {
+  BangumiTemplateType,
+  BangumiTypeTemplatePaths,
+  SourceConfig,
+  SourceConfigRoot,
+  SourceId,
+  TemplateVariableDefinition,
+} from "../types.ts";
 import { FolderPathSuggest, TemplatePathSuggest } from "./suggest.ts";
+
+const BANGUMI_TEMPLATE_TYPE_LABELS: Record<BangumiTemplateType, string> = {
+  game: "游戏模板",
+  anime: "动画模板",
+  book: "书籍模板",
+  liveAction: "三次元模板",
+};
 
 interface TemplateEditorState {
   targetFolder: string;
   templatePath: string;
   searchLimit: string;
+  typeTemplatePaths?: BangumiTypeTemplatePaths;
   posterSaveLocal: boolean;
   posterFolder: string;
   filenameTemplate: string;
@@ -46,6 +61,7 @@ function createTemplateEditorState(config: SourceConfig): TemplateEditorState {
     targetFolder: config.targetFolder,
     templatePath: config.templatePath,
     searchLimit: String(config.searchLimit),
+    typeTemplatePaths: config.typeTemplatePaths ? { ...config.typeTemplatePaths } : undefined,
     posterSaveLocal: config.poster.saveLocal,
     posterFolder: config.poster.folder,
     filenameTemplate: config.filename.template,
@@ -184,6 +200,29 @@ export class MZMediaFetcherSettingTab extends PluginSettingTab {
         });
       });
 
+    if (sourceKey === "bangumi" && state.typeTemplatePaths && defaultConfig.typeTemplatePaths) {
+      for (const templateType of Object.keys(state.typeTemplatePaths) as BangumiTemplateType[]) {
+        new Setting(sectionEl)
+          .setName(BANGUMI_TEMPLATE_TYPE_LABELS[templateType])
+          .setDesc(
+            `Bangumi 媒体类型是“${labelForBangumiType(templateType)}”时优先使用；留空会回退到上面的通用模板路径。`
+          )
+          .addText((text) => {
+            new TemplatePathSuggest(this.app, text.inputEl);
+            text.setPlaceholder(defaultConfig.typeTemplatePaths?.[templateType] || "");
+            text.setValue(state.typeTemplatePaths?.[templateType] || "");
+            text.onChange((value: string) => {
+              if (!state.typeTemplatePaths) {
+                state.typeTemplatePaths = {
+                  ...(defaultConfig.typeTemplatePaths as BangumiTypeTemplatePaths),
+                };
+              }
+              state.typeTemplatePaths[templateType] = value;
+            });
+          });
+      }
+    }
+
     if (sourceMeta.supportsSearch) {
       new Setting(sectionEl)
         .setName("搜索条目数")
@@ -313,4 +352,15 @@ export class MZMediaFetcherSettingTab extends PluginSettingTab {
       itemEl.appendText(`：${variable.description}`);
     }
   }
+}
+
+function labelForBangumiType(templateType: BangumiTemplateType): string {
+  const labels: Record<BangumiTemplateType, string> = {
+    game: "游戏",
+    anime: "动画",
+    book: "书籍",
+    liveAction: "三次元",
+  };
+
+  return labels[templateType];
 }

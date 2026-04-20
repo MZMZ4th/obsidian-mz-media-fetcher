@@ -1,6 +1,12 @@
 import fsp from "fs/promises";
 import path from "path";
-import type { SourceConfig, NormalizedMediaItem, SourceId, VaultInfo } from "../types.ts";
+import type {
+  BangumiTemplateType,
+  NormalizedMediaItem,
+  SourceConfig,
+  SourceId,
+  VaultInfo,
+} from "../types.ts";
 import { chooseAvailableAssetPath, chooseAvailableCardPath, ensureFolderExists } from "./files.ts";
 import { normalizeVaultPath } from "./paths.ts";
 import { buildTemplateContext, renderTemplate } from "./template.ts";
@@ -11,6 +17,13 @@ export interface BuiltCard {
   filePath: string;
   content: string;
 }
+
+const BANGUMI_MEDIA_TYPE_TEMPLATE_MAP: Record<string, BangumiTemplateType> = {
+  游戏: "game",
+  动画: "anime",
+  书籍: "book",
+  三次元: "liveAction",
+};
 
 async function defaultDownloadBinary(url: string): Promise<ArrayBuffer> {
   const { requestBinary } = await import("./http.ts");
@@ -27,7 +40,8 @@ export async function buildCard(
 ): Promise<BuiltCard> {
   const filePath = await resolveCardPath(app, config, item, sourceKey);
   const resolvedItem = await resolvePosterAsset(app, config, item, filePath, downloadBinary);
-  const templatePath = path.join(vaultInfo.path, normalizeVaultPath(config.templatePath));
+  const configuredTemplatePath = resolveTemplatePathForItem(sourceKey, resolvedItem, config);
+  const templatePath = path.join(vaultInfo.path, normalizeVaultPath(configuredTemplatePath));
   const template = await fsp.readFile(templatePath, "utf8");
   const renderContext = buildTemplateContext(sourceKey, resolvedItem);
   const content = renderTemplate(template, renderContext).trim();
@@ -37,6 +51,24 @@ export async function buildCard(
     filePath,
     content: ensureTrailingNewline(content),
   };
+}
+
+export function resolveTemplatePathForItem(
+  sourceKey: SourceId,
+  item: NormalizedMediaItem,
+  config: SourceConfig
+): string {
+  if (sourceKey !== "bangumi" || !config.typeTemplatePaths) {
+    return config.templatePath;
+  }
+
+  const mediaType = String(item.media_type || "").trim();
+  const templateType = BANGUMI_MEDIA_TYPE_TEMPLATE_MAP[mediaType];
+  if (!templateType) {
+    return config.templatePath;
+  }
+
+  return config.typeTemplatePaths[templateType] || config.templatePath;
 }
 
 async function resolveCardPath(

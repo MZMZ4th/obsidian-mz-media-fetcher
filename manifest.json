@@ -4,7 +4,7 @@
   "version": "0.3.0",
   "minAppVersion": "1.8.0",
   "description": "Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showstart.",
-  "author": "MZMZ4th",
-  "authorUrl": "https://github.com/MZMZ4th",
+  "author": "Codex",
+  "authorUrl": "https://github.com/MZMZ4th/obsidian-mz-media-fetcher",
   "isDesktopOnly": true
 }

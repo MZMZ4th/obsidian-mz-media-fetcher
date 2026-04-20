@@ -6,6 +6,7 @@ import os from "os";
 import { chooseAvailableCardPath } from "../src/core/files.ts";
 import { buildCard } from "../src/core/cards.ts";
 import { buildTemplateContext, renderTemplate } from "../src/core/template.ts";
+import { MEDIA_SOURCE_UI_META_MAP } from "../src/source-ui-meta.ts";
 import { sanitizeFileName } from "../src/core/text.ts";
 
 test("renderTemplate uses yaml-safe values in context", () => {
@@ -43,9 +44,26 @@ test("chooseAvailableCardPath falls back to collision template and suffix", asyn
   assert.equal(selected, "00-Inbox/Balatro 2024 217980-2.md");
 });
 
-test("sanitizeFileName replaces whitespace with hyphens", () => {
+test("sanitizeFileName normalizes whitespace and illegal characters", () => {
   assert.equal(sanitizeFileName("  Hello   World  "), "Hello-World");
   assert.equal(sanitizeFileName("A/B:C"), "A-B-C");
+  assert.equal(sanitizeFileName("Act 1---Finale"), "Act-1-Finale");
+});
+
+test("sanitizeFileName strips control chars and trailing dots", () => {
+  assert.equal(
+    sanitizeFileName("  bad\u0000name\twith\nchars:*?\"<>|  "),
+    "bad-name-with-chars"
+  );
+  assert.equal(sanitizeFileName("Report Final...  "), "Report-Final");
+  assert.equal(sanitizeFileName("...\t"), "");
+});
+
+test("sanitizeFileName avoids Windows reserved names", () => {
+  assert.equal(sanitizeFileName("CON"), "CON-file");
+  assert.equal(sanitizeFileName("nul"), "nul-file");
+  assert.equal(sanitizeFileName("Lpt9.txt"), "Lpt9-file.txt");
+  assert.equal(sanitizeFileName(" \n\t "), "");
 });
 
 test("bilibili_show default template renders required card fields", () => {
@@ -64,6 +82,9 @@ test("bilibili_show default template renders required card fields", () => {
     summary: "",
     platforms: [],
     platforms_text: "",
+    venue_name: "杭州奥体中心体育馆",
+    venue_address: "浙江省杭州市滨江区飞虹路3号",
+    venue_text: "杭州奥体中心体育馆 · 浙江省杭州市滨江区飞虹路3号",
     bilibili_show_url: "https://show.bilibili.com/platform/detail.html?id=107593",
     bilibili_show_id: 107593,
   });
@@ -71,6 +92,7 @@ test("bilibili_show default template renders required card fields", () => {
   const rendered = renderTemplate(template, context);
   assert.match(rendered, /名称: "杭州· ilem&林震Linz「哎嗒派送」音乐专场"/);
   assert.match(rendered, /发布日期: "2025-10-02"/);
+  assert.match(rendered, /演出场所: "杭州奥体中心体育馆 · 浙江省杭州市滨江区飞虹路3号"/);
   assert.match(rendered, /海报: https:\/\/i2\.hdslb\.com\/example\.jpeg/);
   assert.match(
     rendered,
@@ -95,6 +117,9 @@ test("showstart default template renders required card fields", () => {
     summary: "",
     platforms: [],
     platforms_text: "",
+    venue_name: "杭州奥体中心体育馆",
+    venue_address: "浙江省杭州市滨江区飞虹路3号",
+    venue_text: "杭州奥体中心体育馆 · 浙江省杭州市滨江区飞虹路3号",
     showstart_url: "https://wap.showstart.com/pages/activity/detail/detail?activityId=208747",
     showstart_activity_id: 208747,
   });
@@ -102,6 +127,7 @@ test("showstart default template renders required card fields", () => {
   const rendered = renderTemplate(template, context);
   assert.match(rendered, /名称: "2024张惠妹 ASMR MAXXX 巡回演唱会-杭州站"/);
   assert.match(rendered, /发布日期: "2024-09-14"/);
+  assert.match(rendered, /演出场所: "杭州奥体中心体育馆 · 浙江省杭州市滨江区飞虹路3号"/);
   assert.match(rendered, /海报: https:\/\/img\.showstart\.com\/example-showstart-poster\.jpg/);
   assert.match(
     rendered,
@@ -110,6 +136,25 @@ test("showstart default template renders required card fields", () => {
   assert.match(rendered, /网络海报: true/);
   assert.match(rendered, /状态: 已完成/);
   assert.match(rendered, /完成时间: "2024-09-14"/);
+});
+
+test("event source metadata exposes venue template variables", () => {
+  const bilibiliVenue = MEDIA_SOURCE_UI_META_MAP.bilibili_show.templateVariables.filter((item) =>
+    item.key.startsWith("venue_")
+  );
+  const showstartVenue = MEDIA_SOURCE_UI_META_MAP.showstart.templateVariables.filter((item) =>
+    item.key.startsWith("venue_")
+  );
+
+  assert.deepEqual(
+    bilibiliVenue.map((item) => item.key),
+    ["venue_name", "venue_address", "venue_text"]
+  );
+  assert.deepEqual(
+    showstartVenue.map((item) => item.key),
+    ["venue_name", "venue_address", "venue_text"]
+  );
+  assert.match(String(bilibiliVenue[2]?.description || ""), /演出场所/);
 });
 
 test("buildCard downloads poster locally when poster.saveLocal is enabled", async () => {

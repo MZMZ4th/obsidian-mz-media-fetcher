@@ -1,5 +1,10 @@
 import { joinVaultPath } from "../core/paths.ts";
-import type { SourceConfigRoot, SourceId } from "../types.ts";
+import type {
+  BangumiTemplateType,
+  BangumiTypeTemplatePaths,
+  SourceConfigRoot,
+  SourceId,
+} from "../types.ts";
 
 export const PLUGIN_ID = "mz-media-fetcher";
 export const LEGACY_PLUGIN_ID = "MZ-media-fetcher";
@@ -11,8 +16,7 @@ export const HTTP_USER_AGENT = `${PLUGIN_NAME}/${PLUGIN_VERSION} (Obsidian)`;
 export const BANGUMI_API_BASE = "https://api.bgm.tv/v0";
 export const FALLBACK_POSTER_FOLDER = "00-Inbox/附件/作品海报";
 
-export const TEMPLATE_CONTENTS: Record<SourceId, string> = {
-  bangumi: `---
+const BANGUMI_TEMPLATE_CONTENT = `---
 categories: 新作品卡片
 名称: {{yaml.title}}
 原名: {{yaml.title_original}}
@@ -35,7 +39,62 @@ aliases: {{yaml.aliases}}
 {{summary}}
 
 ## 简记
-`,
+`;
+
+const BILIBILI_SHOW_TEMPLATE_CONTENT = `---
+categories: 新作品卡片
+名称: {{yaml.title}}
+原名:
+aliases:
+媒体类型:
+发布日期: {{yaml.release_date}}
+演出场所: {{yaml.venue_text}}
+评分:
+状态:
+完成时间:
+体验次数:
+海报: {{poster}}
+来源链接: {{bilibili_show_url}}
+网络海报: {{yaml.network_poster}}
+---
+
+![cover|300]({{poster}})
+
+## 简介
+
+{{summary}}
+
+## 简记
+`;
+
+const SHOWSTART_TEMPLATE_CONTENT = `---
+categories: 新作品卡片
+名称: {{yaml.title}}
+原名:
+aliases:
+媒体类型:
+发布日期: {{yaml.release_date}}
+演出场所: {{yaml.venue_text}}
+评分:
+状态: 已完成
+完成时间: {{yaml.release_date}}
+体验次数: 1
+海报: {{poster}}
+来源链接: {{showstart_url}}
+网络海报: {{yaml.network_poster}}
+---
+
+![cover|300]({{poster}})
+
+## 简介
+
+{{summary}}
+
+## 简记
+`;
+
+export const TEMPLATE_CONTENTS: Record<SourceId, string> = {
+  bangumi: BANGUMI_TEMPLATE_CONTENT,
   mobygames: `---
 categories: 新作品卡片
 名称: {{yaml.title}}
@@ -64,55 +123,32 @@ aliases: {{yaml.aliases}}
 
 ## 简记
 `,
-  bilibili_show: `---
-categories: 新作品卡片
-名称: {{yaml.title}}
-原名:
-aliases:
-媒体类型:
-发布日期: {{yaml.release_date}}
-评分:
-状态:
-完成时间:
-体验次数:
-海报: {{poster}}
-来源链接: {{bilibili_show_url}}
-网络海报: {{yaml.network_poster}}
----
-
-![cover|300]({{poster}})
-
-## 简介
-
-{{summary}}
-
-## 简记
-`,
-  showstart: `---
-categories: 新作品卡片
-名称: {{yaml.title}}
-原名:
-aliases:
-媒体类型:
-发布日期: {{yaml.release_date}}
-评分:
-状态: 已完成
-完成时间: {{yaml.release_date}}
-体验次数: 1
-海报: {{poster}}
-来源链接: {{showstart_url}}
-网络海报: {{yaml.network_poster}}
----
-
-![cover|300]({{poster}})
-
-## 简介
-
-{{summary}}
-
-## 简记
-`,
+  bilibili_show: BILIBILI_SHOW_TEMPLATE_CONTENT,
+  showstart: SHOWSTART_TEMPLATE_CONTENT,
 };
+
+export const BANGUMI_TYPE_TEMPLATE_FILENAMES: Record<BangumiTemplateType, string> = {
+  game: "bangumi-game.md",
+  anime: "bangumi-anime.md",
+  book: "bangumi-book.md",
+  liveAction: "bangumi-live-action.md",
+};
+
+export const BANGUMI_TYPE_TEMPLATE_CONTENTS: Record<BangumiTemplateType, string> = {
+  game: BANGUMI_TEMPLATE_CONTENT,
+  anime: BANGUMI_TEMPLATE_CONTENT,
+  book: BANGUMI_TEMPLATE_CONTENT,
+  liveAction: BANGUMI_TEMPLATE_CONTENT,
+};
+
+function buildDefaultBangumiTypeTemplatePaths(pluginRoot: string): BangumiTypeTemplatePaths {
+  return {
+    game: joinVaultPath(pluginRoot, "templates", BANGUMI_TYPE_TEMPLATE_FILENAMES.game),
+    anime: joinVaultPath(pluginRoot, "templates", BANGUMI_TYPE_TEMPLATE_FILENAMES.anime),
+    book: joinVaultPath(pluginRoot, "templates", BANGUMI_TYPE_TEMPLATE_FILENAMES.book),
+    liveAction: joinVaultPath(pluginRoot, "templates", BANGUMI_TYPE_TEMPLATE_FILENAMES.liveAction),
+  };
+}
 
 function buildSourceConfigs(
   pluginId: string,
@@ -125,6 +161,7 @@ function buildSourceConfigs(
       targetFolder: "00-Inbox",
       templatePath: joinVaultPath(pluginRoot, "templates", "bangumi.md"),
       searchLimit: 8,
+      typeTemplatePaths: buildDefaultBangumiTypeTemplatePaths(pluginRoot),
       poster: {
         saveLocal: false,
         folder: posterFolder,

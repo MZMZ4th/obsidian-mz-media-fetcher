@@ -14,6 +14,7 @@ export interface BilibiliShowProject {
   cover?: string;
   banner?: string;
   start_time?: number;
+  [key: string]: unknown;
 }
 
 function ensureHttpsUrl(value: unknown): string {
@@ -39,6 +40,109 @@ function formatUnixTimestamp(timestamp: unknown): string {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function pickString(detail: Record<string, unknown>, keys: string[]): string {
+  for (const key of keys) {
+    const value = detail[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return "";
+}
+
+function pickNestedString(
+  detail: Record<string, unknown>,
+  containerKeys: string[],
+  valueKeys: string[]
+): string {
+  for (const containerKey of containerKeys) {
+    const container = detail[containerKey];
+    if (!container || typeof container !== "object" || Array.isArray(container)) {
+      continue;
+    }
+
+    const picked = pickString(container as Record<string, unknown>, valueKeys);
+    if (picked) {
+      return picked;
+    }
+  }
+
+  return "";
+}
+
+function buildVenueText(name: string, address: string): string {
+  if (!name) return address;
+  if (!address) return name;
+  if (address.includes(name)) return address;
+  if (name.includes(address)) return name;
+  return `${name} · ${address}`;
+}
+
+function pickBilibiliVenue(detail: Record<string, unknown>): {
+  venueName: string;
+  venueAddress: string;
+  venueText: string;
+} {
+  const venueName =
+    pickString(detail, [
+      "venue_name",
+      "venueName",
+      "venue",
+      "site_name",
+      "siteName",
+      "place_name",
+      "placeName",
+      "place",
+      "screen_name",
+      "screenName",
+    ]) ||
+    pickNestedString(detail, ["venue_info", "venueInfo", "site_info", "siteInfo"], [
+      "venue_name",
+      "venueName",
+      "name",
+      "site_name",
+      "siteName",
+      "place_name",
+      "placeName",
+      "screen_name",
+      "screenName",
+    ]);
+
+  const venueAddress =
+    pickString(detail, [
+      "venue_address",
+      "venueAddress",
+      "address",
+      "addr",
+      "detail_address",
+      "detailAddress",
+      "place_address",
+      "placeAddress",
+      "city_name",
+      "cityName",
+      "city",
+    ]) ||
+    pickNestedString(detail, ["venue_info", "venueInfo", "site_info", "siteInfo"], [
+      "venue_address",
+      "venueAddress",
+      "address",
+      "addr",
+      "detail_address",
+      "detailAddress",
+      "place_address",
+      "placeAddress",
+      "city_name",
+      "cityName",
+      "city",
+    ]);
+
+  return {
+    venueName,
+    venueAddress,
+    venueText: buildVenueText(venueName, venueAddress),
+  };
 }
 
 export function parseBilibiliShowProjectId(input: string): number | null {
@@ -95,6 +199,8 @@ export function normalizeBilibiliShowProject(
   const projectId = Number(detail?.id);
   const releaseDate = formatUnixTimestamp(detail?.start_time);
   const coverRemote = ensureHttpsUrl(detail?.cover) || ensureHttpsUrl(detail?.banner);
+  const record = (detail || {}) as Record<string, unknown>;
+  const { venueName, venueAddress, venueText } = pickBilibiliVenue(record);
 
   return {
     bilibili_show_id: projectId,
@@ -109,5 +215,8 @@ export function normalizeBilibiliShowProject(
     summary: normalizeSummaryText(detail?.description || ""),
     platforms: [],
     platforms_text: "",
+    venue_name: venueName,
+    venue_address: venueAddress,
+    venue_text: venueText,
   };
 }

@@ -37,6 +37,7 @@ export const MEDIA_SOURCE_UI_META_MAP: Record<SourceId, MediaSourceUiMeta> = {
       "支持标题搜索，并从候选条目里选择后再创建卡片。",
       "支持直接粘贴 Bangumi 条目链接。",
       "支持直接输入数字条目 ID。",
+      "支持按游戏、动画、书籍、三次元自动切换到不同模板；留空时会回退通用模板。",
       "会按模板新建作品卡片，并可按配置决定是否下载本地海报。",
     ],
     templateVariables: buildTemplateVariables([
@@ -68,6 +69,9 @@ export const MEDIA_SOURCE_UI_META_MAP: Record<SourceId, MediaSourceUiMeta> = {
     templateVariables: buildTemplateVariables([
       { key: "bilibili_show_id", description: "会员购项目 ID。" },
       { key: "bilibili_show_url", description: "会员购详情页链接。" },
+      { key: "venue_name", description: "演出场所名称。" },
+      { key: "venue_address", description: "演出场所地址。" },
+      { key: "venue_text", description: "演出场所的一行文本，优先拼接名称和地址。" },
     ]),
   },
   showstart: {
@@ -81,6 +85,9 @@ export const MEDIA_SOURCE_UI_META_MAP: Record<SourceId, MediaSourceUiMeta> = {
     templateVariables: buildTemplateVariables([
       { key: "showstart_activity_id", description: "秀动活动 ID。" },
       { key: "showstart_url", description: "秀动活动详情页链接。" },
+      { key: "venue_name", description: "演出场所名称。" },
+      { key: "venue_address", description: "演出场所地址。" },
+      { key: "venue_text", description: "演出场所的一行文本，优先拼接名称和地址。" },
     ]),
   },
 };

@@ -1,11 +1,21 @@
 export const SOURCE_IDS = ["bangumi", "mobygames", "bilibili_show", "showstart"] as const;
 
 export type SourceId = (typeof SOURCE_IDS)[number];
+export const BANGUMI_TEMPLATE_TYPES = ["game", "anime", "book", "liveAction"] as const;
+export type BangumiTemplateType = (typeof BANGUMI_TEMPLATE_TYPES)[number];
+
+export interface BangumiTypeTemplatePaths {
+  game: string;
+  anime: string;
+  book: string;
+  liveAction: string;
+}
 
 export interface SourceConfig {
   targetFolder: string;
   templatePath: string;
   searchLimit: number;
+  typeTemplatePaths?: BangumiTypeTemplatePaths;
   poster: {
     saveLocal: boolean;
     folder: string;
@@ -29,6 +39,9 @@ export interface NormalizedMediaItem {
   summary: string;
   platforms: string[];
   platforms_text: string;
+  venue_name?: string;
+  venue_address?: string;
+  venue_text?: string;
   [key: string]: unknown;
 }
 

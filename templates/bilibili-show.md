@@ -5,6 +5,7 @@ categories: 新作品卡片
 aliases:
 媒体类型:
 发布日期: {{yaml.release_date}}
+演出场所: {{yaml.venue_text}}
 评分:
 状态:
 完成时间:

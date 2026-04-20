@@ -3,6 +3,7 @@ import fsp from "fs/promises";
 import path from "path";
 import type { App } from "obsidian";
 import {
+  BANGUMI_TYPE_TEMPLATE_CONTENTS,
   DEFAULT_SOURCE_CONFIGS,
   FALLBACK_POSTER_FOLDER,
   LEGACY_PLUGIN_ID,
@@ -13,7 +14,15 @@ import {
 } from "./defaults.ts";
 import { ensureJsonFile, ensureTextFile } from "../core/files.ts";
 import { normalizeVaultPath } from "../core/paths.ts";
-import { SOURCE_IDS, type SourceConfig, type SourceConfigRoot, type SourceId, type VaultInfo } from "../types.ts";
+import {
+  BANGUMI_TEMPLATE_TYPES,
+  SOURCE_IDS,
+  type BangumiTypeTemplatePaths,
+  type SourceConfig,
+  type SourceConfigRoot,
+  type SourceId,
+  type VaultInfo,
+} from "../types.ts";
 
 function normalizePlainRelativePath(value: unknown): string {
   return normalizeVaultPath(value);
@@ -25,6 +34,13 @@ function normalizeVaultRelativePath(value: unknown): string {
     throw new Error("模板路径不能为空。");
   }
   return normalized;
+}
+
+function normalizeOptionalVaultRelativePath(value: unknown): string {
+  if (value === null || typeof value === "undefined") {
+    return "";
+  }
+  return normalizePlainRelativePath(value);
 }
 
 function normalizeSearchLimit(value: unknown, fallback: number): number {
@@ -55,12 +71,18 @@ function buildTemplateModeSourceConfig(
   const legacyTemplatePath = legacyDefaults?.templatePath
     ? normalizeVaultRelativePath(legacyDefaults.templatePath)
     : "";
+  const typeTemplatePaths = buildBangumiTypeTemplatePaths(
+    source,
+    defaults.typeTemplatePaths,
+    legacyDefaults?.typeTemplatePaths
+  );
 
   return {
     targetFolder: normalizePlainRelativePath(source.targetFolder || defaults.targetFolder),
     templatePath:
       legacyTemplatePath && templatePath === legacyTemplatePath ? defaults.templatePath : templatePath,
     searchLimit: normalizeSearchLimit(source.searchLimit, defaults.searchLimit),
+    ...(typeTemplatePaths ? { typeTemplatePaths } : {}),
     poster: {
       saveLocal: Boolean(
         typeof poster.saveLocal === "boolean" ? poster.saveLocal : defaults.poster.saveLocal
@@ -74,6 +96,41 @@ function buildTemplateModeSourceConfig(
       ).trim(),
     },
   };
+}
+
+function buildBangumiTypeTemplatePaths(
+  source: Record<string, unknown>,
+  defaults?: BangumiTypeTemplatePaths,
+  legacyDefaults?: BangumiTypeTemplatePaths
+): BangumiTypeTemplatePaths | undefined {
+  if (!defaults) {
+    return undefined;
+  }
+
+  const raw = source.typeTemplatePaths && typeof source.typeTemplatePaths === "object"
+    ? (source.typeTemplatePaths as Record<string, unknown>)
+    : {};
+
+  return BANGUMI_TEMPLATE_TYPES.reduce((result, templateType) => {
+    const defaultPath = defaults[templateType];
+    const legacyPath = legacyDefaults?.[templateType]
+      ? normalizeVaultRelativePath(legacyDefaults[templateType])
+      : "";
+    const hasExplicitValue = Object.prototype.hasOwnProperty.call(raw, templateType);
+    const explicitValue = hasExplicitValue
+      ? normalizeOptionalVaultRelativePath(raw[templateType])
+      : undefined;
+
+    if (explicitValue === undefined) {
+      result[templateType] = defaultPath;
+    } else if (legacyPath && explicitValue === legacyPath) {
+      result[templateType] = defaultPath;
+    } else {
+      result[templateType] = explicitValue;
+    }
+
+    return result;
+  }, {} as BangumiTypeTemplatePaths);
 }
 
 function normalizeSourceConfig(
@@ -121,6 +178,7 @@ export function normalizeTemplateEditorValues(
     targetFolder: string;
     templatePath: string;
     searchLimit: string;
+    typeTemplatePaths?: Partial<BangumiTypeTemplatePaths>;
     posterSaveLocal: boolean;
     posterFolder: string;
     filenameTemplate: string;
@@ -138,6 +196,16 @@ export function normalizeTemplateEditorValues(
   const filenameCollisionTemplate = String(
     state.filenameCollisionTemplate || defaults.filename.collisionTemplate
   ).trim();
+  const typeTemplatePaths = defaults.typeTemplatePaths
+    ? BANGUMI_TEMPLATE_TYPES.reduce((result, templateType) => {
+        const rawValue = state.typeTemplatePaths?.[templateType];
+        result[templateType] =
+          typeof rawValue === "string"
+            ? normalizeOptionalVaultRelativePath(rawValue)
+            : defaults.typeTemplatePaths?.[templateType] || "";
+        return result;
+      }, {} as BangumiTypeTemplatePaths)
+    : undefined;
 
   if (!filenameTemplate) {
     throw new Error("文件名模板不能为空。");
@@ -151,6 +219,7 @@ export function normalizeTemplateEditorValues(
     targetFolder,
     templatePath,
     searchLimit,
+    ...(typeTemplatePaths ? { typeTemplatePaths } : {}),
     poster: {
       saveLocal: posterSaveLocal,
       folder: posterFolder,
@@ -260,6 +329,8 @@ export class ConfigStore {
         TEMPLATE_CONTENTS[sourceKey]
       );
     }
+
+    await this.ensureBangumiTypeTemplates(vaultBasePath, defaults.bangumi, defaults.bangumi);
   }
 
   async ensureTemplateExists(
@@ -269,6 +340,33 @@ export class ConfigStore {
   ): Promise<void> {
     const absolutePath = path.join(vaultBasePath, normalizeVaultPath(relativePath));
     await ensureTextFile(absolutePath, content);
+  }
+
+  async ensureBangumiTypeTemplates(
+    vaultBasePath: string,
+    config: SourceConfig,
+    defaultConfig: SourceConfig
+  ): Promise<void> {
+    if (!config.typeTemplatePaths || !defaultConfig.typeTemplatePaths) {
+      return;
+    }
+
+    for (const templateType of BANGUMI_TEMPLATE_TYPES) {
+      const configuredPath = config.typeTemplatePaths[templateType];
+      if (!configuredPath) {
+        continue;
+      }
+
+      if (configuredPath !== defaultConfig.typeTemplatePaths[templateType]) {
+        continue;
+      }
+
+      await this.ensureTemplateExists(
+        vaultBasePath,
+        configuredPath,
+        BANGUMI_TYPE_TEMPLATE_CONTENTS[templateType]
+      );
+    }
   }
 
   async loadLegacyPluginConfigRoot(vaultBasePath: string): Promise<SourceConfigRoot | null> {
@@ -370,6 +468,8 @@ export class ConfigStore {
         TEMPLATE_CONTENTS[sourceKey]
       );
     }
+
+    await this.ensureBangumiTypeTemplates(vaultBasePath, normalized.bangumi, defaults.bangumi);
 
     return normalized;
   }

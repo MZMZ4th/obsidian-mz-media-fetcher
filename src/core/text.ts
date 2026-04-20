@@ -13,6 +13,10 @@ export const MONTH_MAP: Record<string, string> = {
   december: "12",
 };
 
+const FILE_NAME_CONTROL_CHARS = /[\u0000-\u001f\u007f]/g;
+const FILE_NAME_ILLEGAL_CHARS = /[\\/:*?"<>|]/g;
+const WINDOWS_RESERVED_FILE_NAME = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
+
 export function sanitizeList(values: unknown[], maxItems: number): string[] {
   if (!Array.isArray(values)) return [];
   const seen = new Set<string>();
@@ -64,12 +68,26 @@ export function safeYear(value: unknown): string {
 }
 
 export function sanitizeFileName(value: unknown): string {
-  return String(value || "")
-    .replace(/[\\/:*?"<>|]/g, " ")
+  const normalized = String(value || "")
+    .replace(FILE_NAME_CONTROL_CHARS, " ")
+    .replace(FILE_NAME_ILLEGAL_CHARS, " ")
     .trim()
+    .replace(/[. ]+$/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-+|-+$/g, "");
+
+  if (!normalized) return "";
+  if (!WINDOWS_RESERVED_FILE_NAME.test(normalized)) {
+    return normalized;
+  }
+
+  const extensionIndex = normalized.indexOf(".");
+  if (extensionIndex === -1) {
+    return `${normalized}-file`;
+  }
+
+  return `${normalized.slice(0, extensionIndex)}-file${normalized.slice(extensionIndex)}`;
 }
 
 export function ensureTrailingNewline(text: string): string {

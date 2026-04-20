@@ -61,6 +61,14 @@ var init_paths = __esm({
 });
 
 // src/config/defaults.ts
+function buildDefaultBangumiTypeTemplatePaths(pluginRoot) {
+  return {
+    game: joinVaultPath(pluginRoot, "templates", BANGUMI_TYPE_TEMPLATE_FILENAMES.game),
+    anime: joinVaultPath(pluginRoot, "templates", BANGUMI_TYPE_TEMPLATE_FILENAMES.anime),
+    book: joinVaultPath(pluginRoot, "templates", BANGUMI_TYPE_TEMPLATE_FILENAMES.book),
+    liveAction: joinVaultPath(pluginRoot, "templates", BANGUMI_TYPE_TEMPLATE_FILENAMES.liveAction)
+  };
+}
 function buildSourceConfigs(pluginId, configDir = ".obsidian", posterFolder = FALLBACK_POSTER_FOLDER) {
   const pluginRoot = joinVaultPath(configDir, "plugins", pluginId);
   return {
@@ -68,6 +76,7 @@ function buildSourceConfigs(pluginId, configDir = ".obsidian", posterFolder = FA
       targetFolder: "00-Inbox",
       templatePath: joinVaultPath(pluginRoot, "templates", "bangumi.md"),
       searchLimit: 8,
+      typeTemplatePaths: buildDefaultBangumiTypeTemplatePaths(pluginRoot),
       poster: {
         saveLocal: false,
         folder: posterFolder
@@ -124,7 +133,7 @@ function getDefaultSourceConfigs(configDir = ".obsidian", posterFolder = FALLBAC
 function getLegacyDefaultSourceConfigs(configDir = ".obsidian", posterFolder = FALLBACK_POSTER_FOLDER) {
   return buildSourceConfigs(LEGACY_PLUGIN_ID, configDir, posterFolder);
 }
-var PLUGIN_ID, LEGACY_PLUGIN_ID, PLUGIN_NAME, PLUGIN_VERSION, HTTP_USER_AGENT, BANGUMI_API_BASE, FALLBACK_POSTER_FOLDER, TEMPLATE_CONTENTS, DEFAULT_SOURCE_CONFIGS;
+var PLUGIN_ID, LEGACY_PLUGIN_ID, PLUGIN_NAME, PLUGIN_VERSION, HTTP_USER_AGENT, BANGUMI_API_BASE, FALLBACK_POSTER_FOLDER, BANGUMI_TEMPLATE_CONTENT, BILIBILI_SHOW_TEMPLATE_CONTENT, SHOWSTART_TEMPLATE_CONTENT, TEMPLATE_CONTENTS, BANGUMI_TYPE_TEMPLATE_FILENAMES, BANGUMI_TYPE_TEMPLATE_CONTENTS, DEFAULT_SOURCE_CONFIGS;
 var init_defaults = __esm({
   "src/config/defaults.ts"() {
     init_paths();
@@ -135,8 +144,7 @@ var init_defaults = __esm({
     HTTP_USER_AGENT = `${PLUGIN_NAME}/${PLUGIN_VERSION} (Obsidian)`;
     BANGUMI_API_BASE = "https://api.bgm.tv/v0";
     FALLBACK_POSTER_FOLDER = "00-Inbox/\u9644\u4EF6/\u4F5C\u54C1\u6D77\u62A5";
-    TEMPLATE_CONTENTS = {
-      bangumi: `---
+    BANGUMI_TEMPLATE_CONTENT = `---
 categories: \u65B0\u4F5C\u54C1\u5361\u7247
 \u540D\u79F0: {{yaml.title}}
 \u539F\u540D: {{yaml.title_original}}
@@ -159,7 +167,59 @@ aliases: {{yaml.aliases}}
 {{summary}}
 
 ## \u7B80\u8BB0
-`,
+`;
+    BILIBILI_SHOW_TEMPLATE_CONTENT = `---
+categories: \u65B0\u4F5C\u54C1\u5361\u7247
+\u540D\u79F0: {{yaml.title}}
+\u539F\u540D:
+aliases:
+\u5A92\u4F53\u7C7B\u578B:
+\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}
+\u6F14\u51FA\u573A\u6240: {{yaml.venue_text}}
+\u8BC4\u5206:
+\u72B6\u6001:
+\u5B8C\u6210\u65F6\u95F4:
+\u4F53\u9A8C\u6B21\u6570:
+\u6D77\u62A5: {{poster}}
+\u6765\u6E90\u94FE\u63A5: {{bilibili_show_url}}
+\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}
+---
+
+![cover|300]({{poster}})
+
+## \u7B80\u4ECB
+
+{{summary}}
+
+## \u7B80\u8BB0
+`;
+    SHOWSTART_TEMPLATE_CONTENT = `---
+categories: \u65B0\u4F5C\u54C1\u5361\u7247
+\u540D\u79F0: {{yaml.title}}
+\u539F\u540D:
+aliases:
+\u5A92\u4F53\u7C7B\u578B:
+\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}
+\u6F14\u51FA\u573A\u6240: {{yaml.venue_text}}
+\u8BC4\u5206:
+\u72B6\u6001: \u5DF2\u5B8C\u6210
+\u5B8C\u6210\u65F6\u95F4: {{yaml.release_date}}
+\u4F53\u9A8C\u6B21\u6570: 1
+\u6D77\u62A5: {{poster}}
+\u6765\u6E90\u94FE\u63A5: {{showstart_url}}
+\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}
+---
+
+![cover|300]({{poster}})
+
+## \u7B80\u4ECB
+
+{{summary}}
+
+## \u7B80\u8BB0
+`;
+    TEMPLATE_CONTENTS = {
+      bangumi: BANGUMI_TEMPLATE_CONTENT,
       mobygames: `---
 categories: \u65B0\u4F5C\u54C1\u5361\u7247
 \u540D\u79F0: {{yaml.title}}
@@ -188,54 +248,20 @@ aliases: {{yaml.aliases}}
 
 ## \u7B80\u8BB0
 `,
-      bilibili_show: `---
-categories: \u65B0\u4F5C\u54C1\u5361\u7247
-\u540D\u79F0: {{yaml.title}}
-\u539F\u540D:
-aliases:
-\u5A92\u4F53\u7C7B\u578B:
-\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}
-\u8BC4\u5206:
-\u72B6\u6001:
-\u5B8C\u6210\u65F6\u95F4:
-\u4F53\u9A8C\u6B21\u6570:
-\u6D77\u62A5: {{poster}}
-\u6765\u6E90\u94FE\u63A5: {{bilibili_show_url}}
-\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}
----
-
-![cover|300]({{poster}})
-
-## \u7B80\u4ECB
-
-{{summary}}
-
-## \u7B80\u8BB0
-`,
-      showstart: `---
-categories: \u65B0\u4F5C\u54C1\u5361\u7247
-\u540D\u79F0: {{yaml.title}}
-\u539F\u540D:
-aliases:
-\u5A92\u4F53\u7C7B\u578B:
-\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}
-\u8BC4\u5206:
-\u72B6\u6001: \u5DF2\u5B8C\u6210
-\u5B8C\u6210\u65F6\u95F4: {{yaml.release_date}}
-\u4F53\u9A8C\u6B21\u6570: 1
-\u6D77\u62A5: {{poster}}
-\u6765\u6E90\u94FE\u63A5: {{showstart_url}}
-\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}
----
-
-![cover|300]({{poster}})
-
-## \u7B80\u4ECB
-
-{{summary}}
-
-## \u7B80\u8BB0
-`
+      bilibili_show: BILIBILI_SHOW_TEMPLATE_CONTENT,
+      showstart: SHOWSTART_TEMPLATE_CONTENT
+    };
+    BANGUMI_TYPE_TEMPLATE_FILENAMES = {
+      game: "bangumi-game.md",
+      anime: "bangumi-anime.md",
+      book: "bangumi-book.md",
+      liveAction: "bangumi-live-action.md"
+    };
+    BANGUMI_TYPE_TEMPLATE_CONTENTS = {
+      game: BANGUMI_TEMPLATE_CONTENT,
+      anime: BANGUMI_TEMPLATE_CONTENT,
+      book: BANGUMI_TEMPLATE_CONTENT,
+      liveAction: BANGUMI_TEMPLATE_CONTENT
     };
     DEFAULT_SOURCE_CONFIGS = getDefaultSourceConfigs();
   }
@@ -342,6 +368,9 @@ var MONTH_MAP = {
   november: "11",
   december: "12"
 };
+var FILE_NAME_CONTROL_CHARS = /[\u0000-\u001f\u007f]/g;
+var FILE_NAME_ILLEGAL_CHARS = /[\\/:*?"<>|]/g;
+var WINDOWS_RESERVED_FILE_NAME = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
 function sanitizeList(values, maxItems) {
   if (!Array.isArray(values)) return [];
   const seen = /* @__PURE__ */ new Set();
@@ -373,7 +402,16 @@ function safeYear(value) {
   return extractYear(value);
 }
 function sanitizeFileName(value) {
-  return String(value || "").replace(/[\\/:*?"<>|]/g, " ").trim().replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
+  const normalized = String(value || "").replace(FILE_NAME_CONTROL_CHARS, " ").replace(FILE_NAME_ILLEGAL_CHARS, " ").trim().replace(/[. ]+$/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
+  if (!normalized) return "";
+  if (!WINDOWS_RESERVED_FILE_NAME.test(normalized)) {
+    return normalized;
+  }
+  const extensionIndex = normalized.indexOf(".");
+  if (extensionIndex === -1) {
+    return `${normalized}-file`;
+  }
+  return `${normalized.slice(0, extensionIndex)}-file${normalized.slice(extensionIndex)}`;
 }
 function ensureTrailingNewline(text) {
   return text.endsWith("\n") ? text : `${text}
@@ -541,6 +579,12 @@ function buildTemplateContext(sourceKey, subject) {
 }
 
 // src/core/cards.ts
+var BANGUMI_MEDIA_TYPE_TEMPLATE_MAP = {
+  \u6E38\u620F: "game",
+  \u52A8\u753B: "anime",
+  \u4E66\u7C4D: "book",
+  \u4E09\u6B21\u5143: "liveAction"
+};
 async function defaultDownloadBinary(url) {
   const { requestBinary: requestBinary2 } = await Promise.resolve().then(() => (init_http(), http_exports));
   return requestBinary2(url);
@@ -548,7 +592,8 @@ async function defaultDownloadBinary(url) {
 async function buildCard(app, vaultInfo, sourceKey, item, config, downloadBinary = defaultDownloadBinary) {
   const filePath = await resolveCardPath(app, config, item, sourceKey);
   const resolvedItem = await resolvePosterAsset(app, config, item, filePath, downloadBinary);
-  const templatePath = import_path2.default.join(vaultInfo.path, normalizeVaultPath(config.templatePath));
+  const configuredTemplatePath = resolveTemplatePathForItem(sourceKey, resolvedItem, config);
+  const templatePath = import_path2.default.join(vaultInfo.path, normalizeVaultPath(configuredTemplatePath));
   const template = await import_promises2.default.readFile(templatePath, "utf8");
   const renderContext = buildTemplateContext(sourceKey, resolvedItem);
   const content = renderTemplate(template, renderContext).trim();
@@ -557,6 +602,17 @@ async function buildCard(app, vaultInfo, sourceKey, item, config, downloadBinary
     filePath,
     content: ensureTrailingNewline(content)
   };
+}
+function resolveTemplatePathForItem(sourceKey, item, config) {
+  if (sourceKey !== "bangumi" || !config.typeTemplatePaths) {
+    return config.templatePath;
+  }
+  const mediaType = String(item.media_type || "").trim();
+  const templateType = BANGUMI_MEDIA_TYPE_TEMPLATE_MAP[mediaType];
+  if (!templateType) {
+    return config.templatePath;
+  }
+  return config.typeTemplatePaths[templateType] || config.templatePath;
 }
 async function resolveCardPath(app, config, item, sourceKey) {
   const idKeyMap = {
@@ -635,6 +691,7 @@ init_paths();
 
 // src/types.ts
 var SOURCE_IDS = ["bangumi", "mobygames", "bilibili_show", "showstart"];
+var BANGUMI_TEMPLATE_TYPES = ["game", "anime", "book", "liveAction"];
 
 // src/config/storage.ts
 function normalizePlainRelativePath(value) {
@@ -646,6 +703,12 @@ function normalizeVaultRelativePath(value) {
     throw new Error("\u6A21\u677F\u8DEF\u5F84\u4E0D\u80FD\u4E3A\u7A7A\u3002");
   }
   return normalized;
+}
+function normalizeOptionalVaultRelativePath(value) {
+  if (value === null || typeof value === "undefined") {
+    return "";
+  }
+  return normalizePlainRelativePath(value);
 }
 function normalizeSearchLimit(value, fallback) {
   const numeric = Number(value);
@@ -664,10 +727,16 @@ function buildTemplateModeSourceConfig(raw, defaults, legacyDefaults) {
   const poster = source.poster && typeof source.poster === "object" ? source.poster : {};
   const templatePath = normalizeVaultRelativePath(source.templatePath || defaults.templatePath);
   const legacyTemplatePath = legacyDefaults?.templatePath ? normalizeVaultRelativePath(legacyDefaults.templatePath) : "";
+  const typeTemplatePaths = buildBangumiTypeTemplatePaths(
+    source,
+    defaults.typeTemplatePaths,
+    legacyDefaults?.typeTemplatePaths
+  );
   return {
     targetFolder: normalizePlainRelativePath(source.targetFolder || defaults.targetFolder),
     templatePath: legacyTemplatePath && templatePath === legacyTemplatePath ? defaults.templatePath : templatePath,
     searchLimit: normalizeSearchLimit(source.searchLimit, defaults.searchLimit),
+    ...typeTemplatePaths ? { typeTemplatePaths } : {},
     poster: {
       saveLocal: Boolean(
         typeof poster.saveLocal === "boolean" ? poster.saveLocal : defaults.poster.saveLocal
@@ -681,6 +750,26 @@ function buildTemplateModeSourceConfig(raw, defaults, legacyDefaults) {
       ).trim()
     }
   };
+}
+function buildBangumiTypeTemplatePaths(source, defaults, legacyDefaults) {
+  if (!defaults) {
+    return void 0;
+  }
+  const raw = source.typeTemplatePaths && typeof source.typeTemplatePaths === "object" ? source.typeTemplatePaths : {};
+  return BANGUMI_TEMPLATE_TYPES.reduce((result, templateType) => {
+    const defaultPath = defaults[templateType];
+    const legacyPath = legacyDefaults?.[templateType] ? normalizeVaultRelativePath(legacyDefaults[templateType]) : "";
+    const hasExplicitValue = Object.prototype.hasOwnProperty.call(raw, templateType);
+    const explicitValue = hasExplicitValue ? normalizeOptionalVaultRelativePath(raw[templateType]) : void 0;
+    if (explicitValue === void 0) {
+      result[templateType] = defaultPath;
+    } else if (legacyPath && explicitValue === legacyPath) {
+      result[templateType] = defaultPath;
+    } else {
+      result[templateType] = explicitValue;
+    }
+    return result;
+  }, {});
 }
 function normalizeSourceConfig(raw, sourceKey, defaults, legacyDefaults) {
   return buildTemplateModeSourceConfig(raw, defaults[sourceKey], legacyDefaults[sourceKey]);
@@ -715,6 +804,11 @@ function normalizeTemplateEditorValues(sourceKey, state, defaultSourceConfigs = 
   const filenameCollisionTemplate = String(
     state.filenameCollisionTemplate || defaults.filename.collisionTemplate
   ).trim();
+  const typeTemplatePaths = defaults.typeTemplatePaths ? BANGUMI_TEMPLATE_TYPES.reduce((result, templateType) => {
+    const rawValue = state.typeTemplatePaths?.[templateType];
+    result[templateType] = typeof rawValue === "string" ? normalizeOptionalVaultRelativePath(rawValue) : defaults.typeTemplatePaths?.[templateType] || "";
+    return result;
+  }, {}) : void 0;
   if (!filenameTemplate) {
     throw new Error("\u6587\u4EF6\u540D\u6A21\u677F\u4E0D\u80FD\u4E3A\u7A7A\u3002");
   }
@@ -725,6 +819,7 @@ function normalizeTemplateEditorValues(sourceKey, state, defaultSourceConfigs = 
     targetFolder,
     templatePath,
     searchLimit,
+    ...typeTemplatePaths ? { typeTemplatePaths } : {},
     poster: {
       saveLocal: posterSaveLocal,
       folder: posterFolder
@@ -815,10 +910,30 @@ var ConfigStore = class {
         TEMPLATE_CONTENTS[sourceKey]
       );
     }
+    await this.ensureBangumiTypeTemplates(vaultBasePath, defaults.bangumi, defaults.bangumi);
   }
   async ensureTemplateExists(vaultBasePath, relativePath, content) {
     const absolutePath = import_path3.default.join(vaultBasePath, normalizeVaultPath(relativePath));
     await ensureTextFile(absolutePath, content);
+  }
+  async ensureBangumiTypeTemplates(vaultBasePath, config, defaultConfig) {
+    if (!config.typeTemplatePaths || !defaultConfig.typeTemplatePaths) {
+      return;
+    }
+    for (const templateType of BANGUMI_TEMPLATE_TYPES) {
+      const configuredPath = config.typeTemplatePaths[templateType];
+      if (!configuredPath) {
+        continue;
+      }
+      if (configuredPath !== defaultConfig.typeTemplatePaths[templateType]) {
+        continue;
+      }
+      await this.ensureTemplateExists(
+        vaultBasePath,
+        configuredPath,
+        BANGUMI_TYPE_TEMPLATE_CONTENTS[templateType]
+      );
+    }
   }
   async loadLegacyPluginConfigRoot(vaultBasePath) {
     const filePath = this.getLegacyPluginFilePath("media-fetcher-rules.json");
@@ -906,6 +1021,7 @@ var ConfigStore = class {
         TEMPLATE_CONTENTS[sourceKey]
       );
     }
+    await this.ensureBangumiTypeTemplates(vaultBasePath, normalized.bangumi, defaults.bangumi);
     return normalized;
   }
   async saveTemplateSourceConfig(sourceKey, values) {
@@ -959,6 +1075,7 @@ var MEDIA_SOURCE_UI_META_MAP = {
       "\u652F\u6301\u6807\u9898\u641C\u7D22\uFF0C\u5E76\u4ECE\u5019\u9009\u6761\u76EE\u91CC\u9009\u62E9\u540E\u518D\u521B\u5EFA\u5361\u7247\u3002",
       "\u652F\u6301\u76F4\u63A5\u7C98\u8D34 Bangumi \u6761\u76EE\u94FE\u63A5\u3002",
       "\u652F\u6301\u76F4\u63A5\u8F93\u5165\u6570\u5B57\u6761\u76EE ID\u3002",
+      "\u652F\u6301\u6309\u6E38\u620F\u3001\u52A8\u753B\u3001\u4E66\u7C4D\u3001\u4E09\u6B21\u5143\u81EA\u52A8\u5207\u6362\u5230\u4E0D\u540C\u6A21\u677F\uFF1B\u7559\u7A7A\u65F6\u4F1A\u56DE\u9000\u901A\u7528\u6A21\u677F\u3002",
       "\u4F1A\u6309\u6A21\u677F\u65B0\u5EFA\u4F5C\u54C1\u5361\u7247\uFF0C\u5E76\u53EF\u6309\u914D\u7F6E\u51B3\u5B9A\u662F\u5426\u4E0B\u8F7D\u672C\u5730\u6D77\u62A5\u3002"
     ],
     templateVariables: buildTemplateVariables([
@@ -989,7 +1106,10 @@ var MEDIA_SOURCE_UI_META_MAP = {
     ],
     templateVariables: buildTemplateVariables([
       { key: "bilibili_show_id", description: "\u4F1A\u5458\u8D2D\u9879\u76EE ID\u3002" },
-      { key: "bilibili_show_url", description: "\u4F1A\u5458\u8D2D\u8BE6\u60C5\u9875\u94FE\u63A5\u3002" }
+      { key: "bilibili_show_url", description: "\u4F1A\u5458\u8D2D\u8BE6\u60C5\u9875\u94FE\u63A5\u3002" },
+      { key: "venue_name", description: "\u6F14\u51FA\u573A\u6240\u540D\u79F0\u3002" },
+      { key: "venue_address", description: "\u6F14\u51FA\u573A\u6240\u5730\u5740\u3002" },
+      { key: "venue_text", description: "\u6F14\u51FA\u573A\u6240\u7684\u4E00\u884C\u6587\u672C\uFF0C\u4F18\u5148\u62FC\u63A5\u540D\u79F0\u548C\u5730\u5740\u3002" }
     ])
   },
   showstart: {
@@ -1002,7 +1122,10 @@ var MEDIA_SOURCE_UI_META_MAP = {
     ],
     templateVariables: buildTemplateVariables([
       { key: "showstart_activity_id", description: "\u79C0\u52A8\u6D3B\u52A8 ID\u3002" },
-      { key: "showstart_url", description: "\u79C0\u52A8\u6D3B\u52A8\u8BE6\u60C5\u9875\u94FE\u63A5\u3002" }
+      { key: "showstart_url", description: "\u79C0\u52A8\u6D3B\u52A8\u8BE6\u60C5\u9875\u94FE\u63A5\u3002" },
+      { key: "venue_name", description: "\u6F14\u51FA\u573A\u6240\u540D\u79F0\u3002" },
+      { key: "venue_address", description: "\u6F14\u51FA\u573A\u6240\u5730\u5740\u3002" },
+      { key: "venue_text", description: "\u6F14\u51FA\u573A\u6240\u7684\u4E00\u884C\u6587\u672C\uFF0C\u4F18\u5148\u62FC\u63A5\u540D\u79F0\u548C\u5730\u5740\u3002" }
     ])
   }
 };
@@ -1172,6 +1295,89 @@ function formatUnixTimestamp(timestamp) {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
+function pickString(detail, keys) {
+  for (const key of keys) {
+    const value = detail[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return "";
+}
+function pickNestedString(detail, containerKeys, valueKeys) {
+  for (const containerKey of containerKeys) {
+    const container = detail[containerKey];
+    if (!container || typeof container !== "object" || Array.isArray(container)) {
+      continue;
+    }
+    const picked = pickString(container, valueKeys);
+    if (picked) {
+      return picked;
+    }
+  }
+  return "";
+}
+function buildVenueText(name, address) {
+  if (!name) return address;
+  if (!address) return name;
+  if (address.includes(name)) return address;
+  if (name.includes(address)) return name;
+  return `${name} \xB7 ${address}`;
+}
+function pickBilibiliVenue(detail) {
+  const venueName = pickString(detail, [
+    "venue_name",
+    "venueName",
+    "venue",
+    "site_name",
+    "siteName",
+    "place_name",
+    "placeName",
+    "place",
+    "screen_name",
+    "screenName"
+  ]) || pickNestedString(detail, ["venue_info", "venueInfo", "site_info", "siteInfo"], [
+    "venue_name",
+    "venueName",
+    "name",
+    "site_name",
+    "siteName",
+    "place_name",
+    "placeName",
+    "screen_name",
+    "screenName"
+  ]);
+  const venueAddress = pickString(detail, [
+    "venue_address",
+    "venueAddress",
+    "address",
+    "addr",
+    "detail_address",
+    "detailAddress",
+    "place_address",
+    "placeAddress",
+    "city_name",
+    "cityName",
+    "city"
+  ]) || pickNestedString(detail, ["venue_info", "venueInfo", "site_info", "siteInfo"], [
+    "venue_address",
+    "venueAddress",
+    "address",
+    "addr",
+    "detail_address",
+    "detailAddress",
+    "place_address",
+    "placeAddress",
+    "city_name",
+    "cityName",
+    "city"
+  ]);
+  return {
+    venueName,
+    venueAddress,
+    venueText: buildVenueText(venueName, venueAddress)
+  };
+}
 function parseBilibiliShowProjectId(input) {
   const text = String(input || "").trim();
   if (!text) {
@@ -1211,6 +1417,8 @@ function normalizeBilibiliShowProject(detail) {
   const projectId = Number(detail?.id);
   const releaseDate = formatUnixTimestamp(detail?.start_time);
   const coverRemote = ensureHttpsUrl(detail?.cover) || ensureHttpsUrl(detail?.banner);
+  const record = detail || {};
+  const { venueName, venueAddress, venueText } = pickBilibiliVenue(record);
   return {
     bilibili_show_id: projectId,
     bilibili_show_url: normalizeBilibiliShowProjectUrl(projectId),
@@ -1223,7 +1431,10 @@ function normalizeBilibiliShowProject(detail) {
     cover_remote: coverRemote,
     summary: normalizeSummaryText(detail?.description || ""),
     platforms: [],
-    platforms_text: ""
+    platforms_text: "",
+    venue_name: venueName,
+    venue_address: venueAddress,
+    venue_text: venueText
   };
 }
 
@@ -1466,7 +1677,7 @@ function ensureHttpsUrl2(value) {
   if (normalized.startsWith("//")) return `https:${normalized}`;
   return normalized;
 }
-function pickString(detail, keys) {
+function pickString2(detail, keys) {
   for (const key of keys) {
     const value = detail[key];
     if (typeof value === "string" && value.trim()) {
@@ -1503,8 +1714,8 @@ function normalizeShowstartDate(detail) {
   const timestampDate = formatTimestamp(detail.startTime);
   if (timestampDate) return timestampDate;
   const candidates = [
-    pickString(detail, ["activityTime", "showTime", "startDate"]),
-    pickString(detail, ["activityDate", "date"])
+    pickString2(detail, ["activityTime", "showTime", "startDate"]),
+    pickString2(detail, ["activityDate", "date"])
   ].filter(Boolean);
   for (const candidate of candidates) {
     const direct = normalizeDateValue(candidate);
@@ -1523,7 +1734,7 @@ function normalizeShowstartDate(detail) {
 }
 function pickShowstartCover(detail) {
   return ensureHttpsUrl2(
-    pickString(detail, [
+    pickString2(detail, [
       "avatar",
       "poster",
       "posterUrl",
@@ -1534,6 +1745,80 @@ function pickShowstartCover(detail) {
       "activityImg"
     ])
   );
+}
+function pickNestedString2(detail, containerKeys, valueKeys) {
+  for (const containerKey of containerKeys) {
+    const container = detail[containerKey];
+    if (!container || typeof container !== "object" || Array.isArray(container)) {
+      continue;
+    }
+    const picked = pickString2(container, valueKeys);
+    if (picked) {
+      return picked;
+    }
+  }
+  return "";
+}
+function buildVenueText2(name, address) {
+  if (!name) return address;
+  if (!address) return name;
+  if (address.includes(name)) return address;
+  if (name.includes(address)) return name;
+  return `${name} \xB7 ${address}`;
+}
+function pickShowstartVenue(detail) {
+  const venueName = pickString2(detail, [
+    "venueName",
+    "venue_name",
+    "siteName",
+    "site_name",
+    "placeName",
+    "place_name",
+    "venue",
+    "place",
+    "shopName",
+    "stadiumName"
+  ]) || pickNestedString2(detail, ["venueInfo", "venue_info", "siteInfo", "site_info"], [
+    "venueName",
+    "venue_name",
+    "name",
+    "siteName",
+    "site_name",
+    "placeName",
+    "place_name",
+    "shopName",
+    "stadiumName"
+  ]);
+  const venueAddress = pickString2(detail, [
+    "venueAddress",
+    "venue_address",
+    "address",
+    "addr",
+    "detailAddress",
+    "detail_address",
+    "placeAddress",
+    "place_address",
+    "cityName",
+    "city_name",
+    "city"
+  ]) || pickNestedString2(detail, ["venueInfo", "venue_info", "siteInfo", "site_info"], [
+    "venueAddress",
+    "venue_address",
+    "address",
+    "addr",
+    "detailAddress",
+    "detail_address",
+    "placeAddress",
+    "place_address",
+    "cityName",
+    "city_name",
+    "city"
+  ]);
+  return {
+    venueName,
+    venueAddress,
+    venueText: buildVenueText2(venueName, venueAddress)
+  };
 }
 function parseShowstartActivityId(input) {
   const text = String(input || "").trim();
@@ -1587,11 +1872,12 @@ function normalizeShowstartActivity(detail) {
   if (!activityId) {
     throw new Error("\u79C0\u52A8\u6D3B\u52A8\u6570\u636E\u91CC\u6CA1\u6709\u6709\u6548\u7684 activityId\u3002");
   }
-  const title = pickString(record, ["activityName", "title", "activityTitle"]) || `\u79C0\u52A8\u6D3B\u52A8 ${activityId}`;
+  const title = pickString2(record, ["activityName", "title", "activityTitle"]) || `\u79C0\u52A8\u6D3B\u52A8 ${activityId}`;
   const releaseDate = normalizeShowstartDate(record);
   const summary = normalizeSummaryText(
-    pickString(record, ["document", "description", "content", "remark", "summary"])
+    pickString2(record, ["document", "description", "content", "remark", "summary"])
   );
+  const { venueName, venueAddress, venueText } = pickShowstartVenue(record);
   return {
     showstart_activity_id: activityId,
     showstart_url: normalizeShowstartActivityUrl(activityId),
@@ -1604,7 +1890,10 @@ function normalizeShowstartActivity(detail) {
     cover_remote: pickShowstartCover(record),
     summary,
     platforms: [],
-    platforms_text: ""
+    platforms_text: "",
+    venue_name: venueName,
+    venue_address: venueAddress,
+    venue_text: venueText
   };
 }
 
@@ -1952,6 +2241,12 @@ var FolderPathSuggest = class extends import_obsidian3.AbstractInputSuggest {
 };
 
 // src/ui/settings.ts
+var BANGUMI_TEMPLATE_TYPE_LABELS = {
+  game: "\u6E38\u620F\u6A21\u677F",
+  anime: "\u52A8\u753B\u6A21\u677F",
+  book: "\u4E66\u7C4D\u6A21\u677F",
+  liveAction: "\u4E09\u6B21\u5143\u6A21\u677F"
+};
 async function copyTextToClipboard(text) {
   if (navigator?.clipboard?.writeText) {
     await navigator.clipboard.writeText(text);
@@ -1978,6 +2273,7 @@ function createTemplateEditorState(config) {
     targetFolder: config.targetFolder,
     templatePath: config.templatePath,
     searchLimit: String(config.searchLimit),
+    typeTemplatePaths: config.typeTemplatePaths ? { ...config.typeTemplatePaths } : void 0,
     posterSaveLocal: config.poster.saveLocal,
     posterFolder: config.poster.folder,
     filenameTemplate: config.filename.template,
@@ -2081,6 +2377,25 @@ var MZMediaFetcherSettingTab = class extends import_obsidian4.PluginSettingTab {
         state.templatePath = value;
       });
     });
+    if (sourceKey === "bangumi" && state.typeTemplatePaths && defaultConfig.typeTemplatePaths) {
+      for (const templateType of Object.keys(state.typeTemplatePaths)) {
+        new import_obsidian4.Setting(sectionEl).setName(BANGUMI_TEMPLATE_TYPE_LABELS[templateType]).setDesc(
+          `Bangumi \u5A92\u4F53\u7C7B\u578B\u662F\u201C${labelForBangumiType(templateType)}\u201D\u65F6\u4F18\u5148\u4F7F\u7528\uFF1B\u7559\u7A7A\u4F1A\u56DE\u9000\u5230\u4E0A\u9762\u7684\u901A\u7528\u6A21\u677F\u8DEF\u5F84\u3002`
+        ).addText((text) => {
+          new TemplatePathSuggest(this.app, text.inputEl);
+          text.setPlaceholder(defaultConfig.typeTemplatePaths?.[templateType] || "");
+          text.setValue(state.typeTemplatePaths?.[templateType] || "");
+          text.onChange((value) => {
+            if (!state.typeTemplatePaths) {
+              state.typeTemplatePaths = {
+                ...defaultConfig.typeTemplatePaths
+              };
+            }
+            state.typeTemplatePaths[templateType] = value;
+          });
+        });
+      }
+    }
     if (sourceMeta.supportsSearch) {
       new import_obsidian4.Setting(sectionEl).setName("\u641C\u7D22\u6761\u76EE\u6570").setDesc("\u641C\u7D22\u65F6\u6700\u591A\u5C55\u793A\u591A\u5C11\u4E2A\u5019\u9009\u6761\u76EE\u3002").addText((text) => {
         text.setPlaceholder(String(defaultConfig.searchLimit));
@@ -2180,6 +2495,15 @@ var MZMediaFetcherSettingTab = class extends import_obsidian4.PluginSettingTab {
     }
   }
 };
+function labelForBangumiType(templateType) {
+  const labels = {
+    game: "\u6E38\u620F",
+    anime: "\u52A8\u753B",
+    book: "\u4E66\u7C4D",
+    liveAction: "\u4E09\u6B21\u5143"
+  };
+  return labels[templateType];
+}
 
 // src/plugin.ts
 var MZMediaFetcherPlugin = class extends import_obsidian5.Plugin {

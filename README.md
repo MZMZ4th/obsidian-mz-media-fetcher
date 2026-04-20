@@ -8,19 +8,19 @@ Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showsta
 
 ## Highlights / 功能概览
 
-- Bangumi supports title search, subject links, and numeric IDs.
+- Bangumi supports title search, subject links, numeric IDs, and per-type template overrides for game, anime, book, and live action subjects.
 - MobyGames supports direct game detail links.
-- Bilibili Show supports direct event detail links.
-- Showstart supports direct event detail links.
+- Bilibili Show supports direct event detail links and venue metadata.
+- Showstart supports direct event detail links and venue metadata.
 - Each source keeps its own parser and adapter, while note creation follows one shared pipeline.
 - The settings tab is split by source, and only Bangumi exposes search-limit controls.
 - Built-in templates ship with the plugin, and you can copy them into your own template files.
 - Poster filenames and note filenames normalize whitespace into hyphenated names.
 
-- Bangumi 支持标题搜索、条目链接和数字 ID。
+- Bangumi 支持标题搜索、条目链接、数字 ID，以及按游戏 / 动画 / 书籍 / 三次元切换模板。
 - MobyGames 支持直接粘贴游戏详情页链接。
-- bilibili 会员购支持直接粘贴活动详情页链接。
-- 秀动支持直接粘贴活动详情页链接。
+- bilibili 会员购支持直接粘贴活动详情页链接，并会带出演出场所信息。
+- 秀动支持直接粘贴活动详情页链接，并会带出演出场所信息。
 - 每个来源保留自己的解析模块，但卡片生成共用一条主链路。
 - 设置页按来源拆分，只有 Bangumi 会显示搜索条目数设置。
 - 插件自带默认模板，也可以一键复制后改成你自己的模板。
@@ -51,11 +51,17 @@ Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showsta
 npm install
 npm run build
 npm test
+npm run install:dev
+npm run package
 ```
 
 The repository root is the plugin root, so the build output lands directly in `main.js`.
+`npm run install:dev` installs the plugin into `~/Obsidian/PluginLab` by default and enables it in that vault's `community-plugins.json`.
+`npm run package` prepares the publishable release assets in `release/<version>/`.
 
 这个仓库根目录本身就是插件目录，所以构建产物会直接输出到 `main.js`。
+`npm run install:dev` 默认会把插件安装到 `~/Obsidian/PluginLab`，并把它写进这个开发 vault 的 `community-plugins.json`。
+`npm run package` 会把可发布资产整理到 `release/<version>/`。
 
 ## Defaults / 默认行为
 
@@ -78,10 +84,12 @@ The repository root is the plugin root, so the build output lands directly in `m
 - Search by title.
 - Paste a subject URL such as `https://bgm.tv/subject/328609`.
 - Enter a numeric subject ID such as `328609`.
+- Game / anime / book / live action subjects can point to separate template paths; blank overrides fall back to the general Bangumi template.
 
 - 支持直接搜作品名。
 - 支持粘贴条目链接，例如 `https://bgm.tv/subject/328609`。
 - 支持直接输入数字 ID，例如 `328609`。
+- 游戏 / 动画 / 书籍 / 三次元条目可以分别配置模板路径；留空时会回退到通用 Bangumi 模板。
 
 ### MobyGames
 
@@ -95,17 +103,21 @@ The repository root is the plugin root, so the build output lands directly in `m
 
 - Paste a concrete event URL such as `https://show.bilibili.com/platform/detail.html?id=107593`.
 - Release dates are normalized to `YYYY-MM-DD`.
+- Venue metadata is exposed as `venue_name`, `venue_address`, and `venue_text`.
 
 - 直接粘贴活动详情页链接，例如 `https://show.bilibili.com/platform/detail.html?id=107593`。
 - 发布日期会统一写成 `YYYY-MM-DD`。
+- 会额外提供 `venue_name`、`venue_address`、`venue_text` 这 3 个演出场所变量。
 
 ### Showstart
 
 - Paste a concrete event URL such as `https://wap.showstart.com/pages/activity/detail/detail?activityId=208747`.
 - Release dates are normalized to `YYYY-MM-DD`.
+- Venue metadata is exposed as `venue_name`, `venue_address`, and `venue_text`.
 
 - 直接粘贴活动详情页链接，例如 `https://wap.showstart.com/pages/activity/detail/detail?activityId=208747`。
 - 发布日期会统一写成 `YYYY-MM-DD`。
+- 会额外提供 `venue_name`、`venue_address`、`venue_text` 这 3 个演出场所变量。
 
 ## Templates / 模板
 
@@ -125,6 +137,9 @@ Common variables include:
 - `{{yaml.release_date}}`
 - `{{yaml.network_poster}}`
 - `{{bangumi_url}}`
+- `{{venue_name}}`
+- `{{venue_address}}`
+- `{{venue_text}}`
 - `{{mobygames_url}}`
 - `{{bilibili_show_url}}`
 - `{{showstart_url}}`
@@ -145,6 +160,9 @@ Common variables include:
 - `{{yaml.release_date}}`
 - `{{yaml.network_poster}}`
 - `{{bangumi_url}}`
+- `{{venue_name}}`
+- `{{venue_address}}`
+- `{{venue_text}}`
 - `{{mobygames_url}}`
 - `{{bilibili_show_url}}`
 - `{{showstart_url}}`

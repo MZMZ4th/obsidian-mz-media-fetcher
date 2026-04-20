@@ -44,4 +44,39 @@ test("normalizeBilibiliShowProject extracts core project fields", () => {
     normalized.cover_remote,
     "https://i2.hdslb.com/bfs/openplatform/202509/nhqsQVvz1756986449057.jpeg"
   );
+  assert.equal(normalized.venue_name, "");
+  assert.equal(normalized.venue_address, "");
+  assert.equal(normalized.venue_text, "");
+});
+
+test("normalizeBilibiliShowProject extracts venue fields from fallback candidates", () => {
+  const normalized = normalizeBilibiliShowProject({
+    ...fixture.data!,
+    site_name: "杭州奥体中心体育馆",
+    detail_address: "浙江省杭州市滨江区飞虹路3号",
+  });
+
+  assert.equal(normalized.venue_name, "杭州奥体中心体育馆");
+  assert.equal(normalized.venue_address, "浙江省杭州市滨江区飞虹路3号");
+  assert.equal(
+    normalized.venue_text,
+    "杭州奥体中心体育馆 · 浙江省杭州市滨江区飞虹路3号"
+  );
+});
+
+test("normalizeBilibiliShowProject extracts venue fields from nested venue info", () => {
+  const normalized = normalizeBilibiliShowProject({
+    ...fixture.data!,
+    venueInfo: {
+      name: "杭州奥体中心体育馆",
+      detailAddress: "浙江省杭州市滨江区飞虹路3号",
+    },
+  });
+
+  assert.equal(normalized.venue_name, "杭州奥体中心体育馆");
+  assert.equal(normalized.venue_address, "浙江省杭州市滨江区飞虹路3号");
+  assert.equal(
+    normalized.venue_text,
+    "杭州奥体中心体育馆 · 浙江省杭州市滨江区飞虹路3号"
+  );
 });
