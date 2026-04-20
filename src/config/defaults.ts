@@ -9,7 +9,7 @@ import type {
 export const PLUGIN_ID = "mz-media-fetcher";
 export const LEGACY_PLUGIN_ID = "MZ-media-fetcher";
 export const PLUGIN_NAME = "MZ Media Fetcher";
-export const PLUGIN_VERSION = "0.3.0";
+export const PLUGIN_VERSION = "0.3.1";
 export const PLUGIN_DESCRIPTION =
   "Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showstart.";
 export const HTTP_USER_AGENT = `${PLUGIN_NAME}/${PLUGIN_VERSION} (Obsidian)`;

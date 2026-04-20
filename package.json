@@ -1,6 +1,6 @@
 {
   "name": "obsidian-mz-media-fetcher",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showstart.",
   "scripts": {
