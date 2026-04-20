@@ -172,7 +172,7 @@ function pickShowstartVenueContainers(detail: Record<string, unknown>): Showstar
   const containers: ShowstartVenueContainer[] = [{ record: detail, allowGenericName: false }];
   const seen = new Set<Record<string, unknown>>([detail]);
 
-  for (const key of ["venueInfo", "venue_info", "siteInfo", "site_info", "venue", "place"]) {
+  for (const key of ["venueInfo", "venue_info", "siteInfo", "site_info", "site", "venue", "place"]) {
     const value = detail[key];
     if (!value || typeof value !== "object" || Array.isArray(value)) {
       continue;

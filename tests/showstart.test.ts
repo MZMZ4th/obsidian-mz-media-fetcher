@@ -186,6 +186,26 @@ test("normalizeShowstartActivity extracts venue fields from object-style venue c
   );
 });
 
+test("normalizeShowstartActivity extracts venue fields from live site objects", () => {
+  const normalized = normalizeShowstartActivity({
+    activityId: 208747,
+    activityName: "测试活动",
+    site: {
+      id: 6836653,
+      name: "杭州东坡大剧院",
+      address: "杭州市上城区东坡路10号杭州湖滨银泰in77D区",
+      cityName: "杭州",
+    },
+  });
+
+  assert.equal(normalized.venue_name, "杭州东坡大剧院");
+  assert.equal(normalized.venue_address, "杭州市上城区东坡路10号杭州湖滨银泰in77D区");
+  assert.equal(
+    normalized.venue_text,
+    "杭州东坡大剧院 · 杭州市上城区东坡路10号杭州湖滨银泰in77D区"
+  );
+});
+
 test("buildShowstartV3Request matches the verified v3 route format", () => {
   const request = buildShowstartV3Request(
     "/waf/gettoken",

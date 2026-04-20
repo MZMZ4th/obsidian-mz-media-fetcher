@@ -294,7 +294,7 @@ var init_defaults = __esm({
     PLUGIN_ID = "mz-media-fetcher";
     LEGACY_PLUGIN_ID = "MZ-media-fetcher";
     PLUGIN_NAME = "MZ Media Fetcher";
-    PLUGIN_VERSION = "0.3.1";
+    PLUGIN_VERSION = "0.3.3";
     HTTP_USER_AGENT = `${PLUGIN_NAME}/${PLUGIN_VERSION} (Obsidian)`;
     BANGUMI_API_BASE = "https://api.bgm.tv/v0";
     FALLBACK_POSTER_FOLDER = "00-Inbox/\u9644\u4EF6/\u4F5C\u54C1\u6D77\u62A5";
@@ -2061,7 +2061,7 @@ function buildVenueText2(name, address) {
 function pickShowstartVenueContainers(detail) {
   const containers = [{ record: detail, allowGenericName: false }];
   const seen = /* @__PURE__ */ new Set([detail]);
-  for (const key of ["venueInfo", "venue_info", "siteInfo", "site_info", "venue", "place"]) {
+  for (const key of ["venueInfo", "venue_info", "siteInfo", "site_info", "site", "venue", "place"]) {
     const value = detail[key];
     if (!value || typeof value !== "object" || Array.isArray(value)) {
       continue;
