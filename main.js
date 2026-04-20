@@ -738,6 +738,12 @@ function hasMeaningfulValue(value) {
   }
   return Boolean(String(value || "").trim());
 }
+function preferExistingWhenFetchedIsBlank(currentValue, fetchedValue) {
+  if (hasMeaningfulValue(fetchedValue) || !hasMeaningfulValue(currentValue)) {
+    return fetchedValue;
+  }
+  return currentValue;
+}
 function shouldRefreshPoster(frontmatter, posterPropertyKey, networkPosterPropertyKey) {
   const networkPosterValue = networkPosterPropertyKey ? frontmatter[networkPosterPropertyKey] : void 0;
   if (networkPosterValue === false || String(networkPosterValue || "").trim().toLowerCase() === "false") {
@@ -788,7 +794,10 @@ function analyzeBangumiFrontmatterUpdate(args) {
     }
     const variableKey = binding.variableKey;
     const currentValue = args.existingFrontmatter[binding.propertyKey];
-    let fetchedValue = args.fetchedValues[variableKey];
+    let fetchedValue = preferExistingWhenFetchedIsBlank(
+      currentValue,
+      args.fetchedValues[variableKey]
+    );
     if (variableKey === "poster" && !canRefreshPoster && hasMeaningfulValue(currentValue)) {
       fetchedValue = currentValue;
     }
