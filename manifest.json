@@ -1,7 +1,7 @@
 {
   "id": "mz-media-fetcher",
   "name": "MZ Media Fetcher",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "minAppVersion": "1.8.0",
   "description": "Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showstart.",
   "author": "Codex",
