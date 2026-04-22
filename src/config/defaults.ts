@@ -10,7 +10,7 @@ import type {
 export const PLUGIN_ID = "mz-media-fetcher";
 export const LEGACY_PLUGIN_ID = "MZ-media-fetcher";
 export const PLUGIN_NAME = "MZ Media Fetcher";
-export const PLUGIN_VERSION = "0.3.4";
+export const PLUGIN_VERSION = "0.3.5";
 export const PLUGIN_DESCRIPTION =
   "Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showstart.";
 export const HTTP_USER_AGENT = `${PLUGIN_NAME}/${PLUGIN_VERSION} (Obsidian)`;
@@ -78,7 +78,7 @@ const BILIBILI_SHOW_TEMPLATE_CONTENT = buildTemplateContent(
     "网络海报: {{yaml.network_poster}}",
   ],
   {
-    cover: "![cover|300]({{poster}})",
+    cover: "{{cover_markdown}}",
   }
 );
 
@@ -101,7 +101,7 @@ const SHOWSTART_TEMPLATE_CONTENT = buildTemplateContent(
     "网络海报: {{yaml.network_poster}}",
   ],
   {
-    cover: "![cover|300]({{poster}})",
+    cover: "{{cover_markdown}}",
   }
 );
 

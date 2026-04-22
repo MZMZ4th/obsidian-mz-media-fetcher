@@ -12,15 +12,37 @@ test("buildCard keeps note and poster filenames safe for Windows reserved names"
   fs.writeFileSync(templatePath, "海报: {{poster}}\n网络海报: {{yaml.network_poster}}\n", "utf8");
 
   const createdBinary: Array<{ filePath: string; bytes: ArrayBuffer }> = [];
+  const files = new Set<string>();
   const app = {
     vault: {
       adapter: {
         exists: async () => false,
       },
+      getAbstractFileByPath: (filePath: string) => {
+        if (!files.has(filePath)) {
+          return null;
+        }
+        return {
+          path: filePath,
+          name: path.basename(filePath),
+          basename: path.parse(filePath).name,
+          extension: path.extname(filePath).replace(/^\./, ""),
+        };
+      },
       createFolder: async () => undefined,
       createBinary: async (filePath: string, bytes: ArrayBuffer) => {
+        files.add(filePath);
         createdBinary.push({ filePath, bytes });
       },
+    },
+    metadataCache: {
+      fileToLinktext: (file: { path: string }) => path.basename(file.path),
+      getFirstLinkpathDest: (linkText: string) => ({
+        path: linkText,
+        name: path.basename(linkText),
+        basename: path.parse(linkText).name,
+        extension: path.extname(linkText).replace(/^\./, ""),
+      }),
     },
   };
 
@@ -64,5 +86,5 @@ test("buildCard keeps note and poster filenames safe for Windows reserved names"
   assert.equal(card.filePath, "00-Inbox/CON-file.md");
   assert.equal(createdBinary.length, 1);
   assert.equal(createdBinary[0].filePath, "00-Inbox/附件/作品海报/CON-file.jpeg");
-  assert.match(card.content, /海报: 00-Inbox\/附件\/作品海报\/CON-file\.jpeg/);
+  assert.match(card.content, /海报: CON-file\.jpeg/);
 });

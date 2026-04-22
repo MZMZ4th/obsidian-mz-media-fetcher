@@ -9,6 +9,7 @@ import type {
 } from "../types.ts";
 import { chooseAvailableAssetPath, chooseAvailableCardPath, ensureFolderExists } from "./files.ts";
 import { normalizeVaultPath } from "./paths.ts";
+import { decoratePosterFields } from "./poster.ts";
 import { buildTemplateContext, renderTemplate } from "./template.ts";
 import { ensureTrailingNewline, sanitizeFileName } from "./text.ts";
 
@@ -123,11 +124,11 @@ async function resolvePosterAsset(
 ): Promise<NormalizedMediaItem> {
   const remotePoster = String(item.cover_remote || "").trim();
   if (!config.poster.saveLocal || !remotePoster) {
-    return {
+    return decoratePosterFields(app, cardFilePath, {
       ...item,
       poster_path: remotePoster,
       network_poster: true,
-    };
+    });
   }
 
   const baseName = path.parse(cardFilePath).name;
@@ -143,9 +144,9 @@ async function resolvePosterAsset(
   const binary = await downloadBinary(remotePoster);
   await app.vault.createBinary(assetPath, binary);
 
-  return {
+  return decoratePosterFields(app, cardFilePath, {
     ...item,
     poster_path: assetPath,
     network_poster: false,
-  };
+  });
 }

@@ -11,8 +11,8 @@ const COMMON_TEMPLATE_VARIABLES: TemplateVariableDefinition[] = [
   { key: "summary", description: "简介正文。" },
   { key: "platforms", description: "平台列表；直接使用时会拼成逗号分隔文本。" },
   { key: "platforms_text", description: "平台列表的换行文本。" },
-  { key: "poster_path", description: "最终海报路径；下载本地后会变成本地路径。" },
-  { key: "poster", description: "模板里推荐直接使用的海报字段。" },
+  { key: "poster_path", description: "海报真实值；网络海报时是 URL，本地海报时是 vault 相对路径。" },
+  { key: "poster", description: "按 Obsidian 链接规则收敛后的海报文本；本地海报优先用文件名，重名时退回最短唯一路径。" },
   { key: "network_poster", description: "当前海报是否仍是网络链接。" },
   { key: "categories", description: "默认分类。" },
   { key: "source", description: "来源 id。" },
@@ -20,7 +20,7 @@ const COMMON_TEMPLATE_VARIABLES: TemplateVariableDefinition[] = [
   { key: "status", description: "预留状态默认值。" },
   { key: "finished_at", description: "预留完成时间默认值。" },
   { key: "rewatch_count", description: "预留体验次数默认值。" },
-  { key: "cover_markdown", description: "现成封面 Markdown。", yamlSafe: false },
+  { key: "cover_markdown", description: "基于 poster 生成的现成封面 Markdown。", yamlSafe: false },
 ];
 
 const SOURCE_SPECIFIC_TEMPLATE_VARIABLES: Record<SourceId, TemplateVariableDefinition[]> = {

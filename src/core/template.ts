@@ -1,4 +1,5 @@
 import type { NormalizedMediaItem } from "../types.ts";
+import { buildCoverMarkdown } from "./poster.ts";
 
 function renderYamlScalar(value: unknown, indentLevel: number): string {
   if (value === null || typeof value === "undefined") return '""';
@@ -66,7 +67,7 @@ export function buildTemplateContext(
     ...subject,
     categories: "新作品卡片",
     source: sourceKey,
-    poster: String(subject.poster_path || subject.cover_remote || "").trim(),
+    poster: String(subject.poster || subject.poster_path || subject.cover_remote || "").trim(),
     network_poster:
       typeof subject.network_poster === "boolean" ? subject.network_poster : true,
     rating: "",
@@ -74,10 +75,13 @@ export function buildTemplateContext(
     finished_at: "",
     rewatch_count: 1,
   };
+  const coverMarkdown = String(
+    subject.cover_markdown || buildCoverMarkdown(String(context.poster || ""))
+  ).trim();
 
   return {
     ...context,
     yaml: buildYamlTemplateContext(context),
-    cover_markdown: context.poster ? `![cover|300](${context.poster})` : "",
+    cover_markdown: coverMarkdown,
   };
 }

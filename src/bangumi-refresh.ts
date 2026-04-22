@@ -211,6 +211,46 @@ export function collectBangumiTemplateValueCandidates(
   return result;
 }
 
+export function normalizeBangumiPosterFrontmatter(
+  frontmatter: Record<string, unknown>,
+  bindingGroups: TemplateFrontmatterBinding[][],
+  normalizePosterValue: (value: string) => string
+): Record<string, unknown> {
+  const posterPropertyKeys = new Set<string>();
+
+  for (const bindings of bindingGroups) {
+    for (const binding of bindings) {
+      if (binding.variableKey === "poster") {
+        posterPropertyKeys.add(binding.propertyKey);
+      }
+    }
+  }
+
+  if (posterPropertyKeys.size === 0) {
+    return frontmatter;
+  }
+
+  const nextFrontmatter = { ...frontmatter };
+  for (const propertyKey of posterPropertyKeys) {
+    const currentValue = nextFrontmatter[propertyKey];
+    if (!hasMeaningfulValue(currentValue)) {
+      continue;
+    }
+
+    const currentText = String(currentValue || "").trim();
+    if (!currentText || /^https?:\/\//i.test(currentText)) {
+      continue;
+    }
+
+    const normalizedValue = String(normalizePosterValue(currentText) || "").trim();
+    if (normalizedValue) {
+      nextFrontmatter[propertyKey] = normalizedValue;
+    }
+  }
+
+  return nextFrontmatter;
+}
+
 export function analyzeBangumiFrontmatterUpdate(args: {
   templateBindings: TemplateFrontmatterBinding[];
   existingFrontmatter: Record<string, unknown>;

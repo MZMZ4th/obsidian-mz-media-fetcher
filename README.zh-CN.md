@@ -9,6 +9,7 @@
 ## 功能概览
 
 - Bangumi 支持标题搜索、条目链接、数字 ID，以及按游戏 / 动画 / 书籍 / 三次元切换模板。
+- Bangumi 的书籍条目会把 `作者`、`原作`、`作画` 一并合并到 `authors` 字段。
 - MobyGames 支持直接粘贴游戏详情页链接。
 - bilibili 会员购支持直接粘贴活动详情页链接，并会带出演出场所信息。
 - 秀动支持直接粘贴活动详情页链接，并会带出演出场所信息。
@@ -51,11 +52,12 @@ npm run package
 
 ## 默认行为
 
-- 插件会把运行配置保存在插件目录下的 `media-fetcher-rules.json`。
+- 插件会把运行配置保存在插件目录下的 `data.json`。
 - 插件自带模板默认放在 `.obsidian/plugins/mz-media-fetcher/templates/`。
 - 本地海报目录默认跟随 `.obsidian/app.json` 里的 `attachmentFolderPath`。
 - 升级时，如果你已经有自定义 `templatePath`，插件会继续保留。
-- 如果你的 vault 里还保留旧插件目录 `MZ-media-fetcher`，插件会在首次启动时导入旧配置，并且只改写旧的内置模板路径，不会动你自己的自定义模板路径。
+- 首次启动时，插件会从 `mz-media-fetcher` 或 `MZ-media-fetcher` 目录里的 `media-fetcher-rules.json` 导入旧配置，写入新的 `data.json`，然后删除旧规则文件。
+- 如果你的 vault 里还保留旧插件目录 `MZ-media-fetcher`，迁移时只会改写旧的内置模板路径，不会动你自己的自定义模板路径。
 
 ## 使用方式
 
@@ -65,6 +67,7 @@ npm run package
 - 支持粘贴条目链接，例如 `https://bgm.tv/subject/328609`。
 - 支持直接输入数字 ID，例如 `328609`。
 - 游戏 / 动画 / 书籍 / 三次元条目可以分别配置模板路径；留空时会回退到通用 Bangumi 模板。
+- 书籍条目会把 `作者`、`原作`、`作画` 合并后写进 `authors` 字段。
 - 已有 Bangumi 卡片支持直接重补当前笔记 frontmatter，不会重写正文。
 
 ### MobyGames
@@ -127,6 +130,12 @@ npm run package
 - `{{bilibili_show_url}}`
 - `{{showstart_activity_id}}`
 - `{{showstart_url}}`
+
+海报相关变量现在分成两层语义：
+
+- `{{poster_path}}` 保存海报真实值：网络海报时是远程 URL，本地海报时是 vault 相对路径。
+- `{{poster}}` 是给模板和 frontmatter 用的 Obsidian 规范链接文本。本地海报优先只写文件名，只有重名时才回退到最短唯一路径。
+- `{{cover_markdown}}` 是基于 `{{poster}}` 现成生成的图片嵌入语法。
 
 ## 网络与隐私
 

@@ -5,9 +5,61 @@ import path from "path";
 import os from "os";
 import { chooseAvailableCardPath } from "../src/core/files.ts";
 import { buildCard } from "../src/core/cards.ts";
+import { resolvePosterLinkText } from "../src/core/poster.ts";
 import { buildTemplateContext, renderTemplate } from "../src/core/template.ts";
 import { MEDIA_SOURCE_UI_META_MAP } from "../src/source-ui-meta.ts";
 import { sanitizeFileName } from "../src/core/text.ts";
+
+function createLinkAwareApp(resolveLinkText?: (filePath: string, sourcePath: string) => string) {
+  const files = new Set<string>();
+  const createdFolders: string[] = [];
+  const createdBinary: Array<{ filePath: string; bytes: ArrayBuffer }> = [];
+
+  const app = {
+    vault: {
+      adapter: {
+        exists: async (candidate: string) => files.has(candidate),
+      },
+      getAbstractFileByPath: (filePath: string) => {
+        if (!files.has(filePath)) {
+          return null;
+        }
+        return {
+          path: filePath,
+          name: path.basename(filePath),
+          basename: path.parse(filePath).name,
+          extension: path.extname(filePath).replace(/^\./, ""),
+        };
+      },
+      createFolder: async (folder: string) => {
+        createdFolders.push(folder);
+      },
+      createBinary: async (filePath: string, bytes: ArrayBuffer) => {
+        files.add(filePath);
+        createdBinary.push({ filePath, bytes });
+      },
+    },
+    metadataCache: {
+      fileToLinktext: (file: { path: string }, sourcePath: string) =>
+        resolveLinkText ? resolveLinkText(file.path, sourcePath) : path.basename(file.path),
+      getFirstLinkpathDest: (linkText: string) => {
+        for (const filePath of files) {
+          if (path.basename(filePath) === linkText || filePath === linkText) {
+            return {
+              path: filePath,
+              name: path.basename(filePath),
+              basename: path.parse(filePath).name,
+              extension: path.extname(filePath).replace(/^\./, ""),
+            };
+          }
+        }
+        return null;
+      },
+    },
+  };
+
+  return { app, createdBinary, createdFolders, files };
+}
 
 test("renderTemplate uses yaml-safe values in context", () => {
   const context = buildTemplateContext("bangumi", {
@@ -190,6 +242,23 @@ test("event source metadata exposes venue template variables", () => {
   assert.match(String(bilibiliVenue[2]?.description || ""), /演出场所/);
 });
 
+test("resolvePosterLinkText keeps unique filenames and falls back to shortest unique path", () => {
+  const { app, files } = createLinkAwareApp((filePath) =>
+    filePath.includes("重复") ? filePath : path.basename(filePath)
+  );
+  files.add("50-Attachments/唯一海报.jpg");
+  files.add("50-Attachments/重复海报.jpg");
+
+  assert.equal(
+    resolvePosterLinkText(app, "00-Inbox/测试.md", "50-Attachments/唯一海报.jpg"),
+    "唯一海报.jpg"
+  );
+  assert.equal(
+    resolvePosterLinkText(app, "00-Inbox/测试.md", "50-Attachments/重复海报.jpg"),
+    "50-Attachments/重复海报.jpg"
+  );
+});
+
 test("buildCard downloads poster locally when poster.saveLocal is enabled", async () => {
   const vaultPath = fs.mkdtempSync(path.join(os.tmpdir(), "mz-media-fetcher-"));
   const templatePath = path.join(vaultPath, "templates", "local-poster.md");
@@ -200,21 +269,7 @@ test("buildCard downloads poster locally when poster.saveLocal is enabled", asyn
     "utf8"
   );
 
-  const createdFolders: string[] = [];
-  const createdBinary: Array<{ filePath: string; bytes: ArrayBuffer }> = [];
-  const app = {
-    vault: {
-      adapter: {
-        exists: async () => false,
-      },
-      createFolder: async (folder: string) => {
-        createdFolders.push(folder);
-      },
-      createBinary: async (filePath: string, bytes: ArrayBuffer) => {
-        createdBinary.push({ filePath, bytes });
-      },
-    },
-  };
+  const { app, createdBinary, createdFolders } = createLinkAwareApp();
 
   const card = await buildCard(
     app,
@@ -254,6 +309,7 @@ test("buildCard downloads poster locally when poster.saveLocal is enabled", asyn
   assert.equal(createdBinary.length, 1);
   assert.equal(card.filePath, "00-Inbox/测试-活动.md");
   assert.equal(createdBinary[0].filePath, "00-Inbox/附件/作品海报/测试-活动.jpeg");
-  assert.match(card.content, /海报: 00-Inbox\/附件\/作品海报\/测试-活动\.jpeg/);
+  assert.match(card.content, /海报: 测试-活动\.jpeg/);
+  assert.match(card.content, /!\[cover\|300\]\(<测试-活动\.jpeg>\)/);
   assert.match(card.content, /网络海报: false/);
 });

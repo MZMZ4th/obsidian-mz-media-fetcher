@@ -7,6 +7,7 @@ import {
   collectBangumiTemplateValueCandidates,
   extractFrontmatterBlock,
   listFrontmatterKeys,
+  normalizeBangumiPosterFrontmatter,
   parseTemplateFrontmatterBindings,
   replaceFrontmatter,
   sanitizeFrontmatterObject,
@@ -17,6 +18,7 @@ import { buildCard } from "./core/cards.ts";
 import { normalizeError } from "./core/errors.ts";
 import { ensureFolderExists } from "./core/files.ts";
 import { normalizeVaultPath } from "./core/paths.ts";
+import { decoratePosterFields, resolvePosterLinkText } from "./core/poster.ts";
 import { buildTemplateContext } from "./core/template.ts";
 import { ConfigStore } from "./config/storage.ts";
 import { PLUGIN_ID } from "./config/defaults.ts";
@@ -35,7 +37,7 @@ export default class MZMediaFetcherPlugin extends Plugin {
   isRunning: boolean;
 
   async onload(): Promise<void> {
-    this.configStore = new ConfigStore(this.app);
+    this.configStore = new ConfigStore(this);
     this.isRunning = false;
 
     for (const source of MEDIA_SOURCES) {
@@ -97,7 +99,7 @@ export default class MZMediaFetcherPlugin extends Plugin {
         throw new Error("当前笔记没有 frontmatter，无法重新补全 Bangumi 信息。");
       }
 
-      const existingFrontmatter = sanitizeFrontmatterObject(
+      const rawFrontmatter = sanitizeFrontmatterObject(
         ((this.app.metadataCache.getFileCache(activeFile) as any)?.frontmatter || {}) as Record<
           string,
           unknown
@@ -107,10 +109,12 @@ export default class MZMediaFetcherPlugin extends Plugin {
         vaultInfo.path,
         bangumiConfig
       );
-      const candidateValues = collectBangumiTemplateValueCandidates(
-        existingFrontmatter,
-        templateBindingGroups
+      const existingFrontmatter = normalizeBangumiPosterFrontmatter(
+        rawFrontmatter,
+        templateBindingGroups,
+        (value) => resolvePosterLinkText(this.app, activeFile.path, value)
       );
+      const candidateValues = collectBangumiTemplateValueCandidates(existingFrontmatter, templateBindingGroups);
       const subjectId = this.resolveCurrentBangumiSubjectId(candidateValues);
       if (!subjectId) {
         throw new Error("当前笔记没有可识别的 bangumi_id 或 bangumi_url。");
@@ -124,7 +128,7 @@ export default class MZMediaFetcherPlugin extends Plugin {
         bangumiConfig,
         normalizedItem
       );
-      const fetchedValues = this.buildBangumiFetchedValues(normalizedItem);
+      const fetchedValues = this.buildBangumiFetchedValues(normalizedItem, activeFile.path);
       const analysis = analyzeBangumiFrontmatterUpdate({
         templateBindings,
         existingFrontmatter,
@@ -236,8 +240,12 @@ export default class MZMediaFetcherPlugin extends Plugin {
     }
   }
 
-  private buildBangumiFetchedValues(item: Record<string, unknown>): Record<string, unknown> {
-    const context = buildTemplateContext("bangumi", item as any);
+  private buildBangumiFetchedValues(
+    item: Record<string, unknown>,
+    sourcePath: string
+  ): Record<string, unknown> {
+    const resolvedItem = decoratePosterFields(this.app, sourcePath, item as any);
+    const context = buildTemplateContext("bangumi", resolvedItem as any);
     return BANGUMI_REFRESH_MANAGED_VARIABLES.reduce<Record<string, unknown>>((result, key) => {
       result[key] = context[key];
       return result;

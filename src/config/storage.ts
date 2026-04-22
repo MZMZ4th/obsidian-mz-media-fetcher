@@ -1,7 +1,6 @@
-import fs from "fs";
 import fsp from "fs/promises";
 import path from "path";
-import type { App } from "obsidian";
+import type { App, Plugin } from "obsidian";
 import {
   BANGUMI_TYPE_TEMPLATE_CONTENTS,
   DEFAULT_SOURCE_CONFIGS,
@@ -12,7 +11,7 @@ import {
   getDefaultSourceConfigs,
   getLegacyDefaultSourceConfigs,
 } from "./defaults.ts";
-import { ensureJsonFile, ensureTextFile } from "../core/files.ts";
+import { ensureTextFile } from "../core/files.ts";
 import { normalizeVaultPath } from "../core/paths.ts";
 import {
   BANGUMI_TEMPLATE_TYPES,
@@ -23,6 +22,13 @@ import {
   type SourceId,
   type VaultInfo,
 } from "../types.ts";
+
+type PluginDataStore = Pick<Plugin, "app" | "loadData" | "saveData">;
+
+interface InitialConfigResult {
+  config: SourceConfigRoot;
+  cleanupPath?: string;
+}
 
 function normalizePlainRelativePath(value: unknown): string {
   return normalizeVaultPath(value);
@@ -147,7 +153,7 @@ function normalizeSourceConfigs(
   defaults: SourceConfigRoot,
   legacyDefaults: SourceConfigRoot
 ): SourceConfigRoot {
-  if (!raw || typeof raw !== "object") {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error("作品抓取配置格式不对。");
   }
 
@@ -233,9 +239,11 @@ export function normalizeTemplateEditorValues(
 
 export class ConfigStore {
   app: App;
+  plugin: PluginDataStore;
 
-  constructor(app: App) {
-    this.app = app;
+  constructor(plugin: PluginDataStore) {
+    this.plugin = plugin;
+    this.app = plugin.app;
   }
 
   getVaultInfo(): VaultInfo | null {
@@ -310,17 +318,6 @@ export class ConfigStore {
 
   async ensureDefaultFiles(vaultBasePath: string): Promise<void> {
     const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
-    const configPath = this.getPluginFilePath("media-fetcher-rules.json");
-
-    try {
-      await fsp.access(configPath, fs.constants.F_OK);
-    } catch (error: any) {
-      if (error?.code !== "ENOENT") {
-        throw error;
-      }
-      const initialConfig = await this.buildInitialConfig(vaultBasePath);
-      await ensureJsonFile(configPath, initialConfig);
-    }
 
     for (const sourceKey of SOURCE_IDS) {
       await this.ensureTemplateExists(
@@ -369,8 +366,12 @@ export class ConfigStore {
     }
   }
 
-  async loadLegacyPluginConfigRoot(vaultBasePath: string): Promise<SourceConfigRoot | null> {
-    const filePath = this.getLegacyPluginFilePath("media-fetcher-rules.json");
+  private async loadConfigRootFromFile(
+    filePath: string,
+    label: string,
+    defaults: SourceConfigRoot,
+    legacyDefaults: SourceConfigRoot
+  ): Promise<SourceConfigRoot | null> {
     let raw = "";
 
     try {
@@ -379,30 +380,75 @@ export class ConfigStore {
       if (error?.code === "ENOENT") {
         return null;
       }
-      throw new Error(`读取旧插件配置失败：${LEGACY_PLUGIN_ID}/media-fetcher-rules.json`);
+      throw new Error(`读取旧插件配置失败：${label}`);
     }
 
-    let parsed = null;
     try {
-      parsed = JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      return buildConfigRootFromUnknown(parsed, defaults, legacyDefaults);
     } catch (_error) {
-      throw new Error(`旧插件配置不是合法 JSON：${LEGACY_PLUGIN_ID}/media-fetcher-rules.json`);
+      throw new Error(`旧插件配置不是合法 JSON：${label}`);
     }
-
-    const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
-    const legacyDefaults = await this.getResolvedLegacyDefaultSourceConfigs(vaultBasePath);
-    return buildConfigRootFromUnknown(parsed, defaults, legacyDefaults);
   }
 
-  async buildInitialConfig(vaultBasePath: string): Promise<SourceConfigRoot> {
+  private async deleteFileIfExists(filePath: string | undefined): Promise<void> {
+    if (!filePath) {
+      return;
+    }
+
+    try {
+      await fsp.unlink(filePath);
+    } catch (error: any) {
+      if (error?.code !== "ENOENT") {
+        throw error;
+      }
+    }
+  }
+
+  async loadLegacyPluginConfigRoot(vaultBasePath: string): Promise<SourceConfigRoot | null> {
     const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
-    const legacyPluginConfig = await this.loadLegacyPluginConfigRoot(vaultBasePath);
+    const legacyDefaults = await this.getResolvedLegacyDefaultSourceConfigs(vaultBasePath);
+    return this.loadConfigRootFromFile(
+      this.getLegacyPluginFilePath("media-fetcher-rules.json"),
+      `${LEGACY_PLUGIN_ID}/media-fetcher-rules.json`,
+      defaults,
+      legacyDefaults
+    );
+  }
+
+  async buildInitialConfig(vaultBasePath: string): Promise<InitialConfigResult> {
+    const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
+    const legacyDefaults = await this.getResolvedLegacyDefaultSourceConfigs(vaultBasePath);
+    const currentPluginConfigPath = this.getPluginFilePath("media-fetcher-rules.json");
+    const currentPluginConfig = await this.loadConfigRootFromFile(
+      currentPluginConfigPath,
+      `${PLUGIN_ID}/media-fetcher-rules.json`,
+      defaults,
+      legacyDefaults
+    );
+    if (currentPluginConfig) {
+      return {
+        config: currentPluginConfig,
+        cleanupPath: currentPluginConfigPath,
+      };
+    }
+
+    const legacyPluginConfigPath = this.getLegacyPluginFilePath("media-fetcher-rules.json");
+    const legacyPluginConfig = await this.loadConfigRootFromFile(
+      legacyPluginConfigPath,
+      `${LEGACY_PLUGIN_ID}/media-fetcher-rules.json`,
+      defaults,
+      legacyDefaults
+    );
     if (legacyPluginConfig) {
-      return legacyPluginConfig;
+      return {
+        config: legacyPluginConfig,
+        cleanupPath: legacyPluginConfigPath,
+      };
     }
 
     const configDir = (this.app.vault as any)?.configDir || ".obsidian";
-    const legacyPath = path.join(
+    const organizerConfigPath = path.join(
       vaultBasePath,
       configDir,
       "plugins",
@@ -412,42 +458,41 @@ export class ConfigStore {
 
     let bangumi = defaults.bangumi;
     try {
-      const raw = await fsp.readFile(legacyPath, "utf8");
+      const raw = await fsp.readFile(organizerConfigPath, "utf8");
       bangumi = buildTemplateModeSourceConfig(JSON.parse(raw), defaults.bangumi);
     } catch (_error) {
       bangumi = defaults.bangumi;
     }
 
     return {
-      bangumi,
-      mobygames: defaults.mobygames,
-      bilibili_show: defaults.bilibili_show,
-      showstart: defaults.showstart,
+      config: {
+        bangumi,
+        mobygames: defaults.mobygames,
+        bilibili_show: defaults.bilibili_show,
+        showstart: defaults.showstart,
+      },
     };
   }
 
   async loadRawSourceConfigRoot(vaultBasePath: string): Promise<any> {
     await this.ensureDefaultFiles(vaultBasePath);
-    const filePath = this.getPluginFilePath("media-fetcher-rules.json");
 
-    let raw = "";
-    try {
-      raw = await fsp.readFile(filePath, "utf8");
-    } catch (_error) {
-      throw new Error("读取作品抓取配置失败：media-fetcher-rules.json");
+    const stored = await this.plugin.loadData();
+    if (typeof stored !== "undefined" && stored !== null) {
+      if (typeof stored !== "object" || Array.isArray(stored)) {
+        throw new Error("作品抓取配置不是合法 JSON：data.json");
+      }
+      return stored;
     }
 
-    try {
-      return JSON.parse(raw);
-    } catch (_error) {
-      throw new Error("作品抓取配置不是合法 JSON：media-fetcher-rules.json");
-    }
+    const initial = await this.buildInitialConfig(vaultBasePath);
+    await this.writeSourceConfigRoot(initial.config);
+    await this.deleteFileIfExists(initial.cleanupPath);
+    return initial.config;
   }
 
   async writeSourceConfigRoot(raw: SourceConfigRoot): Promise<void> {
-    const configPath = this.getPluginFilePath("media-fetcher-rules.json");
-    await fsp.mkdir(path.dirname(configPath), { recursive: true });
-    await fsp.writeFile(configPath, `${JSON.stringify(raw, null, 2)}\n`, "utf8");
+    await this.plugin.saveData(raw);
   }
 
   async loadSourceConfigs(vaultBasePath: string): Promise<SourceConfigRoot> {

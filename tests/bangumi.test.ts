@@ -44,3 +44,37 @@ test("normalizeBangumiSubject maps titles, aliases and release info", () => {
   assert.deepEqual(normalized.publishers, ["芳文社", "Houbunsha"]);
   assert.deepEqual(normalized.serial_magazines, ["Manga Time Kirara MAX"]);
 });
+
+test("normalizeBangumiSubject merges author, original work, and artist for book subjects", () => {
+  const normalized = normalizeBangumiSubject({
+    id: 123456,
+    name: "示例漫画",
+    name_cn: "示例漫画",
+    date: "2024-01-01",
+    type: 1,
+    images: {
+      large: "https://example.com/book-cover.jpg",
+    },
+    infobox: [
+      {
+        key: "作者",
+        value: ["作者甲"],
+      },
+      {
+        key: "原作",
+        value: [{ v: "原作乙" }, "作者甲"],
+      },
+      {
+        key: "作画",
+        value: ["作画丙"],
+      },
+      {
+        key: "出版社",
+        value: ["出版社丁"],
+      },
+    ],
+  });
+
+  assert.deepEqual(normalized.authors, ["作者甲", "原作乙", "作画丙"]);
+  assert.deepEqual(normalized.publishers, ["出版社丁"]);
+});

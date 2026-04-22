@@ -92,6 +92,27 @@ function collectBangumiInfoboxValues(
   return sanitizeList(aliases, 20);
 }
 
+function collectBangumiAuthors(subject: BangumiSubject): string[] {
+  const authorGroups =
+    Number(subject?.type) === 1
+      ? [["作者"], ["原作"], ["作画"]]
+      : [["作者"]];
+  const authors: string[] = [];
+  const seen = new Set<string>();
+
+  for (const keys of authorGroups) {
+    for (const value of collectBangumiInfoboxValues(subject, keys)) {
+      if (seen.has(value)) {
+        continue;
+      }
+      seen.add(value);
+      authors.push(value);
+    }
+  }
+
+  return sanitizeList(authors, 20);
+}
+
 function pickBangumiCover(images: unknown): string {
   if (!images || typeof images !== "object") return "";
   const imageMap = images as Record<string, string>;
@@ -147,7 +168,7 @@ export function normalizeBangumiSubject(subject: BangumiSubject): NormalizedMedi
   const releaseDate = normalizeDateValue(subject?.date);
   const releaseYear = extractYear(subject?.date);
   const aliases = collectBangumiAliases(subject, preferredTitle, originalTitle);
-  const authors = collectBangumiInfoboxValues(subject, ["作者"]);
+  const authors = collectBangumiAuthors(subject);
   const publishers = collectBangumiInfoboxValues(subject, ["出版社"]);
   const serialMagazines = collectBangumiInfoboxValues(subject, ["连载杂志"]);
 

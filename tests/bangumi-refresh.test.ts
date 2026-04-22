@@ -5,6 +5,7 @@ import {
   buildBangumiFrontmatterEntries,
   collectBangumiTemplateValueCandidates,
   listFrontmatterKeys,
+  normalizeBangumiPosterFrontmatter,
   parseTemplateFrontmatterBindings,
   replaceFrontmatter,
 } from "../src/bangumi-refresh.ts";
@@ -41,9 +42,8 @@ test("collectBangumiTemplateValueCandidates resolves logical ids from template-b
 
 test("bangumi refresh analysis preserves local posters and detects only real conflicts", () => {
   const bindings = parseTemplateFrontmatterBindings(template);
-  const analysis = analyzeBangumiFrontmatterUpdate({
-    templateBindings: bindings,
-    existingFrontmatter: {
+  const existingFrontmatter = normalizeBangumiPosterFrontmatter(
+    {
       categories: "新作品卡片",
       名称: "旧标题",
       原名: "Old Name",
@@ -53,6 +53,12 @@ test("bangumi refresh analysis preserves local posters and detects only real con
       评分: "",
       自定义字段: "保留我",
     },
+    [bindings],
+    () => "旧海报.jpg"
+  );
+  const analysis = analyzeBangumiFrontmatterUpdate({
+    templateBindings: bindings,
+    existingFrontmatter,
     existingKeyOrder: ["categories", "名称", "原名", "来源链接", "海报", "网络海报", "评分", "自定义字段"],
     fetchedValues: {
       title: "新标题",
@@ -77,7 +83,7 @@ test("bangumi refresh analysis preserves local posters and detects only real con
   const networkPosterCandidate = analysis.managedCandidates.find(
     (item) => item.propertyKey === "网络海报"
   );
-  assert.equal(posterCandidate?.fetchedValue, "00-Inbox/附件/旧海报.jpg");
+  assert.equal(posterCandidate?.fetchedValue, "旧海报.jpg");
   assert.equal(networkPosterCandidate?.fetchedValue, false);
 });
 
@@ -142,9 +148,8 @@ categories: 新作品卡片
 原正文
 `;
   const bindings = parseTemplateFrontmatterBindings(template);
-  const analysis = analyzeBangumiFrontmatterUpdate({
-    templateBindings: bindings,
-    existingFrontmatter: {
+  const existingFrontmatter = normalizeBangumiPosterFrontmatter(
+    {
       categories: "新作品卡片",
       名称: "旧标题",
       来源链接: "https://bgm.tv/subject/1",
@@ -153,6 +158,12 @@ categories: 新作品卡片
       评分: "",
       自定义字段: "保留我",
     },
+    [bindings],
+    () => "旧海报.jpg"
+  );
+  const analysis = analyzeBangumiFrontmatterUpdate({
+    templateBindings: bindings,
+    existingFrontmatter,
     existingKeyOrder: listFrontmatterKeys(content.split("---\n")[1]),
     fetchedValues: {
       title: "新标题",
@@ -179,7 +190,7 @@ categories: 新作品卡片
   assert.match(nextContent, /作者:\n  - "作者甲"/);
   assert.match(nextContent, /出版社:\n  - "出版社乙"/);
   assert.match(nextContent, /连载杂志:\n  - "杂志丙"/);
-  assert.match(nextContent, /海报: "00-Inbox\/附件\/旧海报\.jpg"/);
+  assert.match(nextContent, /海报: "旧海报\.jpg"/);
   assert.match(nextContent, /网络海报: false/);
   assert.match(nextContent, /categories: "新作品卡片"\n评分: ""\n自定义字段: "保留我"/);
   assert.match(nextContent, /## 简介\n\n原正文/);

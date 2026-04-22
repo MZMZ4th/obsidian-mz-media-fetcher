@@ -15,7 +15,7 @@ aliases:
 网络海报: {{yaml.network_poster}}
 ---
 
-![cover|300]({{poster}})
+{{cover_markdown}}
 
 ## 抓取字段预览
 

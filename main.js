@@ -69,8 +69,8 @@ var init_template_fields = __esm({
       { key: "summary", description: "\u7B80\u4ECB\u6B63\u6587\u3002" },
       { key: "platforms", description: "\u5E73\u53F0\u5217\u8868\uFF1B\u76F4\u63A5\u4F7F\u7528\u65F6\u4F1A\u62FC\u6210\u9017\u53F7\u5206\u9694\u6587\u672C\u3002" },
       { key: "platforms_text", description: "\u5E73\u53F0\u5217\u8868\u7684\u6362\u884C\u6587\u672C\u3002" },
-      { key: "poster_path", description: "\u6700\u7EC8\u6D77\u62A5\u8DEF\u5F84\uFF1B\u4E0B\u8F7D\u672C\u5730\u540E\u4F1A\u53D8\u6210\u672C\u5730\u8DEF\u5F84\u3002" },
-      { key: "poster", description: "\u6A21\u677F\u91CC\u63A8\u8350\u76F4\u63A5\u4F7F\u7528\u7684\u6D77\u62A5\u5B57\u6BB5\u3002" },
+      { key: "poster_path", description: "\u6D77\u62A5\u771F\u5B9E\u503C\uFF1B\u7F51\u7EDC\u6D77\u62A5\u65F6\u662F URL\uFF0C\u672C\u5730\u6D77\u62A5\u65F6\u662F vault \u76F8\u5BF9\u8DEF\u5F84\u3002" },
+      { key: "poster", description: "\u6309 Obsidian \u94FE\u63A5\u89C4\u5219\u6536\u655B\u540E\u7684\u6D77\u62A5\u6587\u672C\uFF1B\u672C\u5730\u6D77\u62A5\u4F18\u5148\u7528\u6587\u4EF6\u540D\uFF0C\u91CD\u540D\u65F6\u9000\u56DE\u6700\u77ED\u552F\u4E00\u8DEF\u5F84\u3002" },
       { key: "network_poster", description: "\u5F53\u524D\u6D77\u62A5\u662F\u5426\u4ECD\u662F\u7F51\u7EDC\u94FE\u63A5\u3002" },
       { key: "categories", description: "\u9ED8\u8BA4\u5206\u7C7B\u3002" },
       { key: "source", description: "\u6765\u6E90 id\u3002" },
@@ -78,7 +78,7 @@ var init_template_fields = __esm({
       { key: "status", description: "\u9884\u7559\u72B6\u6001\u9ED8\u8BA4\u503C\u3002" },
       { key: "finished_at", description: "\u9884\u7559\u5B8C\u6210\u65F6\u95F4\u9ED8\u8BA4\u503C\u3002" },
       { key: "rewatch_count", description: "\u9884\u7559\u4F53\u9A8C\u6B21\u6570\u9ED8\u8BA4\u503C\u3002" },
-      { key: "cover_markdown", description: "\u73B0\u6210\u5C01\u9762 Markdown\u3002", yamlSafe: false }
+      { key: "cover_markdown", description: "\u57FA\u4E8E poster \u751F\u6210\u7684\u73B0\u6210\u5C01\u9762 Markdown\u3002", yamlSafe: false }
     ];
     SOURCE_SPECIFIC_TEMPLATE_VARIABLES = {
       bangumi: [
@@ -294,7 +294,7 @@ var init_defaults = __esm({
     PLUGIN_ID = "mz-media-fetcher";
     LEGACY_PLUGIN_ID = "MZ-media-fetcher";
     PLUGIN_NAME = "MZ Media Fetcher";
-    PLUGIN_VERSION = "0.3.4";
+    PLUGIN_VERSION = "0.3.5";
     HTTP_USER_AGENT = `${PLUGIN_NAME}/${PLUGIN_VERSION} (Obsidian)`;
     BANGUMI_API_BASE = "https://api.bgm.tv/v0";
     FALLBACK_POSTER_FOLDER = "00-Inbox/\u9644\u4EF6/\u4F5C\u54C1\u6D77\u62A5";
@@ -339,7 +339,7 @@ var init_defaults = __esm({
         "\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}"
       ],
       {
-        cover: "![cover|300]({{poster}})"
+        cover: "{{cover_markdown}}"
       }
     );
     SHOWSTART_TEMPLATE_CONTENT = buildTemplateContent(
@@ -361,7 +361,7 @@ var init_defaults = __esm({
         "\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}"
       ],
       {
-        cover: "![cover|300]({{poster}})"
+        cover: "{{cover_markdown}}"
       }
     );
     TEMPLATE_CONTENTS = {
@@ -569,6 +569,48 @@ function normalizeDateText(value) {
   return `${match[3]}-${month}-${day}`;
 }
 
+// src/core/poster.ts
+function isRemotePosterTarget(value) {
+  return /^https?:\/\//i.test(String(value || "").trim());
+}
+function resolvePosterFile(app, posterPath, sourcePath) {
+  const vault = app?.vault;
+  const metadataCache = app?.metadataCache;
+  return vault?.getAbstractFileByPath?.(posterPath) || metadataCache?.getFirstLinkpathDest?.(posterPath, sourcePath) || null;
+}
+function resolvePosterLinkText(app, sourcePath, posterPath) {
+  const rawPath = String(posterPath || "").trim();
+  if (!rawPath || isRemotePosterTarget(rawPath)) {
+    return rawPath;
+  }
+  const file = resolvePosterFile(app, rawPath, sourcePath);
+  if (!file) {
+    return rawPath;
+  }
+  const linkText = app?.metadataCache?.fileToLinktext?.(file, sourcePath, false);
+  return String(linkText || rawPath).trim();
+}
+function buildCoverMarkdown(poster) {
+  const target = String(poster || "").trim();
+  if (!target) {
+    return "";
+  }
+  if (isRemotePosterTarget(target)) {
+    return `![cover|300](${target})`;
+  }
+  return `![cover|300](<${target}>)`;
+}
+function decoratePosterFields(app, sourcePath, subject) {
+  const posterPath = String(subject.poster_path || subject.poster || subject.cover_remote || "").trim();
+  const poster = resolvePosterLinkText(app, sourcePath, posterPath);
+  return {
+    ...subject,
+    ...posterPath ? { poster_path: posterPath } : {},
+    poster,
+    cover_markdown: buildCoverMarkdown(poster)
+  };
+}
+
 // src/core/template.ts
 function renderYamlScalar(value, indentLevel) {
   if (value === null || typeof value === "undefined") return '""';
@@ -619,17 +661,20 @@ function buildTemplateContext(sourceKey, subject) {
     ...subject,
     categories: "\u65B0\u4F5C\u54C1\u5361\u7247",
     source: sourceKey,
-    poster: String(subject.poster_path || subject.cover_remote || "").trim(),
+    poster: String(subject.poster || subject.poster_path || subject.cover_remote || "").trim(),
     network_poster: typeof subject.network_poster === "boolean" ? subject.network_poster : true,
     rating: "",
     status: "\u8FDB\u884C\u4E2D",
     finished_at: "",
     rewatch_count: 1
   };
+  const coverMarkdown = String(
+    subject.cover_markdown || buildCoverMarkdown(String(context.poster || ""))
+  ).trim();
   return {
     ...context,
     yaml: buildYamlTemplateContext(context),
-    cover_markdown: context.poster ? `![cover|300](${context.poster})` : ""
+    cover_markdown: coverMarkdown
   };
 }
 
@@ -775,6 +820,35 @@ function collectBangumiTemplateValueCandidates(frontmatter, bindingGroups) {
   }
   return result;
 }
+function normalizeBangumiPosterFrontmatter(frontmatter, bindingGroups, normalizePosterValue) {
+  const posterPropertyKeys = /* @__PURE__ */ new Set();
+  for (const bindings of bindingGroups) {
+    for (const binding of bindings) {
+      if (binding.variableKey === "poster") {
+        posterPropertyKeys.add(binding.propertyKey);
+      }
+    }
+  }
+  if (posterPropertyKeys.size === 0) {
+    return frontmatter;
+  }
+  const nextFrontmatter = { ...frontmatter };
+  for (const propertyKey of posterPropertyKeys) {
+    const currentValue = nextFrontmatter[propertyKey];
+    if (!hasMeaningfulValue(currentValue)) {
+      continue;
+    }
+    const currentText = String(currentValue || "").trim();
+    if (!currentText || /^https?:\/\//i.test(currentText)) {
+      continue;
+    }
+    const normalizedValue = String(normalizePosterValue(currentText) || "").trim();
+    if (normalizedValue) {
+      nextFrontmatter[propertyKey] = normalizedValue;
+    }
+  }
+  return nextFrontmatter;
+}
 function analyzeBangumiFrontmatterUpdate(args) {
   const managedCandidates = [];
   const conflicts = [];
@@ -854,19 +928,6 @@ async function ensureTextFile(filePath, content) {
   }
   await import_promises.default.mkdir(import_path.default.dirname(filePath), { recursive: true });
   await import_promises.default.writeFile(filePath, ensureTrailingNewline(content), "utf8");
-}
-async function ensureJsonFile(filePath, data) {
-  try {
-    await import_promises.default.access(filePath, import_fs.default.constants.F_OK);
-    return;
-  } catch (error) {
-    if (error?.code !== "ENOENT") {
-      throw error;
-    }
-  }
-  await import_promises.default.mkdir(import_path.default.dirname(filePath), { recursive: true });
-  await import_promises.default.writeFile(filePath, `${JSON.stringify(data, null, 2)}
-`, "utf8");
 }
 async function ensureFolderExists(vault, targetFolder) {
   const normalized = normalizeVaultPath(targetFolder);
@@ -989,11 +1050,11 @@ function inferRemoteFileExtension(urlText) {
 async function resolvePosterAsset(app, config, item, cardFilePath, downloadBinary) {
   const remotePoster = String(item.cover_remote || "").trim();
   if (!config.poster.saveLocal || !remotePoster) {
-    return {
+    return decoratePosterFields(app, cardFilePath, {
       ...item,
       poster_path: remotePoster,
       network_poster: true
-    };
+    });
   }
   const baseName = import_path2.default.parse(cardFilePath).name;
   const extension = inferRemoteFileExtension(remotePoster);
@@ -1006,11 +1067,11 @@ async function resolvePosterAsset(app, config, item, cardFilePath, downloadBinar
   await ensureFolderExists(app.vault, config.poster.folder);
   const binary = await downloadBinary(remotePoster);
   await app.vault.createBinary(assetPath, binary);
-  return {
+  return decoratePosterFields(app, cardFilePath, {
     ...item,
     poster_path: assetPath,
     network_poster: false
-  };
+  });
 }
 
 // src/core/errors.ts
@@ -1025,7 +1086,6 @@ function normalizeError(error) {
 init_paths();
 
 // src/config/storage.ts
-var import_fs2 = __toESM(require("fs"));
 var import_promises3 = __toESM(require("fs/promises"));
 var import_path3 = __toESM(require("path"));
 init_defaults();
@@ -1117,7 +1177,7 @@ function normalizeSourceConfig(raw, sourceKey, defaults, legacyDefaults) {
   return buildTemplateModeSourceConfig(raw, defaults[sourceKey], legacyDefaults[sourceKey]);
 }
 function normalizeSourceConfigs(raw, defaults, legacyDefaults) {
-  if (!raw || typeof raw !== "object") {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error("\u4F5C\u54C1\u6293\u53D6\u914D\u7F6E\u683C\u5F0F\u4E0D\u5BF9\u3002");
   }
   return SOURCE_IDS.reduce((result, sourceKey) => {
@@ -1173,8 +1233,9 @@ function normalizeTemplateEditorValues(sourceKey, state, defaultSourceConfigs = 
   };
 }
 var ConfigStore = class {
-  constructor(app) {
-    this.app = app;
+  constructor(plugin) {
+    this.plugin = plugin;
+    this.app = plugin.app;
   }
   getVaultInfo() {
     const adapter = this.app.vault.adapter;
@@ -1235,16 +1296,6 @@ var ConfigStore = class {
   }
   async ensureDefaultFiles(vaultBasePath) {
     const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
-    const configPath = this.getPluginFilePath("media-fetcher-rules.json");
-    try {
-      await import_promises3.default.access(configPath, import_fs2.default.constants.F_OK);
-    } catch (error) {
-      if (error?.code !== "ENOENT") {
-        throw error;
-      }
-      const initialConfig = await this.buildInitialConfig(vaultBasePath);
-      await ensureJsonFile(configPath, initialConfig);
-    }
     for (const sourceKey of SOURCE_IDS) {
       await this.ensureTemplateExists(
         vaultBasePath,
@@ -1277,8 +1328,7 @@ var ConfigStore = class {
       );
     }
   }
-  async loadLegacyPluginConfigRoot(vaultBasePath) {
-    const filePath = this.getLegacyPluginFilePath("media-fetcher-rules.json");
+  async loadConfigRootFromFile(filePath, label, defaults, legacyDefaults) {
     let raw = "";
     try {
       raw = await import_promises3.default.readFile(filePath, "utf8");
@@ -1286,26 +1336,68 @@ var ConfigStore = class {
       if (error?.code === "ENOENT") {
         return null;
       }
-      throw new Error(`\u8BFB\u53D6\u65E7\u63D2\u4EF6\u914D\u7F6E\u5931\u8D25\uFF1A${LEGACY_PLUGIN_ID}/media-fetcher-rules.json`);
+      throw new Error(`\u8BFB\u53D6\u65E7\u63D2\u4EF6\u914D\u7F6E\u5931\u8D25\uFF1A${label}`);
     }
-    let parsed = null;
     try {
-      parsed = JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      return buildConfigRootFromUnknown(parsed, defaults, legacyDefaults);
     } catch (_error) {
-      throw new Error(`\u65E7\u63D2\u4EF6\u914D\u7F6E\u4E0D\u662F\u5408\u6CD5 JSON\uFF1A${LEGACY_PLUGIN_ID}/media-fetcher-rules.json`);
+      throw new Error(`\u65E7\u63D2\u4EF6\u914D\u7F6E\u4E0D\u662F\u5408\u6CD5 JSON\uFF1A${label}`);
     }
+  }
+  async deleteFileIfExists(filePath) {
+    if (!filePath) {
+      return;
+    }
+    try {
+      await import_promises3.default.unlink(filePath);
+    } catch (error) {
+      if (error?.code !== "ENOENT") {
+        throw error;
+      }
+    }
+  }
+  async loadLegacyPluginConfigRoot(vaultBasePath) {
     const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
     const legacyDefaults = await this.getResolvedLegacyDefaultSourceConfigs(vaultBasePath);
-    return buildConfigRootFromUnknown(parsed, defaults, legacyDefaults);
+    return this.loadConfigRootFromFile(
+      this.getLegacyPluginFilePath("media-fetcher-rules.json"),
+      `${LEGACY_PLUGIN_ID}/media-fetcher-rules.json`,
+      defaults,
+      legacyDefaults
+    );
   }
   async buildInitialConfig(vaultBasePath) {
     const defaults = await this.getResolvedDefaultSourceConfigs(vaultBasePath);
-    const legacyPluginConfig = await this.loadLegacyPluginConfigRoot(vaultBasePath);
+    const legacyDefaults = await this.getResolvedLegacyDefaultSourceConfigs(vaultBasePath);
+    const currentPluginConfigPath = this.getPluginFilePath("media-fetcher-rules.json");
+    const currentPluginConfig = await this.loadConfigRootFromFile(
+      currentPluginConfigPath,
+      `${PLUGIN_ID}/media-fetcher-rules.json`,
+      defaults,
+      legacyDefaults
+    );
+    if (currentPluginConfig) {
+      return {
+        config: currentPluginConfig,
+        cleanupPath: currentPluginConfigPath
+      };
+    }
+    const legacyPluginConfigPath = this.getLegacyPluginFilePath("media-fetcher-rules.json");
+    const legacyPluginConfig = await this.loadConfigRootFromFile(
+      legacyPluginConfigPath,
+      `${LEGACY_PLUGIN_ID}/media-fetcher-rules.json`,
+      defaults,
+      legacyDefaults
+    );
     if (legacyPluginConfig) {
-      return legacyPluginConfig;
+      return {
+        config: legacyPluginConfig,
+        cleanupPath: legacyPluginConfigPath
+      };
     }
     const configDir = this.app.vault?.configDir || ".obsidian";
-    const legacyPath = import_path3.default.join(
+    const organizerConfigPath = import_path3.default.join(
       vaultBasePath,
       configDir,
       "plugins",
@@ -1314,38 +1406,36 @@ var ConfigStore = class {
     );
     let bangumi = defaults.bangumi;
     try {
-      const raw = await import_promises3.default.readFile(legacyPath, "utf8");
+      const raw = await import_promises3.default.readFile(organizerConfigPath, "utf8");
       bangumi = buildTemplateModeSourceConfig(JSON.parse(raw), defaults.bangumi);
     } catch (_error) {
       bangumi = defaults.bangumi;
     }
     return {
-      bangumi,
-      mobygames: defaults.mobygames,
-      bilibili_show: defaults.bilibili_show,
-      showstart: defaults.showstart
+      config: {
+        bangumi,
+        mobygames: defaults.mobygames,
+        bilibili_show: defaults.bilibili_show,
+        showstart: defaults.showstart
+      }
     };
   }
   async loadRawSourceConfigRoot(vaultBasePath) {
     await this.ensureDefaultFiles(vaultBasePath);
-    const filePath = this.getPluginFilePath("media-fetcher-rules.json");
-    let raw = "";
-    try {
-      raw = await import_promises3.default.readFile(filePath, "utf8");
-    } catch (_error) {
-      throw new Error("\u8BFB\u53D6\u4F5C\u54C1\u6293\u53D6\u914D\u7F6E\u5931\u8D25\uFF1Amedia-fetcher-rules.json");
+    const stored = await this.plugin.loadData();
+    if (typeof stored !== "undefined" && stored !== null) {
+      if (typeof stored !== "object" || Array.isArray(stored)) {
+        throw new Error("\u4F5C\u54C1\u6293\u53D6\u914D\u7F6E\u4E0D\u662F\u5408\u6CD5 JSON\uFF1Adata.json");
+      }
+      return stored;
     }
-    try {
-      return JSON.parse(raw);
-    } catch (_error) {
-      throw new Error("\u4F5C\u54C1\u6293\u53D6\u914D\u7F6E\u4E0D\u662F\u5408\u6CD5 JSON\uFF1Amedia-fetcher-rules.json");
-    }
+    const initial = await this.buildInitialConfig(vaultBasePath);
+    await this.writeSourceConfigRoot(initial.config);
+    await this.deleteFileIfExists(initial.cleanupPath);
+    return initial.config;
   }
   async writeSourceConfigRoot(raw) {
-    const configPath = this.getPluginFilePath("media-fetcher-rules.json");
-    await import_promises3.default.mkdir(import_path3.default.dirname(configPath), { recursive: true });
-    await import_promises3.default.writeFile(configPath, `${JSON.stringify(raw, null, 2)}
-`, "utf8");
+    await this.plugin.saveData(raw);
   }
   async loadSourceConfigs(vaultBasePath) {
     const raw = await this.loadRawSourceConfigRoot(vaultBasePath);
@@ -1485,6 +1575,21 @@ function collectBangumiInfoboxValues(subject, keys, excludedValues = []) {
   }
   return sanitizeList(aliases, 20);
 }
+function collectBangumiAuthors(subject) {
+  const authorGroups = Number(subject?.type) === 1 ? [["\u4F5C\u8005"], ["\u539F\u4F5C"], ["\u4F5C\u753B"]] : [["\u4F5C\u8005"]];
+  const authors = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const keys of authorGroups) {
+    for (const value of collectBangumiInfoboxValues(subject, keys)) {
+      if (seen.has(value)) {
+        continue;
+      }
+      seen.add(value);
+      authors.push(value);
+    }
+  }
+  return sanitizeList(authors, 20);
+}
 function pickBangumiCover(images) {
   if (!images || typeof images !== "object") return "";
   const imageMap = images;
@@ -1522,7 +1627,7 @@ function normalizeBangumiSubject(subject) {
   const releaseDate = normalizeDateValue(subject?.date);
   const releaseYear = extractYear(subject?.date);
   const aliases = collectBangumiAliases(subject, preferredTitle, originalTitle);
-  const authors = collectBangumiInfoboxValues(subject, ["\u4F5C\u8005"]);
+  const authors = collectBangumiAuthors(subject);
   const publishers = collectBangumiInfoboxValues(subject, ["\u51FA\u7248\u793E"]);
   const serialMagazines = collectBangumiInfoboxValues(subject, ["\u8FDE\u8F7D\u6742\u5FD7"]);
   return {
@@ -2929,7 +3034,7 @@ function labelForBangumiType(templateType) {
 // src/plugin.ts
 var MZMediaFetcherPlugin = class extends import_obsidian5.Plugin {
   async onload() {
-    this.configStore = new ConfigStore(this.app);
+    this.configStore = new ConfigStore(this);
     this.isRunning = false;
     for (const source of MEDIA_SOURCES) {
       this.addCommand({
@@ -2980,17 +3085,19 @@ var MZMediaFetcherPlugin = class extends import_obsidian5.Plugin {
       if (!frontmatterBlock) {
         throw new Error("\u5F53\u524D\u7B14\u8BB0\u6CA1\u6709 frontmatter\uFF0C\u65E0\u6CD5\u91CD\u65B0\u8865\u5168 Bangumi \u4FE1\u606F\u3002");
       }
-      const existingFrontmatter = sanitizeFrontmatterObject(
+      const rawFrontmatter = sanitizeFrontmatterObject(
         this.app.metadataCache.getFileCache(activeFile)?.frontmatter || {}
       );
       const templateBindingGroups = await this.loadBangumiTemplateBindingGroups(
         vaultInfo.path,
         bangumiConfig
       );
-      const candidateValues = collectBangumiTemplateValueCandidates(
-        existingFrontmatter,
-        templateBindingGroups
+      const existingFrontmatter = normalizeBangumiPosterFrontmatter(
+        rawFrontmatter,
+        templateBindingGroups,
+        (value) => resolvePosterLinkText(this.app, activeFile.path, value)
       );
+      const candidateValues = collectBangumiTemplateValueCandidates(existingFrontmatter, templateBindingGroups);
       const subjectId = this.resolveCurrentBangumiSubjectId(candidateValues);
       if (!subjectId) {
         throw new Error("\u5F53\u524D\u7B14\u8BB0\u6CA1\u6709\u53EF\u8BC6\u522B\u7684 bangumi_id \u6216 bangumi_url\u3002");
@@ -3003,7 +3110,7 @@ var MZMediaFetcherPlugin = class extends import_obsidian5.Plugin {
         bangumiConfig,
         normalizedItem
       );
-      const fetchedValues = this.buildBangumiFetchedValues(normalizedItem);
+      const fetchedValues = this.buildBangumiFetchedValues(normalizedItem, activeFile.path);
       const analysis = analyzeBangumiFrontmatterUpdate({
         templateBindings,
         existingFrontmatter,
@@ -3094,8 +3201,9 @@ var MZMediaFetcherPlugin = class extends import_obsidian5.Plugin {
       this.isRunning = false;
     }
   }
-  buildBangumiFetchedValues(item) {
-    const context = buildTemplateContext("bangumi", item);
+  buildBangumiFetchedValues(item, sourcePath) {
+    const resolvedItem = decoratePosterFields(this.app, sourcePath, item);
+    const context = buildTemplateContext("bangumi", resolvedItem);
     return BANGUMI_REFRESH_MANAGED_VARIABLES.reduce((result, key) => {
       result[key] = context[key];
       return result;

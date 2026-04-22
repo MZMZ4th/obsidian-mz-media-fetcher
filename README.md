@@ -9,6 +9,7 @@ Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showsta
 ## Highlights
 
 - Bangumi supports title search, subject links, numeric IDs, and per-type template overrides for game, anime, book, and live action subjects.
+- Bangumi book subjects merge `作者`, `原作`, and `作画` into the `authors` field.
 - MobyGames supports direct game detail links.
 - Bilibili Show supports direct event detail links and venue metadata.
 - Showstart supports direct event detail links and venue metadata.
@@ -51,11 +52,12 @@ The repository root is the plugin root, so the build output lands directly in `m
 
 ## Defaults
 
-- The plugin stores its runtime config in `media-fetcher-rules.json` under the plugin folder.
+- The plugin stores its runtime config in `data.json` under the plugin folder.
 - Built-in templates live under `.obsidian/plugins/mz-media-fetcher/templates/`.
 - The default local poster folder follows `attachmentFolderPath` from `.obsidian/app.json`.
 - Existing custom `templatePath` values are preserved during upgrades.
-- If the vault still has the old plugin id directory `MZ-media-fetcher`, the plugin imports its existing config on first launch and rewrites only the old built-in template paths.
+- On first launch, the plugin imports `media-fetcher-rules.json` from either `mz-media-fetcher` or `MZ-media-fetcher`, writes the migrated config to `data.json`, and deletes the old rules file.
+- If the vault still has the old plugin id directory `MZ-media-fetcher`, the migration rewrites only the old built-in template paths and keeps custom template paths intact.
 
 ## Usage
 
@@ -65,6 +67,7 @@ The repository root is the plugin root, so the build output lands directly in `m
 - Paste a subject URL such as `https://bgm.tv/subject/328609`.
 - Enter a numeric subject ID such as `328609`.
 - Game / anime / book / live action subjects can point to separate template paths; blank overrides fall back to the general Bangumi template.
+- Book subjects merge `作者`, `原作`, and `作画` into the exported `authors` field.
 - Bangumi cards can refresh the current note's frontmatter from the latest subject metadata without rewriting the body.
 
 ### MobyGames
@@ -127,6 +130,12 @@ Built-in templates now include a preview section that renders every currently su
 - `{{bilibili_show_url}}`
 - `{{showstart_activity_id}}`
 - `{{showstart_url}}`
+
+Poster variables now have two different roles:
+
+- `{{poster_path}}` keeps the raw poster value: a remote URL for network posters, or the vault-relative file path for local posters.
+- `{{poster}}` is the Obsidian-normalized link text for templates and frontmatter. Local posters prefer the filename and fall back to the shortest unique path only when needed.
+- `{{cover_markdown}}` is the ready-to-use image embed generated from `{{poster}}`.
 
 ## Network & Privacy
 
