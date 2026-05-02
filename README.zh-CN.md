@@ -47,7 +47,7 @@ npm run package
 ```
 
 这个仓库根目录本身就是插件目录，所以构建产物会直接输出到 `main.js`。
-`npm run install:dev` 默认会把插件安装到 `~/Obsidian/PluginLab`，并把它写进这个开发 vault 的 `community-plugins.json`。
+`npm run install:dev` 默认会把插件安装到 `~/Obsidian/CodexBase-OS`，并把它写进这个开发 vault 的 `community-plugins.json`。
 `npm run package` 会把可发布资产整理到 `release/<version>/`。
 
 ## 默认行为

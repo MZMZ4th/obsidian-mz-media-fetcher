@@ -47,7 +47,7 @@ npm run package
 ```
 
 The repository root is the plugin root, so the build output lands directly in `main.js`.
-`npm run install:dev` installs the plugin into `~/Obsidian/PluginLab` by default and enables it in that vault's `community-plugins.json`.
+`npm run install:dev` installs the plugin into `~/Obsidian/CodexBase-OS` by default and enables it in that vault's `community-plugins.json`.
 `npm run package` prepares the publishable release assets in `release/<version>/`.
 
 ## Defaults

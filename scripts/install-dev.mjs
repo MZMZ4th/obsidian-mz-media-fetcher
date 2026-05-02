@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..");
-const defaultVault = path.join(process.env.HOME || process.env.USERPROFILE || "", "Obsidian", "PluginLab");
+const defaultVault = path.join(process.env.HOME || process.env.USERPROFILE || "", "Obsidian", "CodexBase-OS");
 const vaultPath = path.resolve(process.argv[2] || process.env.OBSIDIAN_DEV_VAULT || defaultVault);
 const obsidianDir = path.join(vaultPath, ".obsidian");
 const pluginsDir = path.join(obsidianDir, "plugins");
