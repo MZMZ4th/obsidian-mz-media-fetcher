@@ -2,7 +2,7 @@ English | [简体中文](README.zh-CN.md)
 
 # MZ Media Fetcher
 
-Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showstart.
+Create media and event notes from Bangumi, MobyGames, Bilibili Show, Showstart, and Damai.
 
 `MZ Media Fetcher` is a desktop-only Obsidian plugin that fetches public metadata from supported sources and creates template-driven notes inside your vault.
 
@@ -13,6 +13,7 @@ Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showsta
 - MobyGames supports direct game detail links.
 - Bilibili Show supports direct event detail links and venue metadata.
 - Showstart supports direct event detail links and venue metadata.
+- Damai supports direct event detail links and venue metadata.
 - Each source keeps its own parser and adapter, while note creation follows one shared pipeline.
 - The settings tab is split by source, and only Bangumi exposes search-limit controls.
 - Built-in templates ship with the plugin, and you can copy them into your own template files.
@@ -27,6 +28,7 @@ The plugin currently registers these Obsidian commands. The command names below 
 - `从 MobyGames 新建作品卡片`: create a new media note from MobyGames.
 - `从 bilibili会员购新建作品卡片`: create a new event note from Bilibili Show.
 - `从秀动新建作品卡片`: create a new event note from Showstart.
+- `从大麦网新建作品卡片`: create a new event note from Damai.
 
 ## Install
 
@@ -87,6 +89,13 @@ The repository root is the plugin root, so the build output lands directly in `m
 - Release dates are normalized to `YYYY-MM-DD`.
 - Venue metadata is exposed as `venue_name`, `venue_address`, and `venue_text`.
 
+### Damai
+
+- Paste a concrete event URL such as `https://detail.damai.cn/item.htm?id=1012125810980`.
+- Mobile item links with `itemId` are also supported.
+- Release dates are normalized to `YYYY-MM-DD`.
+- Venue metadata is exposed as `venue_name`, `venue_address`, and `venue_text`.
+
 ## Templates
 
 Built-in templates now include a preview section that renders every currently supported variable. Common variables include:
@@ -130,6 +139,10 @@ Built-in templates now include a preview section that renders every currently su
 - `{{bilibili_show_url}}`
 - `{{showstart_activity_id}}`
 - `{{showstart_url}}`
+- `{{damai_item_id}}`
+- `{{damai_url}}`
+- `{{show_time}}`
+- `{{city_name}}`
 
 Poster variables now have two different roles:
 
@@ -143,6 +156,7 @@ Poster variables now have two different roles:
 - MobyGames requests fetch the public game detail page HTML.
 - Bilibili Show requests use the public project detail API behind the event page.
 - Showstart requests first fetch an anonymous guest token, then request the event detail API used by the public page.
+- Damai requests fetch the public event detail page HTML and parse the hidden page JSON.
 - The plugin does not send telemetry.
 - The plugin only writes files inside the current vault.
 - The plugin does not read files outside the current vault.
@@ -151,7 +165,7 @@ Poster variables now have two different roles:
 
 - `src/core/`: shared note building, file handling, path normalization, and template rendering
 - `src/config/`: defaults, config migration, and config storage
-- `src/sources/`: Bangumi, MobyGames, Bilibili Show, and Showstart adapters
+- `src/sources/`: Bangumi, MobyGames, Bilibili Show, Showstart, and Damai adapters
 - `src/ui/`: modals, settings tab, and path suggestions
 - `templates/`: bundled default templates
 - `tests/`: parser, template, config, and migration tests

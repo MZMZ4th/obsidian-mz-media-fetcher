@@ -140,6 +140,32 @@ test("normalizeTemplateEditorValues supports showstart", () => {
   });
 });
 
+test("normalizeTemplateEditorValues supports damai", () => {
+  const config = normalizeTemplateEditorValues("damai", {
+    targetFolder: "00-Inbox",
+    templatePath: ".obsidian/plugins/mz-media-fetcher/templates/damai.md",
+    searchLimit: "8",
+    posterSaveLocal: false,
+    posterFolder: "00-Inbox/附件/作品海报",
+    filenameTemplate: "{{title}}",
+    filenameCollisionTemplate: "{{title}} {{release_year}} {{damai_item_id}}",
+  });
+
+  assert.deepEqual(config, {
+    targetFolder: "00-Inbox",
+    templatePath: ".obsidian/plugins/mz-media-fetcher/templates/damai.md",
+    searchLimit: 8,
+    poster: {
+      saveLocal: false,
+      folder: "00-Inbox/附件/作品海报",
+    },
+    filename: {
+      template: "{{title}}",
+      collisionTemplate: "{{title}} {{release_year}} {{damai_item_id}}",
+    },
+  });
+});
+
 test("normalizeTemplateEditorValues falls back to runtime default poster folder", () => {
   const defaultConfigs = getDefaultSourceConfigs(".obsidian", "50-Others/附件");
   const config = normalizeTemplateEditorValues(

@@ -1,4 +1,10 @@
-export const SOURCE_IDS = ["bangumi", "mobygames", "bilibili_show", "showstart"] as const;
+export const SOURCE_IDS = [
+  "bangumi",
+  "mobygames",
+  "bilibili_show",
+  "showstart",
+  "damai",
+] as const;
 
 export type SourceId = (typeof SOURCE_IDS)[number];
 export const BANGUMI_TEMPLATE_TYPES = ["game", "anime", "book", "liveAction"] as const;

@@ -1,5 +1,6 @@
 import { bangumiSource } from "./bangumi-source.ts";
 import { bilibiliShowSource } from "./bilibili-show-source.ts";
+import { damaiSource } from "./damai-source.ts";
 import { mobygamesSource } from "./mobygames-source.ts";
 import { showstartSource } from "./showstart-source.ts";
 import type { MediaSource, SourceId } from "../types.ts";
@@ -9,6 +10,7 @@ export const MEDIA_SOURCES: MediaSource[] = [
   mobygamesSource,
   bilibiliShowSource,
   showstartSource,
+  damaiSource,
 ];
 
 export const MEDIA_SOURCE_MAP: Record<SourceId, MediaSource> = {
@@ -16,4 +18,5 @@ export const MEDIA_SOURCE_MAP: Record<SourceId, MediaSource> = {
   mobygames: mobygamesSource,
   bilibili_show: bilibiliShowSource,
   showstart: showstartSource,
+  damai: damaiSource,
 };

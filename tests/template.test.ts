@@ -223,11 +223,54 @@ test("showstart default template renders required card fields", () => {
   assert.match(rendered, /- showstart_activity_id: 208747/);
 });
 
+test("damai default template renders required card fields", () => {
+  const template = fs.readFileSync(
+    path.join(process.cwd(), "templates/damai.md"),
+    "utf8"
+  );
+  const context = buildTemplateContext("damai", {
+    title: "【北京】Jolin蔡依林PLEASURE巡回演唱会2026 - 北京站",
+    title_original: "",
+    aliases: [],
+    media_type: "演唱会",
+    release_date: "2026-06-12",
+    release_year: "2026",
+    cover_remote: "https://img.alicdn.com/example-damai-poster.jpg",
+    summary: "",
+    platforms: [],
+    platforms_text: "",
+    show_time: "2026.06.12-06.14",
+    city_name: "北京市",
+    venue_name: "国家体育场-鸟巢",
+    venue_address: "北京市朝阳区国家体育场南路1号奥林匹克公园",
+    venue_text: "国家体育场-鸟巢 · 北京市朝阳区国家体育场南路1号奥林匹克公园",
+    damai_url: "https://detail.damai.cn/item.htm?id=1012125810980",
+    damai_item_id: 1012125810980,
+  });
+
+  const rendered = renderTemplate(template, context);
+  assert.match(rendered, /名称: "【北京】Jolin蔡依林PLEASURE巡回演唱会2026 - 北京站"/);
+  assert.match(rendered, /媒体类型: "演唱会"/);
+  assert.match(rendered, /发布日期: "2026-06-12"/);
+  assert.match(rendered, /演出时间: "2026.06.12-06.14"/);
+  assert.match(rendered, /城市: "北京市"/);
+  assert.match(rendered, /演出场所: "国家体育场-鸟巢 · 北京市朝阳区国家体育场南路1号奥林匹克公园"/);
+  assert.match(rendered, /来源链接: https:\/\/detail\.damai\.cn\/item\.htm\?id=1012125810980/);
+  assert.match(rendered, /网络海报: true/);
+  assert.match(rendered, /状态: 已完成/);
+  assert.match(rendered, /完成时间: "2026-06-12"/);
+  assert.match(rendered, /- damai_item_id: 1012125810980/);
+  assert.match(rendered, /- show_time: 2026\.06\.12-06\.14/);
+});
+
 test("event source metadata exposes venue template variables", () => {
   const bilibiliVenue = MEDIA_SOURCE_UI_META_MAP.bilibili_show.templateVariables.filter((item) =>
     item.key.startsWith("venue_")
   );
   const showstartVenue = MEDIA_SOURCE_UI_META_MAP.showstart.templateVariables.filter((item) =>
+    item.key.startsWith("venue_")
+  );
+  const damaiVenue = MEDIA_SOURCE_UI_META_MAP.damai.templateVariables.filter((item) =>
     item.key.startsWith("venue_")
   );
 
@@ -237,6 +280,10 @@ test("event source metadata exposes venue template variables", () => {
   );
   assert.deepEqual(
     showstartVenue.map((item) => item.key),
+    ["venue_name", "venue_address", "venue_text"]
+  );
+  assert.deepEqual(
+    damaiVenue.map((item) => item.key),
     ["venue_name", "venue_address", "venue_text"]
   );
   assert.match(String(bilibiliVenue[2]?.description || ""), /演出场所/);

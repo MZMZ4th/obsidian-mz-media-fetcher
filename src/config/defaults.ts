@@ -12,7 +12,7 @@ export const LEGACY_PLUGIN_ID = "MZ-media-fetcher";
 export const PLUGIN_NAME = "MZ Media Fetcher";
 export const PLUGIN_VERSION = "0.3.5";
 export const PLUGIN_DESCRIPTION =
-  "Create media and event notes from Bangumi, MobyGames, Bilibili Show, and Showstart.";
+  "Create media and event notes from Bangumi, MobyGames, Bilibili Show, Showstart, and Damai.";
 export const HTTP_USER_AGENT = `${PLUGIN_NAME}/${PLUGIN_VERSION} (Obsidian)`;
 export const BANGUMI_API_BASE = "https://api.bgm.tv/v0";
 export const FALLBACK_POSTER_FOLDER = "00-Inbox/附件/作品海报";
@@ -105,6 +105,31 @@ const SHOWSTART_TEMPLATE_CONTENT = buildTemplateContent(
   }
 );
 
+const DAMAI_TEMPLATE_CONTENT = buildTemplateContent(
+  "damai",
+  [
+    "categories: 新作品卡片",
+    "名称: {{yaml.title}}",
+    "原名:",
+    "aliases:",
+    "媒体类型: {{yaml.media_type}}",
+    "发布日期: {{yaml.release_date}}",
+    "演出时间: {{yaml.show_time}}",
+    "城市: {{yaml.city_name}}",
+    "演出场所: {{yaml.venue_text}}",
+    "评分:",
+    "状态: 已完成",
+    "完成时间: {{yaml.release_date}}",
+    "体验次数: 1",
+    "海报: {{poster}}",
+    "来源链接: {{damai_url}}",
+    "网络海报: {{yaml.network_poster}}",
+  ],
+  {
+    cover: "{{cover_markdown}}",
+  }
+);
+
 export const TEMPLATE_CONTENTS: Record<SourceId, string> = {
   bangumi: BANGUMI_TEMPLATE_CONTENT,
   mobygames: buildTemplateContent(
@@ -131,6 +156,7 @@ export const TEMPLATE_CONTENTS: Record<SourceId, string> = {
   ),
   bilibili_show: BILIBILI_SHOW_TEMPLATE_CONTENT,
   showstart: SHOWSTART_TEMPLATE_CONTENT,
+  damai: DAMAI_TEMPLATE_CONTENT,
 };
 
 export const BANGUMI_TYPE_TEMPLATE_FILENAMES: Record<BangumiTemplateType, string> = {
@@ -214,6 +240,19 @@ function buildSourceConfigs(
       filename: {
         template: "{{title}}",
         collisionTemplate: "{{title}} {{release_year}} {{showstart_activity_id}}",
+      },
+    },
+    damai: {
+      targetFolder: "00-Inbox",
+      templatePath: joinVaultPath(pluginRoot, "templates", "damai.md"),
+      searchLimit: 8,
+      poster: {
+        saveLocal: false,
+        folder: posterFolder,
+      },
+      filename: {
+        template: "{{title}}",
+        collisionTemplate: "{{title}} {{release_year}} {{damai_item_id}}",
       },
     },
   };

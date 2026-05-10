@@ -105,6 +105,15 @@ var init_template_fields = __esm({
         { key: "venue_name", description: "\u6F14\u51FA\u573A\u6240\u540D\u79F0\u3002" },
         { key: "venue_address", description: "\u6F14\u51FA\u573A\u6240\u5730\u5740\u3002" },
         { key: "venue_text", description: "\u6F14\u51FA\u573A\u6240\u7684\u4E00\u884C\u6587\u672C\uFF0C\u4F18\u5148\u62FC\u63A5\u540D\u79F0\u548C\u5730\u5740\u3002" }
+      ],
+      damai: [
+        { key: "damai_item_id", description: "\u5927\u9EA6\u7F51\u6F14\u51FA ID\u3002" },
+        { key: "damai_url", description: "\u5927\u9EA6\u7F51\u6F14\u51FA\u8BE6\u60C5\u9875\u94FE\u63A5\u3002" },
+        { key: "show_time", description: "\u5927\u9EA6\u7F51\u539F\u59CB\u6F14\u51FA\u65F6\u95F4\u6587\u672C\u3002" },
+        { key: "city_name", description: "\u6F14\u51FA\u57CE\u5E02\u3002" },
+        { key: "venue_name", description: "\u6F14\u51FA\u573A\u6240\u540D\u79F0\u3002" },
+        { key: "venue_address", description: "\u6F14\u51FA\u573A\u6240\u5730\u5740\u3002" },
+        { key: "venue_text", description: "\u6F14\u51FA\u573A\u6240\u7684\u4E00\u884C\u6587\u672C\uFF0C\u4F18\u5148\u62FC\u63A5\u540D\u79F0\u548C\u5730\u5740\u3002" }
       ]
     };
     PREVIEW_INLINE_VARIABLES = /* @__PURE__ */ new Set([
@@ -136,6 +145,10 @@ var init_template_fields = __esm({
       "bilibili_show_url",
       "showstart_activity_id",
       "showstart_url",
+      "damai_item_id",
+      "damai_url",
+      "show_time",
+      "city_name",
       "venue_name",
       "venue_address",
       "venue_text"
@@ -162,7 +175,8 @@ var init_template_fields = __esm({
       bangumi: getSourceTemplateVariables("bangumi"),
       mobygames: getSourceTemplateVariables("mobygames"),
       bilibili_show: getSourceTemplateVariables("bilibili_show"),
-      showstart: getSourceTemplateVariables("showstart")
+      showstart: getSourceTemplateVariables("showstart"),
+      damai: getSourceTemplateVariables("damai")
     };
   }
 });
@@ -277,6 +291,19 @@ function buildSourceConfigs(pluginId, configDir = ".obsidian", posterFolder = FA
         template: "{{title}}",
         collisionTemplate: "{{title}} {{release_year}} {{showstart_activity_id}}"
       }
+    },
+    damai: {
+      targetFolder: "00-Inbox",
+      templatePath: joinVaultPath(pluginRoot, "templates", "damai.md"),
+      searchLimit: 8,
+      poster: {
+        saveLocal: false,
+        folder: posterFolder
+      },
+      filename: {
+        template: "{{title}}",
+        collisionTemplate: "{{title}} {{release_year}} {{damai_item_id}}"
+      }
     }
   };
 }
@@ -286,7 +313,7 @@ function getDefaultSourceConfigs(configDir = ".obsidian", posterFolder = FALLBAC
 function getLegacyDefaultSourceConfigs(configDir = ".obsidian", posterFolder = FALLBACK_POSTER_FOLDER) {
   return buildSourceConfigs(LEGACY_PLUGIN_ID, configDir, posterFolder);
 }
-var PLUGIN_ID, LEGACY_PLUGIN_ID, PLUGIN_NAME, PLUGIN_VERSION, HTTP_USER_AGENT, BANGUMI_API_BASE, FALLBACK_POSTER_FOLDER, BANGUMI_TEMPLATE_FRONTMATTER, BANGUMI_TEMPLATE_CONTENT, BILIBILI_SHOW_TEMPLATE_CONTENT, SHOWSTART_TEMPLATE_CONTENT, TEMPLATE_CONTENTS, BANGUMI_TYPE_TEMPLATE_FILENAMES, BANGUMI_TYPE_TEMPLATE_CONTENTS, DEFAULT_SOURCE_CONFIGS;
+var PLUGIN_ID, LEGACY_PLUGIN_ID, PLUGIN_NAME, PLUGIN_VERSION, HTTP_USER_AGENT, BANGUMI_API_BASE, FALLBACK_POSTER_FOLDER, BANGUMI_TEMPLATE_FRONTMATTER, BANGUMI_TEMPLATE_CONTENT, BILIBILI_SHOW_TEMPLATE_CONTENT, SHOWSTART_TEMPLATE_CONTENT, DAMAI_TEMPLATE_CONTENT, TEMPLATE_CONTENTS, BANGUMI_TYPE_TEMPLATE_FILENAMES, BANGUMI_TYPE_TEMPLATE_CONTENTS, DEFAULT_SOURCE_CONFIGS;
 var init_defaults = __esm({
   "src/config/defaults.ts"() {
     init_paths();
@@ -364,6 +391,30 @@ var init_defaults = __esm({
         cover: "{{cover_markdown}}"
       }
     );
+    DAMAI_TEMPLATE_CONTENT = buildTemplateContent(
+      "damai",
+      [
+        "categories: \u65B0\u4F5C\u54C1\u5361\u7247",
+        "\u540D\u79F0: {{yaml.title}}",
+        "\u539F\u540D:",
+        "aliases:",
+        "\u5A92\u4F53\u7C7B\u578B: {{yaml.media_type}}",
+        "\u53D1\u5E03\u65E5\u671F: {{yaml.release_date}}",
+        "\u6F14\u51FA\u65F6\u95F4: {{yaml.show_time}}",
+        "\u57CE\u5E02: {{yaml.city_name}}",
+        "\u6F14\u51FA\u573A\u6240: {{yaml.venue_text}}",
+        "\u8BC4\u5206:",
+        "\u72B6\u6001: \u5DF2\u5B8C\u6210",
+        "\u5B8C\u6210\u65F6\u95F4: {{yaml.release_date}}",
+        "\u4F53\u9A8C\u6B21\u6570: 1",
+        "\u6D77\u62A5: {{poster}}",
+        "\u6765\u6E90\u94FE\u63A5: {{damai_url}}",
+        "\u7F51\u7EDC\u6D77\u62A5: {{yaml.network_poster}}"
+      ],
+      {
+        cover: "{{cover_markdown}}"
+      }
+    );
     TEMPLATE_CONTENTS = {
       bangumi: BANGUMI_TEMPLATE_CONTENT,
       mobygames: buildTemplateContent(
@@ -389,7 +440,8 @@ var init_defaults = __esm({
         }
       ),
       bilibili_show: BILIBILI_SHOW_TEMPLATE_CONTENT,
-      showstart: SHOWSTART_TEMPLATE_CONTENT
+      showstart: SHOWSTART_TEMPLATE_CONTENT,
+      damai: DAMAI_TEMPLATE_CONTENT
     };
     BANGUMI_TYPE_TEMPLATE_FILENAMES = {
       game: "bangumi-game.md",
@@ -1019,7 +1071,8 @@ async function resolveCardPath(app, config, item, sourceKey) {
     bangumi: "bangumi_id",
     mobygames: "mobygames_id",
     bilibili_show: "bilibili_show_id",
-    showstart: "showstart_activity_id"
+    showstart: "showstart_activity_id",
+    damai: "damai_item_id"
   };
   const idKey = idKeyMap[sourceKey];
   const primaryName = sanitizeFileName(renderTemplate(config.filename.template, item));
@@ -1092,7 +1145,13 @@ init_defaults();
 init_paths();
 
 // src/types.ts
-var SOURCE_IDS = ["bangumi", "mobygames", "bilibili_show", "showstart"];
+var SOURCE_IDS = [
+  "bangumi",
+  "mobygames",
+  "bilibili_show",
+  "showstart",
+  "damai"
+];
 var BANGUMI_TEMPLATE_TYPES = ["game", "anime", "book", "liveAction"];
 
 // src/config/storage.ts
@@ -1416,7 +1475,8 @@ var ConfigStore = class {
         bangumi,
         mobygames: defaults.mobygames,
         bilibili_show: defaults.bilibili_show,
-        showstart: defaults.showstart
+        showstart: defaults.showstart,
+        damai: defaults.damai
       }
     };
   }
@@ -1518,6 +1578,16 @@ var MEDIA_SOURCE_UI_META_MAP = {
       "\u4F1A\u8BFB\u53D6\u79C0\u52A8\u6D3B\u52A8\u8BE6\u60C5\u63A5\u53E3\uFF0C\u4E0D\u89E3\u6790\u9875\u9762\u6B63\u6587\u3002"
     ],
     templateVariables: SOURCE_TEMPLATE_VARIABLES_MAP.showstart
+  },
+  damai: {
+    supportsSearch: false,
+    inputFieldLabel: "\u8BE6\u60C5\u94FE\u63A5",
+    featureNotes: [
+      "\u53EA\u652F\u6301\u76F4\u63A5\u7C98\u8D34\u5927\u9EA6\u7F51\u5177\u4F53\u6F14\u51FA\u8BE6\u60C5\u9875\u94FE\u63A5\u3002",
+      "\u4E0D\u652F\u6301\u7AD9\u5185\u641C\u7D22\u3002",
+      "\u4F1A\u8BFB\u53D6\u5927\u9EA6\u8BE6\u60C5\u9875\u91CC\u7684\u516C\u5F00\u6F14\u51FA\u4FE1\u606F\uFF0C\u4E0D\u731C\u6D4B\u989D\u5916\u63A5\u53E3\u3002"
+    ],
+    templateVariables: SOURCE_TEMPLATE_VARIABLES_MAP.damai
   }
 };
 
@@ -1877,6 +1947,214 @@ var bilibiliShowSource = {
   normalize: normalizeBilibiliShowProject
 };
 
+// src/sources/damai-source.ts
+init_http();
+
+// src/sources/damai.ts
+function pickRecord(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+function pickString2(detail, keys) {
+  for (const key of keys) {
+    const value = detail[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return "";
+}
+function pickNumber(detail, keys) {
+  for (const key of keys) {
+    const numeric = Number(detail[key]);
+    if (Number.isInteger(numeric) && numeric > 0) {
+      return numeric;
+    }
+  }
+  return null;
+}
+function ensureHttpsUrl2(value) {
+  const normalized = String(value || "").trim();
+  if (!normalized) return "";
+  if (/^https?:\/\//i.test(normalized)) return normalized;
+  if (normalized.startsWith("//")) return `https:${normalized}`;
+  return normalized;
+}
+function buildVenueText2(name, address) {
+  if (!name) return address;
+  if (!address) return name;
+  if (address.includes(name)) return address;
+  if (name.includes(address)) return name;
+  return `${name} \xB7 ${address}`;
+}
+function decodeMaybeUriComponent(value) {
+  const text = String(value || "");
+  if (!text) return "";
+  try {
+    return decodeURIComponent(text);
+  } catch (_error) {
+    return text;
+  }
+}
+function parseHiddenJson(html, elementId) {
+  const pattern = new RegExp(
+    `<div[^>]+id=["']${elementId}["'][^>]*>([\\s\\S]*?)<\\/div>`,
+    "i"
+  );
+  const match = html.match(pattern);
+  if (!match) {
+    return {};
+  }
+  const text = match[1].trim();
+  if (!text) {
+    return {};
+  }
+  const candidates = [text, decodeHtmlEntities(text)];
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate);
+    } catch (_error) {
+    }
+  }
+  throw new Error(`\u5927\u9EA6\u9875\u9762\u91CC\u7684 ${elementId} \u4E0D\u662F\u6709\u6548 JSON\u3002`);
+}
+function parseDamaiHiddenPayloads(html) {
+  return {
+    dataDefault: parseHiddenJson(html, "dataDefault"),
+    staticDataDefault: parseHiddenJson(html, "staticDataDefault")
+  };
+}
+function normalizeDamaiShowDate(showTime) {
+  const text = String(showTime || "").trim();
+  if (!text) return "";
+  const direct = text.match(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/) || text.match(/(\d{4})年\s*(\d{1,2})月\s*(\d{1,2})日/);
+  if (!direct) return "";
+  const year = direct[1];
+  const month = direct[2].padStart(2, "0");
+  const day = direct[3].padStart(2, "0");
+  return normalizeDateValue(`${year}-${month}-${day}`);
+}
+function pickDamaiCover(itemBase) {
+  const direct = ensureHttpsUrl2(pickString2(itemBase, ["itemPic", "cover", "poster", "image"]));
+  if (direct) {
+    return direct;
+  }
+  const itemPics = pickRecord(itemBase.itemPics);
+  const itemPicList = Array.isArray(itemPics.itemPicList) ? itemPics.itemPicList : [];
+  for (const item of itemPicList) {
+    const picUrl = ensureHttpsUrl2(pickString2(pickRecord(item), ["picUrl", "url"]));
+    if (picUrl) {
+      return picUrl;
+    }
+  }
+  return "";
+}
+function pickDamaiSummary(staticDataDefault) {
+  const itemExtendInfo = pickRecord(staticDataDefault.itemExtendInfo);
+  const itemExtend = pickString2(itemExtendInfo, ["itemExtend", "content", "description"]);
+  if (!itemExtend) {
+    return "";
+  }
+  return normalizeSummaryText(decodeMaybeUriComponent(itemExtend));
+}
+function parseDamaiItemId(input) {
+  const text = String(input || "").trim();
+  if (!text) {
+    throw new Error("\u8BF7\u5148\u8D34\u4E0A\u5927\u9EA6\u7F51\u6F14\u51FA\u8BE6\u60C5\u9875\u94FE\u63A5\u3002");
+  }
+  let url;
+  try {
+    url = new URL(text);
+  } catch (_error) {
+    throw new Error("\u5927\u9EA6\u7F51\u76EE\u524D\u53EA\u652F\u6301\u76F4\u63A5\u8D34\u6F14\u51FA\u8BE6\u60C5\u9875\u94FE\u63A5\u3002");
+  }
+  const hostname = url.hostname.toLowerCase();
+  const isPcDetail = hostname === "detail.damai.cn" && url.pathname === "/item.htm";
+  const isMobileDetail = (hostname === "m.damai.cn" || hostname === "m.taopiaopiao.com") && /\/item\.html$/i.test(url.pathname);
+  if (!isPcDetail && !isMobileDetail) {
+    throw new Error("\u8BF7\u8D34\u5927\u9EA6\u7F51\u5177\u4F53\u6F14\u51FA\u8BE6\u60C5\u9875\u94FE\u63A5\uFF0C\u4E0D\u662F\u5217\u8868\u9875\u6216\u5176\u4ED6\u9875\u9762\u3002");
+  }
+  const itemId = Number(url.searchParams.get("id") || url.searchParams.get("itemId"));
+  if (!Number.isInteger(itemId) || itemId <= 0) {
+    throw new Error("\u8FD9\u4E2A\u5927\u9EA6\u7F51\u94FE\u63A5\u91CC\u6CA1\u6709\u6709\u6548\u7684 itemId\u3002");
+  }
+  return itemId;
+}
+function normalizeDamaiItemUrl(itemId) {
+  return `https://detail.damai.cn/item.htm?id=${itemId}`;
+}
+function parseDamaiItemPage(html, fallbackItemId) {
+  const payloads = parseDamaiHiddenPayloads(html);
+  const staticDataDefault = pickRecord(payloads.staticDataDefault);
+  const dataDefault = pickRecord(payloads.dataDefault);
+  const itemBase = pickRecord(staticDataDefault.itemBase);
+  const venue = pickRecord(staticDataDefault.venue);
+  const itemId = pickNumber(itemBase, ["itemId", "id"]) || pickNumber(dataDefault, ["itemId", "id"]) || (Number.isInteger(fallbackItemId) && Number(fallbackItemId) > 0 ? Number(fallbackItemId) : null);
+  if (!itemId) {
+    throw new Error("\u5927\u9EA6\u9875\u9762\u7ED3\u6784\u548C\u9884\u671F\u4E0D\u4E00\u81F4\uFF0C\u6682\u65F6\u6CA1\u6CD5\u8BFB\u51FA\u6F14\u51FA ID\u3002");
+  }
+  const title = pickString2(itemBase, ["itemName", "title", "name"]) || `\u5927\u9EA6\u7F51\u6F14\u51FA ${itemId}`;
+  const showTime = pickString2(itemBase, ["showTime", "show_time", "time"]);
+  const releaseDate = normalizeDamaiShowDate(showTime);
+  const venueName = pickString2(venue, ["venueName", "name"]);
+  const venueAddress = pickString2(venue, ["venueAddr", "venueAddress", "address", "addr"]);
+  const cityName = pickString2(itemBase, ["cityName", "city"]) || pickString2(venue, ["venueCityName", "cityName", "city"]);
+  return {
+    damai_item_id: itemId,
+    damai_url: normalizeDamaiItemUrl(itemId),
+    title,
+    media_type: pickString2(itemBase, ["guideCat", "categoryName", "category"]),
+    show_time: showTime,
+    release_date: releaseDate,
+    cover_remote: pickDamaiCover(itemBase),
+    summary: pickDamaiSummary(staticDataDefault),
+    city_name: cityName,
+    venue_name: venueName,
+    venue_address: venueAddress,
+    venue_text: buildVenueText2(venueName, venueAddress)
+  };
+}
+function normalizeDamaiItem(detail) {
+  const itemId = Number(detail?.damai_item_id);
+  return {
+    damai_item_id: itemId,
+    damai_url: String(detail?.damai_url || "").trim() || normalizeDamaiItemUrl(itemId),
+    title: String(detail?.title || "").trim() || `\u5927\u9EA6\u7F51\u6F14\u51FA ${itemId}`,
+    title_original: "",
+    aliases: [],
+    media_type: String(detail?.media_type || "").trim(),
+    release_date: normalizeDateValue(detail?.release_date),
+    release_year: extractYear(detail?.release_date),
+    cover_remote: String(detail?.cover_remote || "").trim(),
+    summary: normalizeSummaryText(detail?.summary || ""),
+    platforms: [],
+    platforms_text: "",
+    show_time: String(detail?.show_time || "").trim(),
+    city_name: String(detail?.city_name || "").trim(),
+    venue_name: String(detail?.venue_name || "").trim(),
+    venue_address: String(detail?.venue_address || "").trim(),
+    venue_text: String(detail?.venue_text || "").trim()
+  };
+}
+
+// src/sources/damai-source.ts
+async function fetchDamaiItem(itemId) {
+  const url = normalizeDamaiItemUrl(itemId);
+  const response = await requestText(url);
+  return parseDamaiItemPage(response, itemId);
+}
+var damaiSource = {
+  id: "damai",
+  label: "\u5927\u9EA6\u7F51",
+  commandId: "create-damai-card",
+  commandName: "\u4ECE\u5927\u9EA6\u7F51\u65B0\u5EFA\u4F5C\u54C1\u5361\u7247",
+  inputTitle: "\u4ECE\u5927\u9EA6\u7F51\u65B0\u5EFA\u4F5C\u54C1\u5361\u7247",
+  inputHint: "\u8D34\u5927\u9EA6\u7F51\u6F14\u51FA\u8BE6\u60C5\u9875\u94FE\u63A5\uFF0C\u63D2\u4EF6\u4F1A\u76F4\u63A5\u8BFB\u53D6\u9875\u9762\u91CC\u7684\u516C\u5F00\u6F14\u51FA\u4FE1\u606F\u3002",
+  inputPlaceholder: "\u4F8B\u5982\uFF1Ahttps://detail.damai.cn/item.htm?id=1012125810980",
+  parseDirectInput: parseDamaiItemId,
+  fetchByDirectInput: (itemId) => fetchDamaiItem(itemId),
+  normalize: normalizeDamaiItem
+};
+
 // src/sources/mobygames-source.ts
 init_http();
 
@@ -2089,14 +2367,14 @@ var mobygamesSource = {
 init_http();
 
 // src/sources/showstart.ts
-function ensureHttpsUrl2(value) {
+function ensureHttpsUrl3(value) {
   const normalized = String(value || "").trim();
   if (!normalized) return "";
   if (/^https?:\/\//i.test(normalized)) return normalized;
   if (normalized.startsWith("//")) return `https:${normalized}`;
   return normalized;
 }
-function pickString2(detail, keys) {
+function pickString3(detail, keys) {
   for (const key of keys) {
     const value = detail[key];
     if (typeof value === "string" && value.trim()) {
@@ -2105,7 +2383,7 @@ function pickString2(detail, keys) {
   }
   return "";
 }
-function pickNumber(detail, keys) {
+function pickNumber2(detail, keys) {
   for (const key of keys) {
     const numeric = Number(detail[key]);
     if (Number.isInteger(numeric) && numeric > 0) {
@@ -2133,8 +2411,8 @@ function normalizeShowstartDate(detail) {
   const timestampDate = formatTimestamp(detail.startTime);
   if (timestampDate) return timestampDate;
   const candidates = [
-    pickString2(detail, ["activityTime", "showTime", "startDate"]),
-    pickString2(detail, ["activityDate", "date"])
+    pickString3(detail, ["activityTime", "showTime", "startDate"]),
+    pickString3(detail, ["activityDate", "date"])
   ].filter(Boolean);
   for (const candidate of candidates) {
     const direct = normalizeDateValue(candidate);
@@ -2152,8 +2430,8 @@ function normalizeShowstartDate(detail) {
   return "";
 }
 function pickShowstartCover(detail) {
-  return ensureHttpsUrl2(
-    pickString2(detail, [
+  return ensureHttpsUrl3(
+    pickString3(detail, [
       "avatar",
       "poster",
       "posterUrl",
@@ -2165,7 +2443,7 @@ function pickShowstartCover(detail) {
     ])
   );
 }
-function buildVenueText2(name, address) {
+function buildVenueText3(name, address) {
   if (!name) return address;
   if (!address) return name;
   if (address.includes(name)) return address;
@@ -2194,7 +2472,7 @@ function pickStringFromVenueContainers(containers, keys, options = {}) {
     if (options.genericNameOnly && !container.allowGenericName) {
       continue;
     }
-    const picked = pickString2(container.record, keys);
+    const picked = pickString3(container.record, keys);
     if (picked) {
       return picked;
     }
@@ -2273,7 +2551,7 @@ function pickShowstartVenue(detail) {
   return {
     venueName,
     venueAddress,
-    venueText: buildVenueText2(venueName, venueAddress)
+    venueText: buildVenueText3(venueName, venueAddress)
   };
 }
 function parseShowstartActivityId(input) {
@@ -2308,7 +2586,7 @@ function normalizeShowstartActivityUrl(activityId) {
 }
 function unwrapShowstartActivityResponse(payload, activityId) {
   const data = payload?.data || payload?.result;
-  const responseActivityId = pickNumber(data || {}, [
+  const responseActivityId = pickNumber2(data || {}, [
     "activityId",
     "id"
   ]);
@@ -2324,14 +2602,14 @@ function unwrapShowstartActivityResponse(payload, activityId) {
 }
 function normalizeShowstartActivity(detail) {
   const record = detail || {};
-  const activityId = pickNumber(record, ["activityId", "id"]);
+  const activityId = pickNumber2(record, ["activityId", "id"]);
   if (!activityId) {
     throw new Error("\u79C0\u52A8\u6D3B\u52A8\u6570\u636E\u91CC\u6CA1\u6709\u6709\u6548\u7684 activityId\u3002");
   }
-  const title = pickString2(record, ["activityName", "title", "activityTitle"]) || `\u79C0\u52A8\u6D3B\u52A8 ${activityId}`;
+  const title = pickString3(record, ["activityName", "title", "activityTitle"]) || `\u79C0\u52A8\u6D3B\u52A8 ${activityId}`;
   const releaseDate = normalizeShowstartDate(record);
   const summary = normalizeSummaryText(
-    pickString2(record, ["document", "description", "content", "remark", "summary"])
+    pickString3(record, ["document", "description", "content", "remark", "summary"])
   );
   const { venueName, venueAddress, venueText } = pickShowstartVenue(record);
   return {
@@ -2535,13 +2813,15 @@ var MEDIA_SOURCES = [
   bangumiSource,
   mobygamesSource,
   bilibiliShowSource,
-  showstartSource
+  showstartSource,
+  damaiSource
 ];
 var MEDIA_SOURCE_MAP = {
   bangumi: bangumiSource,
   mobygames: mobygamesSource,
   bilibili_show: bilibiliShowSource,
-  showstart: showstartSource
+  showstart: showstartSource,
+  damai: damaiSource
 };
 
 // src/plugin.ts

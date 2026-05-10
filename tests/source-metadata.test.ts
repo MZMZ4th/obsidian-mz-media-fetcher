@@ -7,11 +7,13 @@ test("only bangumi exposes search settings metadata", () => {
   assert.equal(MEDIA_SOURCE_UI_META_MAP.mobygames.supportsSearch, false);
   assert.equal(MEDIA_SOURCE_UI_META_MAP.bilibili_show.supportsSearch, false);
   assert.equal(MEDIA_SOURCE_UI_META_MAP.showstart.supportsSearch, false);
+  assert.equal(MEDIA_SOURCE_UI_META_MAP.damai.supportsSearch, false);
 });
 
 test("source metadata includes common and source-specific template variables", () => {
   const bangumiKeys = MEDIA_SOURCE_UI_META_MAP.bangumi.templateVariables.map((item) => item.key);
   const showstartKeys = MEDIA_SOURCE_UI_META_MAP.showstart.templateVariables.map((item) => item.key);
+  const damaiKeys = MEDIA_SOURCE_UI_META_MAP.damai.templateVariables.map((item) => item.key);
   const coverMarkdown = MEDIA_SOURCE_UI_META_MAP.bangumi.templateVariables.find(
     (item) => item.key === "cover_markdown"
   );
@@ -23,5 +25,9 @@ test("source metadata includes common and source-specific template variables", (
   assert.ok(bangumiKeys.includes("publishers"));
   assert.ok(bangumiKeys.includes("serial_magazines"));
   assert.ok(showstartKeys.includes("showstart_activity_id"));
+  assert.ok(damaiKeys.includes("damai_item_id"));
+  assert.ok(damaiKeys.includes("damai_url"));
+  assert.ok(damaiKeys.includes("show_time"));
+  assert.ok(damaiKeys.includes("city_name"));
   assert.equal(coverMarkdown?.yamlSafe, false);
 });

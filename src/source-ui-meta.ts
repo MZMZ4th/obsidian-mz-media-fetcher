@@ -45,4 +45,14 @@ export const MEDIA_SOURCE_UI_META_MAP: Record<SourceId, MediaSourceUiMeta> = {
     ],
     templateVariables: SOURCE_TEMPLATE_VARIABLES_MAP.showstart,
   },
+  damai: {
+    supportsSearch: false,
+    inputFieldLabel: "详情链接",
+    featureNotes: [
+      "只支持直接粘贴大麦网具体演出详情页链接。",
+      "不支持站内搜索。",
+      "会读取大麦详情页里的公开演出信息，不猜测额外接口。",
+    ],
+    templateVariables: SOURCE_TEMPLATE_VARIABLES_MAP.damai,
+  },
 };

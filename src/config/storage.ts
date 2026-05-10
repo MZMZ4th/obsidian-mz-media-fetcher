@@ -470,6 +470,7 @@ export class ConfigStore {
         mobygames: defaults.mobygames,
         bilibili_show: defaults.bilibili_show,
         showstart: defaults.showstart,
+        damai: defaults.damai,
       },
     };
   }

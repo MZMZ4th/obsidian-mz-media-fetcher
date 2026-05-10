@@ -2,7 +2,7 @@
 
 # MZ Media Fetcher
 
-从 Bangumi、MobyGames、bilibili 会员购和秀动创建作品卡片与活动卡片。
+从 Bangumi、MobyGames、bilibili 会员购、秀动和大麦网创建作品卡片与活动卡片。
 
 `MZ Media Fetcher` 是一个仅支持桌面版 Obsidian 的插件。它会从支持的站点获取公开信息，并按模板在你的 vault 里新建作品或活动卡片。
 
@@ -13,6 +13,7 @@
 - MobyGames 支持直接粘贴游戏详情页链接。
 - bilibili 会员购支持直接粘贴活动详情页链接，并会带出演出场所信息。
 - 秀动支持直接粘贴活动详情页链接，并会带出演出场所信息。
+- 大麦网支持直接粘贴演出详情页链接，并会带出演出场所信息。
 - 每个来源保留自己的解析模块，但卡片生成共用一条主链路。
 - 设置页按来源拆分，只有 Bangumi 会显示搜索条目数设置。
 - 插件自带默认模板，也可以一键复制后改成你自己的模板。
@@ -27,6 +28,7 @@
 - `从 MobyGames 新建作品卡片`
 - `从 bilibili会员购新建作品卡片`
 - `从秀动新建作品卡片`
+- `从大麦网新建作品卡片`
 
 ## 安装
 
@@ -87,6 +89,13 @@ npm run package
 - 发布日期会统一写成 `YYYY-MM-DD`。
 - 会额外提供 `venue_name`、`venue_address`、`venue_text` 这 3 个演出场所变量。
 
+### 大麦网
+
+- 直接粘贴演出详情页链接，例如 `https://detail.damai.cn/item.htm?id=1012125810980`。
+- 带 `itemId` 的移动端详情页链接也支持。
+- 发布日期会统一写成 `YYYY-MM-DD`。
+- 会额外提供 `venue_name`、`venue_address`、`venue_text` 这 3 个演出场所变量。
+
 ## 模板
 
 插件内置模板现在会额外带一个“字段预览”区域，直接把当前支持的变量效果渲染出来。常用模板变量包括：
@@ -130,6 +139,10 @@ npm run package
 - `{{bilibili_show_url}}`
 - `{{showstart_activity_id}}`
 - `{{showstart_url}}`
+- `{{damai_item_id}}`
+- `{{damai_url}}`
+- `{{show_time}}`
+- `{{city_name}}`
 
 海报相关变量现在分成两层语义：
 
@@ -143,6 +156,7 @@ npm run package
 - MobyGames 读取公开游戏详情页 HTML。
 - bilibili 会员购走活动详情页背后的公开项目详情接口。
 - 秀动会先获取匿名访客 token，再请求公开页面实际使用的活动详情接口。
+- 大麦网会读取公开演出详情页 HTML，并解析页面里的隐藏 JSON。
 - 插件不会发送遥测。
 - 插件只会在当前 vault 内写文件。
 - 插件不会读取当前 vault 之外的文件。
@@ -151,7 +165,7 @@ npm run package
 
 - `src/core/`：通用卡片生成、文件处理、路径归一化和模板渲染
 - `src/config/`：默认配置、配置迁移和配置读写
-- `src/sources/`：Bangumi、MobyGames、bilibili 会员购、秀动的来源适配器
+- `src/sources/`：Bangumi、MobyGames、bilibili 会员购、秀动、大麦网的来源适配器
 - `src/ui/`：弹窗、设置页和路径补全
 - `templates/`：插件内置默认模板
 - `tests/`：解析、模板、配置和迁移测试

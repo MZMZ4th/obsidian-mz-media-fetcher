@@ -83,6 +83,7 @@ async function resolveCardPath(
     mobygames: "mobygames_id",
     bilibili_show: "bilibili_show_id",
     showstart: "showstart_activity_id",
+    damai: "damai_item_id",
   };
   const idKey = idKeyMap[sourceKey];
   const primaryName = sanitizeFileName(renderTemplate(config.filename.template, item));

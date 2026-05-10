@@ -49,6 +49,15 @@ const SOURCE_SPECIFIC_TEMPLATE_VARIABLES: Record<SourceId, TemplateVariableDefin
     { key: "venue_address", description: "演出场所地址。" },
     { key: "venue_text", description: "演出场所的一行文本，优先拼接名称和地址。" },
   ],
+  damai: [
+    { key: "damai_item_id", description: "大麦网演出 ID。" },
+    { key: "damai_url", description: "大麦网演出详情页链接。" },
+    { key: "show_time", description: "大麦网原始演出时间文本。" },
+    { key: "city_name", description: "演出城市。" },
+    { key: "venue_name", description: "演出场所名称。" },
+    { key: "venue_address", description: "演出场所地址。" },
+    { key: "venue_text", description: "演出场所的一行文本，优先拼接名称和地址。" },
+  ],
 };
 
 const PREVIEW_INLINE_VARIABLES = new Set([
@@ -80,6 +89,10 @@ const PREVIEW_INLINE_VARIABLES = new Set([
   "bilibili_show_url",
   "showstart_activity_id",
   "showstart_url",
+  "damai_item_id",
+  "damai_url",
+  "show_time",
+  "city_name",
   "venue_name",
   "venue_address",
   "venue_text",
@@ -118,6 +131,7 @@ export const SOURCE_TEMPLATE_VARIABLES_MAP: Record<SourceId, TemplateVariableDef
   mobygames: getSourceTemplateVariables("mobygames"),
   bilibili_show: getSourceTemplateVariables("bilibili_show"),
   showstart: getSourceTemplateVariables("showstart"),
+  damai: getSourceTemplateVariables("damai"),
 };
 
 export function buildTemplatePreviewSection(sourceId: SourceId): string {
